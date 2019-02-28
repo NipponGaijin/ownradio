@@ -16,7 +16,7 @@ class ItemViewController: UIViewController {
 	var itemIndex: Int = 0
 	var countTrying: Int = 0
 	var labelText: String = "" {
-
+		
 		didSet {
 			if let label = contentLbl {
 				label.text = labelText
@@ -30,7 +30,7 @@ class ItemViewController: UIViewController {
 	@IBOutlet var countTryingLbl: UILabel!
 
 	@IBOutlet var loadIndicator: UIActivityIndicatorView!
-
+	
     override func viewDidLoad() {
         super.viewDidLoad()
 		contentLbl.font = UIFont.boldSystemFont(ofSize: contentLbl.font.pointSize)
@@ -39,18 +39,18 @@ class ItemViewController: UIViewController {
 		tryAgainBtn.layer.cornerRadius = 4
 		loadIndicator.isHidden = isIndicatorHide
 		countTryingLbl.isHidden = isCountTryingHide
-
+		
 		pageControl.numberOfPages = StartVideoViewController.sharedInstance.contentLabels.count
 		pageControl.currentPage = itemIndex
-
+		
 		countTryingLbl.text = "(\(countTrying) попытка кеширования)"
     }
-
+	
     override func didReceiveMemoryWarning() {
         super.didReceiveMemoryWarning()
         // Dispose of any resources that can be recreated.
     }
-
+    
 	@IBAction func tryAgainBtnClick(_ sender: UIButton) {
 		guard currentReachabilityStatus != NSObject.ReachabilityStatus.notReachable else {
 			return
@@ -60,9 +60,9 @@ class ItemViewController: UIViewController {
 		countTryingLbl.isHidden = false
 		contentLbl.text = StartVideoViewController.sharedInstance.getContentLblByIndex(index: itemIndex)
 		StartVideoViewController.sharedInstance.timerStart()
-		DispatchQueue.global(qos: .utility).async {
+		DispatchQueue.global(qos: .background).async {
 			Downloader.sharedInstance.load(isSelfFlag: false, complition: {
-
+				
 			})
 		}
 	}

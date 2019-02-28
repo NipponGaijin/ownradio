@@ -9,10 +9,11 @@
 import Foundation
 import CoreData
 
+
 extension TrackEntity {
 
     @nonobjc public class func fetchRequest() -> NSFetchRequest<TrackEntity> {
-        return NSFetchRequest<TrackEntity>(entityName: "TrackEntity")
+        return NSFetchRequest<TrackEntity>(entityName: "TrackEntity");
     }
 
     @NSManaged public var artistName: String?
