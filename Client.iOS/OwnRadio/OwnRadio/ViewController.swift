@@ -13,7 +13,7 @@ import Alamofire
 import CloudKit
 
 
-class RadioViewController: UIViewController, UITableViewDataSource, UITableViewDelegate {
+class RadioViewController: UIViewController, UITableViewDataSource, UITableViewDelegate, RemoteAudioControls {
 	
 	
 	
@@ -48,10 +48,6 @@ class RadioViewController: UIViewController, UITableViewDataSource, UITableViewD
 	
 	@IBOutlet weak var playPauseBtn: UIButton!
 	@IBOutlet weak var nextButton: UIButton!
-	
-	@IBOutlet weak var timerButton: UIButton!
-	@IBOutlet weak var budButton: UIButton!
-	
 	@IBOutlet var tapRecogniser: UITapGestureRecognizer!
 	
 	@IBOutlet weak var leftPlayBtnConstraint: NSLayoutConstraint!
@@ -79,13 +75,15 @@ class RadioViewController: UIViewController, UITableViewDataSource, UITableViewD
 	
 	let tracksUrlString =  FileManager.applicationSupportDir().appending("/Tracks/")
 	
+	
 	override func prepare(for segue: UIStoryboardSegue, sender: Any?) {
-		if segue.identifier == "alertClockSegue"{
-			if let nextViewController = segue.destination as? AlertClockViewController{
-				nextViewController.player = self.player
+		if segue.identifier == "SettingsByButton" || segue.identifier == "SettingsBySwipe"{
+			if let nextViewController = segue.destination as? SettingsViewController {
+				nextViewController.remoteAudioControls = self
 			}
 		}
 	}
+	
 	
 	// MARK: Override
 	//выполняется при загрузке окна
@@ -149,10 +147,10 @@ class RadioViewController: UIViewController, UITableViewDataSource, UITableViewD
 		//трек доигран до конца
 		NotificationCenter.default.addObserver(self, selector: #selector(songDidPlay), name: NSNotification.Name.AVPlayerItemDidPlayToEndTime, object: nil)
 		//обновление системной информации
-//		NotificationCenter.default.addObserver(self, selector: #selector(updateSysInfo(_:)), name: NSNotification.Name(rawValue:"updateSysInfo"), object: nil)
+		NotificationCenter.default.addObserver(self, selector: #selector(updateSysInfo(_:)), name: NSNotification.Name(rawValue:"updateSysInfo"), object: nil)
 		
 	}
-	
+
 	
 	func checkMemoryWarning() {
 		guard DiskStatus.freeDiskSpaceInBytes < 104857600 && CoreDataManager.instance.chekCountOfEntitiesFor(entityName: "TrackEntity") < 1 else {
@@ -190,18 +188,6 @@ class RadioViewController: UIViewController, UITableViewDataSource, UITableViewD
 		
 		self.player = AudioPlayerManager.sharedInstance
 		
-		if UserDefaults.standard.bool(forKey: "timerState"){
-			timerButton.setImage(UIImage(named: "timBlueImage"), for: .normal)
-		}
-		else{
-			timerButton.setImage(UIImage(named: "timGrayImage"), for: .normal)
-		}
-		if UserDefaults.standard.bool(forKey: "budState"){
-			budButton.setImage(UIImage(named: "budBlueImage"), for: .normal)
-		}
-		else{
-			budButton.setImage(UIImage(named: "budGrayImage"), for: .normal)
-		}
 		updateUI()
 	}
 	
@@ -209,11 +195,13 @@ class RadioViewController: UIViewController, UITableViewDataSource, UITableViewD
 	override func viewDidDisappear(_ animated: Bool) {
 		super.viewDidDisappear(animated)
 //		reachability?.stopListening()
-		
-		NotificationCenter.default.removeObserver(self, name:  NSNotification.Name.AVPlayerItemFailedToPlayToEndTime, object: nil)
-		NotificationCenter.default.removeObserver(self, name: NSNotification.Name.AVPlayerItemDidPlayToEndTime, object: self.player.playerItem)
-		NotificationCenter.default.removeObserver(self, name: NSNotification.Name(rawValue: "updateSysInfo"), object: nil)
+//
+//		NotificationCenter.default.removeObserver(self, name:  NSNotification.Name.AVPlayerItemFailedToPlayToEndTime, object: nil)
+//		NotificationCenter.default.removeObserver(self, name: NSNotification.Name.AVPlayerItemDidPlayToEndTime, object: self.player.playerItem)
+//		NotificationCenter.default.removeObserver(self, name: NSNotification.Name(rawValue: "updateSysInfo"), object: nil)
 	}
+	
+	
 	
 	//управление проигрыванием со шторки / экрана блокировки
 	override func remoteControlReceived(with event: UIEvent?) {
@@ -430,20 +418,6 @@ class RadioViewController: UIViewController, UITableViewDataSource, UITableViewD
         }
 		self.trackIDLbl.text = self.player.playingSong.trackID
 		self.isNowPlaying.text = String(self.player.isPlaying)
-		
-		if UserDefaults.standard.bool(forKey: "timerState"){
-			self.timerButton.setImage(UIImage(named: "timBlueImage"), for: .normal)
-		}
-		else{
-			self.timerButton.setImage(UIImage(named: "timGrayImage"), for: .normal)
-		}
-			
-		if UserDefaults.standard.bool(forKey: "budState"){
-			self.budButton.setImage(UIImage(named: "budBlueImage"), for: .normal)
-		}
-		else{
-			self.budButton.setImage(UIImage(named: "budGrayImage"), for: .normal)
-		}
 			
 			
 		if CoreDataManager.instance.getCountOfTracks() < 3 && CoreDataManager.instance.getCountOfTracks() != 0 {
@@ -568,4 +542,7 @@ class RadioViewController: UIViewController, UITableViewDataSource, UITableViewD
 	@IBAction func skipTrackToEnd(_ sender: UIButton) {
 		self.player.fwdTrackToEnd()
 	}
+}
+protocol RemoteAudioControls {
+	func remoteControlReceived(with event: UIEvent?)
 }

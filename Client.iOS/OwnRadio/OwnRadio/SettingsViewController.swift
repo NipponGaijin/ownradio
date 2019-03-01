@@ -20,12 +20,13 @@ class SettingsViewController: UITableViewController {
 	@IBOutlet weak var delAllTracksLbl: UILabel!
 	@IBOutlet weak var versionLbl: UILabel!
 	@IBOutlet weak var deviceIdLbl: UILabel!
-    
+	
 	@IBOutlet weak var fromFreeSpace: UILabel!
 
 	@IBOutlet weak var delAllTracksCell: UITableViewCell!
 	@IBOutlet weak var countPlayingTracksTable: UILabel!
 
+	var remoteAudioControls: RemoteAudioControls?
 	//получаем таблицу с количеством треков сгруппированных по количестсву их прослушиваний
 	var playedTracks: NSArray = CoreDataManager.instance.getGroupedTracks()
 	
@@ -103,6 +104,14 @@ class SettingsViewController: UITableViewController {
 		DispatchQueue.global(qos: .background).async {
 			Downloader.sharedInstance.fillCache()
 		}
+	}
+	
+	override func remoteControlReceived(with event: UIEvent?) {
+		guard let remoteControls = remoteAudioControls else {
+			print("Remote controls not set")
+			return
+		}
+		remoteControls.remoteControlReceived(with: event)
 	}
 	
 	func tapDelAllTracks(sender: UITapGestureRecognizer) {

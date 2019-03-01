@@ -453,28 +453,6 @@
                                     <constraint firstItem="Ifw-5N-ebI" firstAttribute="leading" secondItem="cjQ-kN-iGY" secondAttribute="leading" id="yrd-fZ-Sod"/>
                                 </constraints>
                             </view>
-                            <button opaque="NO" contentMode="scaleToFill" contentHorizontalAlignment="center" contentVerticalAlignment="center" lineBreakMode="middleTruncation" translatesAutoresizingMaskIntoConstraints="NO" id="Z6g-2i-xve">
-                                <rect key="frame" x="193" y="518.5" width="25" height="30"/>
-                                <constraints>
-                                    <constraint firstAttribute="height" constant="30" id="6wh-S3-P4V"/>
-                                    <constraint firstAttribute="width" constant="25" id="Qpn-ah-rNh"/>
-                                </constraints>
-                                <state key="normal" title="Button" image="timGrayImage"/>
-                                <connections>
-                                    <segue destination="teJ-CS-BXL" kind="show" identifier="" id="xpR-UY-Ksf"/>
-                                </connections>
-                            </button>
-                            <button opaque="NO" contentMode="scaleToFill" contentHorizontalAlignment="center" contentVerticalAlignment="center" lineBreakMode="middleTruncation" translatesAutoresizingMaskIntoConstraints="NO" id="22U-Hd-HBk">
-                                <rect key="frame" x="102" y="518.5" width="30" height="30"/>
-                                <constraints>
-                                    <constraint firstAttribute="width" constant="30" id="V2F-P3-NiS"/>
-                                    <constraint firstAttribute="height" constant="30" id="oSz-wW-SGz"/>
-                                </constraints>
-                                <state key="normal" title="Button" image="budGrayImage"/>
-                                <connections>
-                                    <segue destination="u1V-M8-lST" kind="push" identifier="alertClockSegue" id="gIL-Lm-Ur2"/>
-                                </connections>
-                            </button>
                         </subviews>
                         <color key="backgroundColor" red="1" green="1" blue="1" alpha="1" colorSpace="custom" customColorSpace="sRGB"/>
                         <gestureRecognizers/>
@@ -485,46 +463,22 @@
                             <constraint firstItem="Va0-Ci-1zg" firstAttribute="centerX" secondItem="8bC-Xf-vdC" secondAttribute="centerX" id="5OI-Sr-pfw"/>
                             <constraint firstItem="QXq-lk-UPI" firstAttribute="leading" secondItem="8bC-Xf-vdC" secondAttribute="leadingMargin" id="7TP-z7-D3H"/>
                             <constraint firstItem="Va0-Ci-1zg" firstAttribute="leading" secondItem="8bC-Xf-vdC" secondAttribute="leadingMargin" id="7jS-HA-Ho0"/>
-                            <constraint firstItem="Z6g-2i-xve" firstAttribute="top" secondItem="8tx-Ye-IHh" secondAttribute="bottom" constant="29" id="9At-sq-NSd"/>
-                            <constraint firstAttribute="trailingMargin" secondItem="Z6g-2i-xve" secondAttribute="trailing" constant="61" id="GzY-NW-mcd"/>
                             <constraint firstItem="cjQ-kN-iGY" firstAttribute="top" secondItem="8bC-Xf-vdC" secondAttribute="top" id="I3Y-go-eRD"/>
-                            <constraint firstItem="22U-Hd-HBk" firstAttribute="top" secondItem="8tx-Ye-IHh" secondAttribute="bottom" constant="29" id="Izn-JX-PE5"/>
                             <constraint firstAttribute="trailingMargin" secondItem="Va0-Ci-1zg" secondAttribute="trailing" id="Mvd-Ua-6Nc"/>
                             <constraint firstItem="cjQ-kN-iGY" firstAttribute="centerX" secondItem="8bC-Xf-vdC" secondAttribute="centerX" id="O1u-B1-5VO"/>
                             <constraint firstItem="QXq-lk-UPI" firstAttribute="top" secondItem="y3c-jy-aDJ" secondAttribute="bottom" constant="45" id="Qwj-nc-h3i"/>
-                            <constraint firstAttribute="trailingMargin" secondItem="22U-Hd-HBk" secondAttribute="trailing" constant="225" id="S1J-SV-1fa"/>
                             <constraint firstItem="cjQ-kN-iGY" firstAttribute="leading" secondItem="8bC-Xf-vdC" secondAttribute="leading" id="UFT-Sy-WDD"/>
-                            <constraint firstItem="22U-Hd-HBk" firstAttribute="centerY" secondItem="8bC-Xf-vdC" secondAttribute="centerY" constant="249.5" id="Um1-LT-hvg"/>
                             <constraint firstAttribute="trailing" secondItem="cjQ-kN-iGY" secondAttribute="trailing" id="esJ-13-91y"/>
                             <constraint firstAttribute="trailing" secondItem="cjQ-kN-iGY" secondAttribute="trailing" id="hNi-1x-IgG"/>
                             <constraint firstItem="QXq-lk-UPI" firstAttribute="centerX" secondItem="8bC-Xf-vdC" secondAttribute="centerX" id="jtV-2P-hG3"/>
                             <constraint firstItem="cjQ-kN-iGY" firstAttribute="leading" secondItem="8bC-Xf-vdC" secondAttribute="leading" id="ngK-WB-tyz"/>
-                            <constraint firstItem="Z6g-2i-xve" firstAttribute="centerY" secondItem="8bC-Xf-vdC" secondAttribute="centerY" constant="249.5" id="pqc-RL-VrX"/>
                             <constraint firstItem="geR-ow-aHy" firstAttribute="centerY" secondItem="8bC-Xf-vdC" secondAttribute="centerY" constant="1.5" id="qNi-0G-tJI"/>
-                            <constraint firstAttribute="bottomMargin" secondItem="Z6g-2i-xve" secondAttribute="bottom" constant="54" id="qcM-sR-aya"/>
-                            <constraint firstItem="22U-Hd-HBk" firstAttribute="leading" secondItem="8bC-Xf-vdC" secondAttribute="leadingMargin" constant="88" id="qxv-Sh-MPu"/>
                             <constraint firstItem="8tx-Ye-IHh" firstAttribute="top" secondItem="1gg-7A-uR4" secondAttribute="bottom" constant="67" id="rCd-h7-w8x"/>
-                            <constraint firstItem="Z6g-2i-xve" firstAttribute="centerX" secondItem="8bC-Xf-vdC" secondAttribute="centerX" constant="45.5" id="rZM-rQ-c4a"/>
-                            <constraint firstAttribute="bottomMargin" secondItem="22U-Hd-HBk" secondAttribute="bottom" constant="54" id="rcK-xM-Vi1"/>
-                            <constraint firstItem="Z6g-2i-xve" firstAttribute="top" secondItem="8tx-Ye-IHh" secondAttribute="bottom" constant="14" id="rm0-DP-4Ll"/>
                             <constraint firstItem="1gg-7A-uR4" firstAttribute="centerY" secondItem="8bC-Xf-vdC" secondAttribute="centerY" constant="126" id="s23-P9-Z3s"/>
                             <constraint firstAttribute="trailing" secondItem="8tx-Ye-IHh" secondAttribute="trailing" constant="5" id="wE8-Bw-q8w"/>
-                            <constraint firstItem="22U-Hd-HBk" firstAttribute="centerX" secondItem="8bC-Xf-vdC" secondAttribute="centerX" constant="-43" id="y2t-Ls-Ep9"/>
-                            <constraint firstItem="22U-Hd-HBk" firstAttribute="top" secondItem="8tx-Ye-IHh" secondAttribute="bottom" constant="14" id="ytM-Ec-4Lo"/>
                             <constraint firstItem="Va0-Ci-1zg" firstAttribute="top" secondItem="QXq-lk-UPI" secondAttribute="bottomMargin" constant="8" id="yun-xy-ejE"/>
                             <constraint firstItem="8tx-Ye-IHh" firstAttribute="leading" secondItem="8bC-Xf-vdC" secondAttribute="leading" constant="5" id="zdP-nI-Iby"/>
                         </constraints>
-                        <variation key="default">
-                            <mask key="constraints">
-                                <exclude reference="Izn-JX-PE5"/>
-                                <exclude reference="S1J-SV-1fa"/>
-                                <exclude reference="qxv-Sh-MPu"/>
-                                <exclude reference="rcK-xM-Vi1"/>
-                                <exclude reference="9At-sq-NSd"/>
-                                <exclude reference="GzY-NW-mcd"/>
-                                <exclude reference="qcM-sR-aya"/>
-                            </mask>
-                        </variation>
                         <connections>
                             <outletCollection property="gestureRecognizers" destination="1ac-vt-IJJ" appends="YES" id="bng-nU-YI4"/>
                             <outletCollection property="gestureRecognizers" destination="PT9-wb-C5T" appends="YES" id="AlY-xc-oNx"/>
@@ -535,7 +489,7 @@
                         <barButtonItem key="leftBarButtonItem" image="humburgerBtn" id="KUI-pP-e7C">
                             <color key="tintColor" white="0.33333333333333331" alpha="1" colorSpace="custom" customColorSpace="genericGamma22GrayColorSpace"/>
                             <connections>
-                                <segue destination="d65-A4-a0S" kind="show" id="P6y-p0-VaX"/>
+                                <segue destination="d65-A4-a0S" kind="show" identifier="SettingsByButton" id="P6y-p0-VaX"/>
                             </connections>
                         </barButtonItem>
                         <barButtonItem key="rightBarButtonItem" style="plain" id="7Vn-kS-JzR">
@@ -551,7 +505,6 @@
                     </navigationItem>
                     <connections>
                         <outlet property="authorNameLbl" destination="Va0-Ci-1zg" id="gH5-d3-JGD"/>
-                        <outlet property="budButton" destination="22U-Hd-HBk" id="g1p-uU-KbK"/>
                         <outlet property="circleViewConteiner" destination="8tx-Ye-IHh" id="MgY-ok-8w3"/>
                         <outlet property="deviceIdLbl" destination="OwP-Dt-Wqz" id="fM9-zo-qo6"/>
                         <outlet property="folderSpaceLbl" destination="fbj-9d-sF2" id="flr-EB-uom"/>
@@ -574,7 +527,6 @@
                         <outlet property="playPauseBtn" destination="geR-ow-aHy" id="S7E-Lt-mGk"/>
                         <outlet property="progressView" destination="8tx-Ye-IHh" id="BgJ-br-l8E"/>
                         <outlet property="tableView" destination="C8N-N4-a6Y" id="grj-gb-69C"/>
-                        <outlet property="timerButton" destination="Z6g-2i-xve" id="dx4-b3-kRd"/>
                         <outlet property="trackIDLbl" destination="wCB-G2-6rJ" id="nry-P9-0rE"/>
                         <outlet property="trackNameLbl" destination="QXq-lk-UPI" id="Qmj-ey-PEd"/>
                         <outlet property="versionLabel" destination="fIJ-N1-pAG" id="ovh-ub-5mg"/>
@@ -583,7 +535,7 @@
                 <placeholder placeholderIdentifier="IBFirstResponder" id="dkx-z0-nzr" sceneMemberID="firstResponder"/>
                 <swipeGestureRecognizer direction="right" id="1ac-vt-IJJ">
                     <connections>
-                        <segue destination="d65-A4-a0S" kind="show" id="pLa-VH-WHm"/>
+                        <segue destination="d65-A4-a0S" kind="show" identifier="SettingsBySwipe" id="pLa-VH-WHm"/>
                     </connections>
                 </swipeGestureRecognizer>
                 <tapGestureRecognizer delaysTouchesEnded="NO" numberOfTapsRequired="3" id="PT9-wb-C5T">
@@ -1063,162 +1015,6 @@
             </objects>
             <point key="canvasLocation" x="917" y="-45"/>
         </scene>
-        <!--Будильник-->
-        <scene sceneID="xMI-C6-o8K">
-            <objects>
-                <viewController id="u1V-M8-lST" customClass="AlertClockViewController" customModule="OwnRadio" customModuleProvider="target" sceneMemberID="viewController">
-                    <layoutGuides>
-                        <viewControllerLayoutGuide type="top" id="ikI-uN-8yh"/>
-                        <viewControllerLayoutGuide type="bottom" id="X7v-z5-pgJ"/>
-                    </layoutGuides>
-                    <view key="view" contentMode="scaleToFill" id="k3k-SL-fRJ">
-                        <rect key="frame" x="0.0" y="0.0" width="320" height="568"/>
-                        <autoresizingMask key="autoresizingMask" widthSizable="YES" heightSizable="YES"/>
-                        <subviews>
-                            <datePicker contentMode="scaleToFill" fixedFrame="YES" contentHorizontalAlignment="center" contentVerticalAlignment="center" datePickerMode="countDownTimer" minuteInterval="1" translatesAutoresizingMaskIntoConstraints="NO" id="E16-QN-4B2">
-                                <rect key="frame" x="0.0" y="144" width="320" height="148"/>
-                                <autoresizingMask key="autoresizingMask" widthSizable="YES" heightSizable="YES" flexibleMaxY="YES"/>
-                                <date key="date" timeIntervalSinceReferenceDate="567602395.31997097">
-                                    <!--2018-12-27 11:19:55 +0000-->
-                                </date>
-                                <locale key="locale" localeIdentifier="ru"/>
-                            </datePicker>
-                            <label opaque="NO" userInteractionEnabled="NO" contentMode="left" horizontalHuggingPriority="251" verticalHuggingPriority="251" fixedFrame="YES" text="Укажите, через какое время должен включаться будильник" textAlignment="center" lineBreakMode="tailTruncation" numberOfLines="2" baselineAdjustment="alignBaselines" adjustsFontSizeToFit="NO" translatesAutoresizingMaskIntoConstraints="NO" id="4kG-Tw-jo3">
-                                <rect key="frame" x="16" y="72" width="294" height="71"/>
-                                <autoresizingMask key="autoresizingMask" widthSizable="YES" flexibleMaxX="YES" flexibleMaxY="YES"/>
-                                <fontDescription key="fontDescription" type="system" pointSize="17"/>
-                                <nil key="textColor"/>
-                                <nil key="highlightedColor"/>
-                            </label>
-                            <button opaque="NO" contentMode="scaleToFill" fixedFrame="YES" contentHorizontalAlignment="center" contentVerticalAlignment="center" buttonType="roundedRect" lineBreakMode="middleTruncation" translatesAutoresizingMaskIntoConstraints="NO" id="FKI-pM-9za">
-                                <rect key="frame" x="31" y="300" width="30" height="30"/>
-                                <autoresizingMask key="autoresizingMask" flexibleMinX="YES" flexibleMaxX="YES" flexibleMinY="YES" flexibleMaxY="YES"/>
-                                <color key="tintColor" red="0.21216781539999999" green="0.48632187630000001" blue="1" alpha="1" colorSpace="custom" customColorSpace="sRGB"/>
-                                <state key="normal" title="ПН">
-                                    <color key="titleColor" white="0.0" alpha="1" colorSpace="custom" customColorSpace="genericGamma22GrayColorSpace"/>
-                                </state>
-                                <connections>
-                                    <action selector="weekDaySelectWithSender:" destination="u1V-M8-lST" eventType="touchUpInside" id="VTP-LJ-0SP"/>
-                                </connections>
-                            </button>
-                            <button opaque="NO" tag="1" contentMode="scaleToFill" fixedFrame="YES" contentHorizontalAlignment="center" contentVerticalAlignment="center" buttonType="roundedRect" lineBreakMode="middleTruncation" translatesAutoresizingMaskIntoConstraints="NO" id="V0X-GW-cVq">
-                                <rect key="frame" x="69" y="300" width="30" height="30"/>
-                                <autoresizingMask key="autoresizingMask" flexibleMinX="YES" flexibleMaxX="YES" flexibleMinY="YES" flexibleMaxY="YES"/>
-                                <color key="tintColor" red="0.21216781539999999" green="0.48632187630000001" blue="1" alpha="1" colorSpace="custom" customColorSpace="sRGB"/>
-                                <state key="normal" title="ВТ">
-                                    <color key="titleColor" white="0.0" alpha="1" colorSpace="custom" customColorSpace="genericGamma22GrayColorSpace"/>
-                                </state>
-                                <connections>
-                                    <action selector="weekDaySelectWithSender:" destination="u1V-M8-lST" eventType="touchUpInside" id="QeY-hW-SIm"/>
-                                </connections>
-                            </button>
-                            <button opaque="NO" tag="2" contentMode="scaleToFill" fixedFrame="YES" contentHorizontalAlignment="center" contentVerticalAlignment="center" buttonType="roundedRect" lineBreakMode="middleTruncation" translatesAutoresizingMaskIntoConstraints="NO" id="vQM-7x-vw2">
-                                <rect key="frame" x="108" y="300" width="30" height="30"/>
-                                <autoresizingMask key="autoresizingMask" flexibleMinX="YES" flexibleMaxX="YES" flexibleMinY="YES" flexibleMaxY="YES"/>
-                                <color key="tintColor" red="0.21216781539999999" green="0.48632187630000001" blue="1" alpha="1" colorSpace="custom" customColorSpace="sRGB"/>
-                                <state key="normal" title="СР">
-                                    <color key="titleColor" white="0.0" alpha="1" colorSpace="custom" customColorSpace="genericGamma22GrayColorSpace"/>
-                                </state>
-                                <connections>
-                                    <action selector="weekDaySelectWithSender:" destination="u1V-M8-lST" eventType="touchUpInside" id="20m-Uh-cAp"/>
-                                </connections>
-                            </button>
-                            <button opaque="NO" tag="3" contentMode="scaleToFill" fixedFrame="YES" contentHorizontalAlignment="center" contentVerticalAlignment="center" buttonType="roundedRect" lineBreakMode="middleTruncation" translatesAutoresizingMaskIntoConstraints="NO" id="IpA-OE-cUM">
-                                <rect key="frame" x="145" y="300" width="30" height="30"/>
-                                <autoresizingMask key="autoresizingMask" flexibleMinX="YES" flexibleMaxX="YES" flexibleMinY="YES" flexibleMaxY="YES"/>
-                                <color key="tintColor" red="0.21216781539999999" green="0.48632187630000001" blue="1" alpha="1" colorSpace="custom" customColorSpace="sRGB"/>
-                                <state key="normal" title="ЧТ">
-                                    <color key="titleColor" white="0.0" alpha="1" colorSpace="custom" customColorSpace="genericGamma22GrayColorSpace"/>
-                                </state>
-                                <connections>
-                                    <action selector="weekDaySelectWithSender:" destination="u1V-M8-lST" eventType="touchUpInside" id="F9e-k3-H0U"/>
-                                </connections>
-                            </button>
-                            <button opaque="NO" tag="4" contentMode="scaleToFill" fixedFrame="YES" contentHorizontalAlignment="center" contentVerticalAlignment="center" buttonType="roundedRect" lineBreakMode="middleTruncation" translatesAutoresizingMaskIntoConstraints="NO" id="aBF-gU-TXn">
-                                <rect key="frame" x="183" y="300" width="30" height="30"/>
-                                <autoresizingMask key="autoresizingMask" flexibleMinX="YES" flexibleMaxX="YES" flexibleMinY="YES" flexibleMaxY="YES"/>
-                                <color key="tintColor" red="0.21216781539999999" green="0.48632187630000001" blue="1" alpha="1" colorSpace="custom" customColorSpace="sRGB"/>
-                                <state key="normal" title="ПТ">
-                                    <color key="titleColor" white="0.0" alpha="1" colorSpace="custom" customColorSpace="genericGamma22GrayColorSpace"/>
-                                </state>
-                                <connections>
-                                    <action selector="weekDaySelectWithSender:" destination="u1V-M8-lST" eventType="touchUpInside" id="Fii-dt-DPv"/>
-                                </connections>
-                            </button>
-                            <button opaque="NO" tag="5" contentMode="scaleToFill" fixedFrame="YES" contentHorizontalAlignment="center" contentVerticalAlignment="center" buttonType="roundedRect" lineBreakMode="middleTruncation" translatesAutoresizingMaskIntoConstraints="NO" id="OSi-Ro-8Cy">
-                                <rect key="frame" x="221" y="300" width="30" height="30"/>
-                                <autoresizingMask key="autoresizingMask" flexibleMinX="YES" flexibleMaxX="YES" flexibleMinY="YES" flexibleMaxY="YES"/>
-                                <color key="backgroundColor" white="1" alpha="1" colorSpace="custom" customColorSpace="genericGamma22GrayColorSpace"/>
-                                <color key="tintColor" red="0.21216781539999999" green="0.48632187630000001" blue="1" alpha="1" colorSpace="custom" customColorSpace="sRGB"/>
-                                <state key="normal" title="СБ">
-                                    <color key="titleColor" white="0.0" alpha="1" colorSpace="custom" customColorSpace="genericGamma22GrayColorSpace"/>
-                                </state>
-                                <connections>
-                                    <action selector="weekDaySelectWithSender:" destination="u1V-M8-lST" eventType="touchUpInside" id="oBW-cO-7em"/>
-                                </connections>
-                            </button>
-                            <button opaque="NO" tag="6" contentMode="scaleToFill" fixedFrame="YES" contentHorizontalAlignment="center" contentVerticalAlignment="center" buttonType="roundedRect" lineBreakMode="middleTruncation" translatesAutoresizingMaskIntoConstraints="NO" id="F8D-Kf-G1N">
-                                <rect key="frame" x="259" y="300" width="30" height="30"/>
-                                <autoresizingMask key="autoresizingMask" flexibleMinX="YES" flexibleMaxX="YES" flexibleMinY="YES" flexibleMaxY="YES"/>
-                                <color key="tintColor" red="0.21216781539999999" green="0.48632187630000001" blue="1" alpha="1" colorSpace="custom" customColorSpace="sRGB"/>
-                                <state key="normal" title="ВС">
-                                    <color key="titleColor" white="0.0" alpha="1" colorSpace="custom" customColorSpace="genericGamma22GrayColorSpace"/>
-                                </state>
-                                <connections>
-                                    <action selector="weekDaySelectWithSender:" destination="u1V-M8-lST" eventType="touchUpInside" id="yy7-ED-hpZ"/>
-                                </connections>
-                            </button>
-                            <label opaque="NO" userInteractionEnabled="NO" contentMode="left" horizontalHuggingPriority="251" verticalHuggingPriority="251" fixedFrame="YES" text="Мелодия будильника" textAlignment="natural" lineBreakMode="tailTruncation" baselineAdjustment="alignBaselines" adjustsFontSizeToFit="NO" translatesAutoresizingMaskIntoConstraints="NO" id="utQ-Tz-NV5">
-                                <rect key="frame" x="31" y="349" width="249" height="21"/>
-                                <autoresizingMask key="autoresizingMask" widthSizable="YES" flexibleMaxX="YES" flexibleMinY="YES" flexibleMaxY="YES"/>
-                                <fontDescription key="fontDescription" type="system" pointSize="17"/>
-                                <nil key="textColor"/>
-                                <nil key="highlightedColor"/>
-                            </label>
-                            <label opaque="NO" userInteractionEnabled="NO" contentMode="left" horizontalHuggingPriority="251" verticalHuggingPriority="251" fixedFrame="YES" text="InfoLabel" textAlignment="center" lineBreakMode="tailTruncation" numberOfLines="2" baselineAdjustment="alignBaselines" adjustsFontSizeToFit="NO" translatesAutoresizingMaskIntoConstraints="NO" id="DNb-aJ-4h7">
-                                <rect key="frame" x="55" y="477" width="211" height="55"/>
-                                <autoresizingMask key="autoresizingMask" flexibleMinX="YES" flexibleMaxX="YES" flexibleMinY="YES" flexibleMaxY="YES"/>
-                                <fontDescription key="fontDescription" type="system" pointSize="17"/>
-                                <nil key="textColor"/>
-                                <nil key="highlightedColor"/>
-                            </label>
-                            <button opaque="NO" contentMode="scaleToFill" fixedFrame="YES" contentHorizontalAlignment="center" contentVerticalAlignment="center" lineBreakMode="middleTruncation" translatesAutoresizingMaskIntoConstraints="NO" id="hwd-r7-NFr">
-                                <rect key="frame" x="137" y="407" width="52" height="51"/>
-                                <autoresizingMask key="autoresizingMask" flexibleMinX="YES" flexibleMaxX="YES" flexibleMinY="YES" flexibleMaxY="YES"/>
-                                <state key="normal" title="Button" image="budGray"/>
-                                <connections>
-                                    <action selector="setBudButtonClick:" destination="u1V-M8-lST" eventType="touchUpInside" id="Avn-4E-feN"/>
-                                </connections>
-                            </button>
-                            <label opaque="NO" userInteractionEnabled="NO" contentMode="left" horizontalHuggingPriority="251" verticalHuggingPriority="251" fixedFrame="YES" text="CurrentPlayingSongLabel" textAlignment="natural" lineBreakMode="tailTruncation" baselineAdjustment="alignBaselines" adjustsFontSizeToFit="NO" translatesAutoresizingMaskIntoConstraints="NO" id="P0g-5X-4GH">
-                                <rect key="frame" x="31" y="378" width="249" height="21"/>
-                                <autoresizingMask key="autoresizingMask" widthSizable="YES" flexibleMaxX="YES" flexibleMinY="YES" flexibleMaxY="YES"/>
-                                <fontDescription key="fontDescription" type="system" pointSize="17"/>
-                                <nil key="textColor"/>
-                                <nil key="highlightedColor"/>
-                            </label>
-                        </subviews>
-                        <color key="backgroundColor" white="1" alpha="1" colorSpace="custom" customColorSpace="genericGamma22GrayColorSpace"/>
-                    </view>
-                    <navigationItem key="navigationItem" title="Будильник" id="Bqz-Gx-ecQ"/>
-                    <connections>
-                        <outlet property="currentPlaySongLbl" destination="P0g-5X-4GH" id="1cC-7s-T7v"/>
-                        <outlet property="fridayBTN" destination="aBF-gU-TXn" id="wpD-Mz-FfE"/>
-                        <outlet property="infoLabel" destination="DNb-aJ-4h7" id="ELI-hW-9EM"/>
-                        <outlet property="mondayBTN" destination="FKI-pM-9za" id="1lX-Rp-pyA"/>
-                        <outlet property="saturdayBTN" destination="OSi-Ro-8Cy" id="IjX-Zz-rEl"/>
-                        <outlet property="setBudButton" destination="hwd-r7-NFr" id="Y44-LU-121"/>
-                        <outlet property="sundayBTN" destination="F8D-Kf-G1N" id="JiM-r4-XCm"/>
-                        <outlet property="thursdayBTN" destination="IpA-OE-cUM" id="qqc-Gl-VgZ"/>
-                        <outlet property="timePicker" destination="E16-QN-4B2" id="Aqd-K1-vI6"/>
-                        <outlet property="tuesdayBTN" destination="V0X-GW-cVq" id="ynb-nR-kux"/>
-                        <outlet property="wednesdayBTN" destination="vQM-7x-vw2" id="r5w-Nu-1Y6"/>
-                    </connections>
-                </viewController>
-                <placeholder placeholderIdentifier="IBFirstResponder" id="BAF-Za-jyb" userLabel="First Responder" sceneMemberID="firstResponder"/>
-            </objects>
-            <point key="canvasLocation" x="1168.8" y="777.66116941529242"/>
-        </scene>
         <!--View Controller-->
         <scene sceneID="UcY-JP-2Et">
             <objects>
@@ -1236,69 +1032,6 @@
                 <placeholder placeholderIdentifier="IBFirstResponder" id="rm2-X3-3tZ" userLabel="First Responder" sceneMemberID="firstResponder"/>
             </objects>
             <point key="canvasLocation" x="2108" y="1198.6506746626687"/>
-        </scene>
-        <!--Таймер сна-->
-        <scene sceneID="upL-N2-ZJ4">
-            <objects>
-                <viewController id="teJ-CS-BXL" customClass="TimerViewController" customModule="OwnRadio" customModuleProvider="target" sceneMemberID="viewController">
-                    <layoutGuides>
-                        <viewControllerLayoutGuide type="top" id="bWo-oF-zWb"/>
-                        <viewControllerLayoutGuide type="bottom" id="MbL-it-6Ut"/>
-                    </layoutGuides>
-                    <view key="view" contentMode="scaleToFill" id="icg-3K-E5n">
-                        <rect key="frame" x="0.0" y="0.0" width="320" height="568"/>
-                        <autoresizingMask key="autoresizingMask" widthSizable="YES" heightSizable="YES"/>
-                        <subviews>
-                            <label opaque="NO" userInteractionEnabled="NO" contentMode="left" horizontalHuggingPriority="251" verticalHuggingPriority="251" fixedFrame="YES" text="Укажите через какое время должно выключиться радио" textAlignment="center" lineBreakMode="tailTruncation" numberOfLines="2" baselineAdjustment="alignBaselines" adjustsFontSizeToFit="NO" translatesAutoresizingMaskIntoConstraints="NO" id="RfY-37-RMB">
-                                <rect key="frame" x="36" y="105" width="253" height="41"/>
-                                <autoresizingMask key="autoresizingMask" flexibleMinX="YES" flexibleMaxX="YES" flexibleMaxY="YES"/>
-                                <fontDescription key="fontDescription" type="system" pointSize="17"/>
-                                <nil key="textColor"/>
-                                <nil key="highlightedColor"/>
-                            </label>
-                            <label opaque="NO" userInteractionEnabled="NO" contentMode="left" horizontalHuggingPriority="251" verticalHuggingPriority="251" fixedFrame="YES" text="timeInfo" textAlignment="center" lineBreakMode="tailTruncation" baselineAdjustment="alignBaselines" adjustsFontSizeToFit="NO" translatesAutoresizingMaskIntoConstraints="NO" id="MCP-iD-Hxv">
-                                <rect key="frame" x="103" y="222" width="115" height="21"/>
-                                <autoresizingMask key="autoresizingMask" flexibleMinX="YES" widthSizable="YES" flexibleMaxX="YES" flexibleMinY="YES" flexibleMaxY="YES"/>
-                                <fontDescription key="fontDescription" type="system" pointSize="17"/>
-                                <nil key="textColor"/>
-                                <nil key="highlightedColor"/>
-                            </label>
-                            <label opaque="NO" userInteractionEnabled="NO" contentMode="left" horizontalHuggingPriority="251" verticalHuggingPriority="251" fixedFrame="YES" text="timerSetInfo" textAlignment="center" lineBreakMode="tailTruncation" numberOfLines="2" baselineAdjustment="alignBaselines" adjustsFontSizeToFit="NO" translatesAutoresizingMaskIntoConstraints="NO" id="5JA-fL-wvs">
-                                <rect key="frame" x="18" y="483" width="288" height="54"/>
-                                <autoresizingMask key="autoresizingMask" flexibleMinX="YES" widthSizable="YES" flexibleMaxX="YES" flexibleMinY="YES" flexibleMaxY="YES"/>
-                                <fontDescription key="fontDescription" type="system" pointSize="14"/>
-                                <nil key="textColor"/>
-                                <nil key="highlightedColor"/>
-                            </label>
-                            <slider opaque="NO" contentMode="scaleToFill" fixedFrame="YES" contentHorizontalAlignment="center" contentVerticalAlignment="center" minValue="0.0" maxValue="240" continuous="NO" translatesAutoresizingMaskIntoConstraints="NO" id="n4w-Hd-qba">
-                                <rect key="frame" x="11" y="163" width="297" height="30"/>
-                                <autoresizingMask key="autoresizingMask" widthSizable="YES" flexibleMinY="YES" flexibleMaxY="YES"/>
-                                <connections>
-                                    <action selector="sliderValueChanged:" destination="teJ-CS-BXL" eventType="valueChanged" id="lUd-pg-kCY"/>
-                                </connections>
-                            </slider>
-                            <button opaque="NO" contentMode="scaleToFill" fixedFrame="YES" contentHorizontalAlignment="center" contentVerticalAlignment="center" lineBreakMode="middleTruncation" translatesAutoresizingMaskIntoConstraints="NO" id="hUM-nP-lMO">
-                                <rect key="frame" x="137" y="414" width="50" height="49"/>
-                                <autoresizingMask key="autoresizingMask" flexibleMinX="YES" flexibleMaxX="YES" flexibleMinY="YES" flexibleMaxY="YES"/>
-                                <state key="normal" title="Button" image="blue_timer"/>
-                                <connections>
-                                    <action selector="btnSetTimerClick:" destination="teJ-CS-BXL" eventType="touchUpInside" id="lOH-7a-enH"/>
-                                </connections>
-                            </button>
-                        </subviews>
-                        <color key="backgroundColor" white="1" alpha="1" colorSpace="custom" customColorSpace="genericGamma22GrayColorSpace"/>
-                    </view>
-                    <navigationItem key="navigationItem" title="Таймер сна" id="RHy-v5-tiP"/>
-                    <connections>
-                        <outlet property="setInfoLable" destination="5JA-fL-wvs" id="DgK-MH-GWV"/>
-                        <outlet property="setTimerBtn" destination="hUM-nP-lMO" id="3kN-7D-lXj"/>
-                        <outlet property="timePicker" destination="n4w-Hd-qba" id="vA1-r8-1D1"/>
-                        <outlet property="timeinfoLabel" destination="MCP-iD-Hxv" id="G2t-LK-R9j"/>
-                    </connections>
-                </viewController>
-                <placeholder placeholderIdentifier="IBFirstResponder" id="mnc-PW-dzo" userLabel="First Responder" sceneMemberID="firstResponder"/>
-            </objects>
-            <point key="canvasLocation" x="562.5" y="1419.7183098591549"/>
         </scene>
         <!--AboutAppViewController-->
         <scene sceneID="bid-fC-pvr">
@@ -1540,8 +1273,6 @@
         </scene>
     </scenes>
     <resources>
-        <image name="blue_timer" width="49" height="49"/>
-        <image name="budGray" width="50" height="50"/>
         <image name="budGrayImage" width="59" height="64"/>
         <image name="humburgerBtn" width="16" height="16"/>
         <image name="iconBig" width="1024" height="1024"/>
@@ -1550,7 +1281,7 @@
         <image name="timGrayImage" width="54" height="69"/>
     </resources>
     <inferredMetricsTieBreakers>
-        <segue reference="pLa-VH-WHm"/>
+        <segue reference="P6y-p0-VaX"/>
     </inferredMetricsTieBreakers>
     <color key="tintColor" white="1" alpha="1" colorSpace="custom" customColorSpace="genericGamma22GrayColorSpace"/>
 </document>

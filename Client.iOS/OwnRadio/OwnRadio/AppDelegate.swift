@@ -23,10 +23,19 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
 	func application(_ application: UIApplication, didFinishLaunchingWithOptions launchOptions: [UIApplicationLaunchOptionsKey: Any]?) -> Bool {
 		// Override point for customization after application launch.
 		
+		if let text = Bundle.main.infoDictionary?["CFBundleVersion"] as? String{
+			print(text + "\(Bundle.allBundles.count)")
+		}
+		for bundle in Bundle.allBundles{
+			print("\(bundle.bundleIdentifier ?? "A")")
+		}
+		
+		URLCache.shared.removeAllCachedResponses()
 		let userDefaults = UserDefaults.standard
 		//для получения отчетов об ошибках на фабрик
 		Fabric.with([Crashlytics.self, Answers.self])
-		
+		userDefaults.set(false, forKey: "budState")
+		userDefaults.set([Date](), forKey: "budSchedule")
 		//если устройству не назначен deviceId - генерируем новый
 //		if userDefaults.object(forKey: "UUIDDevice") == nil {
 //			let UUID = NSUUID().uuidString.lowercased() //"17096171-1C39-4290-AE50-907D7E62F36A" //
@@ -41,7 +50,7 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
 			print("Приложение запущено впервые")
 		}
 		//Регистрируем настройки по умолчанию (не меняя имеющиеся значения, если они уже есть)
-		userDefaults.register(defaults: ["maxMemorySize" : 1])
+		userDefaults.register(defaults: ["maxMemorySize" : 10])
 		userDefaults.register(defaults: ["isOnlyWiFi" : false])
 
 		// создаем папку Tracks если ее нет
