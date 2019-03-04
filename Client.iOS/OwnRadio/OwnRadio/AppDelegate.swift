@@ -23,13 +23,6 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
 	func application(_ application: UIApplication, didFinishLaunchingWithOptions launchOptions: [UIApplicationLaunchOptionsKey: Any]?) -> Bool {
 		// Override point for customization after application launch.
 		
-		if let text = Bundle.main.infoDictionary?["CFBundleVersion"] as? String{
-			print(text + "\(Bundle.allBundles.count)")
-		}
-		for bundle in Bundle.allBundles{
-			print("\(bundle.bundleIdentifier ?? "A")")
-		}
-		
 		URLCache.shared.removeAllCachedResponses()
 		let userDefaults = UserDefaults.standard
 		//для получения отчетов об ошибках на фабрик
@@ -123,8 +116,7 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
 	func applicationDidEnterBackground(_ application: UIApplication) {
 		// Use this method to release shared resources, save user data, invalidate timers, and store enough application state information to restore your application to its current state in case it is terminated later.
 		// If your application supports background execution, this method is called instead of applicationWillTerminate: when the user quits.
-//		UserDefaults.standard.set(false, forKey: "timerState")
-//		UserDefaults.standard.set(0, forKey: "timerDurationSeconds")
+		application.ignoreSnapshotOnNextApplicationLaunch() //игнорирует снапшот при следующем запуске приложения
 	}
 
 	
