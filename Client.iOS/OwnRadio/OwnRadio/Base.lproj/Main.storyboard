@@ -453,6 +453,18 @@
                                     <constraint firstItem="Ifw-5N-ebI" firstAttribute="leading" secondItem="cjQ-kN-iGY" secondAttribute="leading" id="yrd-fZ-Sod"/>
                                 </constraints>
                             </view>
+                            <label opaque="NO" userInteractionEnabled="NO" contentMode="left" horizontalHuggingPriority="251" verticalHuggingPriority="251" text="elapsed_time" textAlignment="natural" lineBreakMode="tailTruncation" baselineAdjustment="alignBaselines" adjustsFontSizeToFit="NO" translatesAutoresizingMaskIntoConstraints="NO" id="qVm-pe-qXo">
+                                <rect key="frame" x="230" y="506" width="85" height="17"/>
+                                <fontDescription key="fontDescription" type="system" pointSize="14"/>
+                                <color key="textColor" white="0.66666666669999997" alpha="1" colorSpace="custom" customColorSpace="genericGamma22GrayColorSpace"/>
+                                <nil key="highlightedColor"/>
+                            </label>
+                            <label opaque="NO" userInteractionEnabled="NO" contentMode="left" horizontalHuggingPriority="251" verticalHuggingPriority="251" text="current_time" textAlignment="natural" lineBreakMode="tailTruncation" baselineAdjustment="alignBaselines" adjustsFontSizeToFit="NO" translatesAutoresizingMaskIntoConstraints="NO" id="OSj-tR-JPj">
+                                <rect key="frame" x="5" y="506" width="81.5" height="17"/>
+                                <fontDescription key="fontDescription" type="system" pointSize="14"/>
+                                <color key="textColor" white="0.66666666669999997" alpha="1" colorSpace="custom" customColorSpace="genericGamma22GrayColorSpace"/>
+                                <nil key="highlightedColor"/>
+                            </label>
                         </subviews>
                         <color key="backgroundColor" red="1" green="1" blue="1" alpha="1" colorSpace="custom" customColorSpace="sRGB"/>
                         <gestureRecognizers/>
@@ -461,13 +473,17 @@
                             <constraint firstItem="1gg-7A-uR4" firstAttribute="centerX" secondItem="8bC-Xf-vdC" secondAttribute="centerX" constant="2.5" id="1bg-kt-3Q8"/>
                             <constraint firstAttribute="trailingMargin" secondItem="QXq-lk-UPI" secondAttribute="trailing" id="59c-MD-Yky"/>
                             <constraint firstItem="Va0-Ci-1zg" firstAttribute="centerX" secondItem="8bC-Xf-vdC" secondAttribute="centerX" id="5OI-Sr-pfw"/>
+                            <constraint firstItem="qVm-pe-qXo" firstAttribute="top" secondItem="8tx-Ye-IHh" secondAttribute="bottom" constant="1.5" id="75Y-ft-SiJ"/>
                             <constraint firstItem="QXq-lk-UPI" firstAttribute="leading" secondItem="8bC-Xf-vdC" secondAttribute="leadingMargin" id="7TP-z7-D3H"/>
                             <constraint firstItem="Va0-Ci-1zg" firstAttribute="leading" secondItem="8bC-Xf-vdC" secondAttribute="leadingMargin" id="7jS-HA-Ho0"/>
+                            <constraint firstItem="OSj-tR-JPj" firstAttribute="top" secondItem="8tx-Ye-IHh" secondAttribute="bottom" constant="1.5" id="HnR-vh-LwE"/>
                             <constraint firstItem="cjQ-kN-iGY" firstAttribute="top" secondItem="8bC-Xf-vdC" secondAttribute="top" id="I3Y-go-eRD"/>
                             <constraint firstAttribute="trailingMargin" secondItem="Va0-Ci-1zg" secondAttribute="trailing" id="Mvd-Ua-6Nc"/>
+                            <constraint firstAttribute="trailing" secondItem="qVm-pe-qXo" secondAttribute="trailing" constant="5" id="NfT-S8-lFy"/>
                             <constraint firstItem="cjQ-kN-iGY" firstAttribute="centerX" secondItem="8bC-Xf-vdC" secondAttribute="centerX" id="O1u-B1-5VO"/>
                             <constraint firstItem="QXq-lk-UPI" firstAttribute="top" secondItem="y3c-jy-aDJ" secondAttribute="bottom" constant="45" id="Qwj-nc-h3i"/>
                             <constraint firstItem="cjQ-kN-iGY" firstAttribute="leading" secondItem="8bC-Xf-vdC" secondAttribute="leading" id="UFT-Sy-WDD"/>
+                            <constraint firstItem="OSj-tR-JPj" firstAttribute="leading" secondItem="8bC-Xf-vdC" secondAttribute="leading" constant="5" id="akX-fa-733"/>
                             <constraint firstAttribute="trailing" secondItem="cjQ-kN-iGY" secondAttribute="trailing" id="esJ-13-91y"/>
                             <constraint firstAttribute="trailing" secondItem="cjQ-kN-iGY" secondAttribute="trailing" id="hNi-1x-IgG"/>
                             <constraint firstItem="QXq-lk-UPI" firstAttribute="centerX" secondItem="8bC-Xf-vdC" secondAttribute="centerX" id="jtV-2P-hG3"/>
@@ -506,7 +522,9 @@
                     <connections>
                         <outlet property="authorNameLbl" destination="Va0-Ci-1zg" id="gH5-d3-JGD"/>
                         <outlet property="circleViewConteiner" destination="8tx-Ye-IHh" id="MgY-ok-8w3"/>
+                        <outlet property="currentTimeLbl" destination="OSj-tR-JPj" id="Q0L-y5-lvD"/>
                         <outlet property="deviceIdLbl" destination="OwP-Dt-Wqz" id="fM9-zo-qo6"/>
+                        <outlet property="elapsedTimeLbl" destination="qVm-pe-qXo" id="0TB-Ai-2zZ"/>
                         <outlet property="folderSpaceLbl" destination="fbj-9d-sF2" id="flr-EB-uom"/>
                         <outlet property="freeSpaceLbl" destination="fk1-5S-yVm" id="hsH-Ok-OGJ"/>
                         <outlet property="infoLabel1" destination="1uo-sP-hKP" id="pBr-Q7-IpR"/>
@@ -1013,7 +1031,7 @@
                 </tableViewController>
                 <placeholder placeholderIdentifier="IBFirstResponder" id="1mR-cN-z50" userLabel="First Responder" sceneMemberID="firstResponder"/>
             </objects>
-            <point key="canvasLocation" x="917" y="-45"/>
+            <point key="canvasLocation" x="916.875" y="-45.950704225352112"/>
         </scene>
         <!--View Controller-->
         <scene sceneID="UcY-JP-2Et">
@@ -1131,7 +1149,7 @@
                 </viewController>
                 <placeholder placeholderIdentifier="IBFirstResponder" id="On6-7V-B87" userLabel="First Responder" sceneMemberID="firstResponder"/>
             </objects>
-            <point key="canvasLocation" x="1799.2" y="124.13793103448276"/>
+            <point key="canvasLocation" x="1930" y="-878"/>
         </scene>
         <!--Navigation Controller-->
         <scene sceneID="9TV-N0-8fT">

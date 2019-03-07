@@ -25,13 +25,15 @@ class SettingsViewController: UITableViewController {
 
 	@IBOutlet weak var delAllTracksCell: UITableViewCell!
 	@IBOutlet weak var countPlayingTracksTable: UILabel!
-
+    
 	var remoteAudioControls: RemoteAudioControls?
 	//получаем таблицу с количеством треков сгруппированных по количестсву их прослушиваний
 	var playedTracks: NSArray = CoreDataManager.instance.getGroupedTracks()
 	
 	override func viewDidLoad() {
 		super.viewDidLoad()
+        
+        
 		let userDefaults = UserDefaults.standard
 		let tracksUrlString = FileManager.applicationSupportDir().appending("/Tracks/")
 
@@ -105,7 +107,7 @@ class SettingsViewController: UITableViewController {
 			Downloader.sharedInstance.fillCache()
 		}
 	}
-	
+    
 	override func remoteControlReceived(with event: UIEvent?) {
 		guard let remoteControls = remoteAudioControls else {
 			print("Remote controls not set")

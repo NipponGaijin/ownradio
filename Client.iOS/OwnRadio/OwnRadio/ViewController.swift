@@ -11,12 +11,11 @@ import UIKit
 import MediaPlayer
 import Alamofire
 import CloudKit
+import CallKit
 
 
+@available(iOS 10.0, *)
 class RadioViewController: UIViewController, UITableViewDataSource, UITableViewDelegate, RemoteAudioControls {
-	
-	
-	
 	// MARK:  Outlets
 	
 	@IBOutlet weak var infoView: UIView!
@@ -49,6 +48,9 @@ class RadioViewController: UIViewController, UITableViewDataSource, UITableViewD
 	@IBOutlet weak var playPauseBtn: UIButton!
 	@IBOutlet weak var nextButton: UIButton!
 	@IBOutlet var tapRecogniser: UITapGestureRecognizer!
+
+    @IBOutlet weak var currentTimeLbl: UILabel!
+    @IBOutlet weak var elapsedTimeLbl: UILabel!
 	
 	@IBOutlet weak var leftPlayBtnConstraint: NSLayoutConstraint!
 	
@@ -63,7 +65,7 @@ class RadioViewController: UIViewController, UITableViewDataSource, UITableViewD
 	
 	var timer = Timer()
 	var timeObserverToken:AnyObject? = nil
-	
+	var interruptedManually = false
 	//let progressView = CircularView(frame: CGRect.zero)
 	
 	let playBtnConstraintConstant = CGFloat(15.0)
@@ -73,8 +75,10 @@ class RadioViewController: UIViewController, UITableViewDataSource, UITableViewD
 	var playedTracks: NSArray = CoreDataManager.instance.getGroupedTracks()
 	var reachability = NetworkReachabilityManager(host: "http://api.ownradio.ru/v5")
 	
+	var activeCall = false
 	let tracksUrlString =  FileManager.applicationSupportDir().appending("/Tracks/")
 	
+	let callObserver = CXCallObserver()
 	
 	override func prepare(for segue: UIStoryboardSegue, sender: Any?) {
 		if segue.identifier == "SettingsByButton" || segue.identifier == "SettingsBySwipe"{
@@ -105,7 +109,9 @@ class RadioViewController: UIViewController, UITableViewDataSource, UITableViewD
 //        }
 		self.trackNameLbl.text = ""
         self.authorNameLbl.text = ""
-        
+		self.currentTimeLbl.text = ""
+		self.elapsedTimeLbl.text = ""
+		
 		self.checkMemoryWarning()
 		
 		cachingView.frame = self.view.bounds
@@ -133,7 +139,9 @@ class RadioViewController: UIViewController, UITableViewDataSource, UITableViewD
 		//подписываемся на уведомлени
 		reachability?.listener = { [unowned self] status in
 			guard CoreDataManager.instance.getCountOfTracks() < 1 else {
+				DispatchQueue.main.async {
 					self.updateUI()
+				}
 				return
 			}
             if status != NetworkReachabilityManager.NetworkReachabilityStatus.notReachable {
@@ -141,7 +149,9 @@ class RadioViewController: UIViewController, UITableViewDataSource, UITableViewD
             }
 		}
 		reachability?.startListening()
-		self.updateUI()
+		DispatchQueue.main.async {
+			self.updateUI()
+		}
 		//обрыв воспроизведения трека
 		NotificationCenter.default.addObserver(self, selector: #selector(crashNetwork(_:)), name: NSNotification.Name.AVPlayerItemFailedToPlayToEndTime, object: self.player.playerItem)
 		//трек доигран до конца
@@ -149,6 +159,8 @@ class RadioViewController: UIViewController, UITableViewDataSource, UITableViewD
 		//обновление системной информации
 		NotificationCenter.default.addObserver(self, selector: #selector(updateSysInfo(_:)), name: NSNotification.Name(rawValue:"updateSysInfo"), object: nil)
 		
+		NotificationCenter.default.addObserver(self, selector:  #selector(RadioViewController.audioRouteChangeListener(notification:)), name: NSNotification.Name.AVAudioSessionRouteChange, object: nil)
+		callObserver.setDelegate(self, queue: nil)
 	}
 
 	
@@ -156,10 +168,12 @@ class RadioViewController: UIViewController, UITableViewDataSource, UITableViewD
 		guard DiskStatus.freeDiskSpaceInBytes < 104857600 && CoreDataManager.instance.chekCountOfEntitiesFor(entityName: "TrackEntity") < 1 else {
 			return
 		}
-		self.authorNameLbl.text = "Not enough free memory. To work correctly, you need at least 100 mb"
-		self.trackNameLbl.text = ""
-		self.playPauseBtn.isEnabled = false
-		self.nextButton.isEnabled = false
+		DispatchQueue.main.async {
+			self.authorNameLbl.text = "Not enough free memory. To work correctly, you need at least 100 mb"
+			self.trackNameLbl.text = ""
+			self.playPauseBtn.isEnabled = false
+			self.nextButton.isEnabled = false
+		}
 	}
 	
 	func detectedHeadphones () {
@@ -176,7 +190,7 @@ class RadioViewController: UIViewController, UITableViewDataSource, UITableViewD
 		} else {
 			print("requires connection to device")
 		}
-		NotificationCenter.default.addObserver(self, selector:  #selector(RadioViewController.audioRouteChangeListener(notification:)), name: NSNotification.Name.AVAudioSessionRouteChange, object: nil)
+		
 	}
 	
 	override func viewDidAppear(_ animated: Bool) {
@@ -188,7 +202,9 @@ class RadioViewController: UIViewController, UITableViewDataSource, UITableViewD
 		
 		self.player = AudioPlayerManager.sharedInstance
 		
-		updateUI()
+		DispatchQueue.main.async {
+			self.updateUI()
+		}
 	}
 	
 	//когда приложение скрыто - отписываемся от уведомлений
@@ -216,6 +232,7 @@ class RadioViewController: UIViewController, UITableViewDataSource, UITableViewD
 				changePlayBtnState()
 				MPNowPlayingInfoCenter.default().nowPlayingInfo![MPNowPlayingInfoPropertyElapsedPlaybackTime] = CMTimeGetSeconds(self.player.player.currentTime())
 				MPNowPlayingInfoCenter.default().nowPlayingInfo![MPNowPlayingInfoPropertyPlaybackRate] = 0
+				interruptedManually = true
 				
 			case .remoteControlPlay:
 				guard MPNowPlayingInfoCenter.default().nowPlayingInfo != nil else {
@@ -240,7 +257,9 @@ class RadioViewController: UIViewController, UITableViewDataSource, UITableViewD
 				
 			case .remoteControlNextTrack:
 				player.skipSong(complition: { [unowned self] in
+					DispatchQueue.main.async {
 						self.updateUI()
+					}
 				})
 			default:
 				break
@@ -254,7 +273,9 @@ class RadioViewController: UIViewController, UITableViewDataSource, UITableViewD
 		}
 		DispatchQueue.global(qos: .background).async {
 			Downloader.sharedInstance.load(isSelfFlag: false){ [unowned self] in
+				DispatchQueue.main.async {
 					self.updateUI()
+				}
 			}
 		}
 	}
@@ -262,7 +283,9 @@ class RadioViewController: UIViewController, UITableViewDataSource, UITableViewD
 	// MARK: Notification Selectors
 	func songDidPlay() {
 		self.player.nextTrack { [unowned self] in
+			DispatchQueue.main.async {
 				self.updateUI()
+			}
 		}
 //		self.progressView.isHidden = true
 	}
@@ -307,19 +330,21 @@ class RadioViewController: UIViewController, UITableViewDataSource, UITableViewD
 	}
 	
 	func crashNetwork(_ notification: Notification) {
-		self.playPauseBtn.setImage(UIImage(named: "playImage"), for: UIControlState.normal)
-		self.leftPlayBtnConstraint.constant = pauseBtnConstraintConstant
-		self.trackIDLbl.text = ""
-		self.infoLabel10.text = self.infoLabel9.text
-		self.infoLabel9.text = self.infoLabel8.text
-		self.infoLabel8.text = self.infoLabel7.text
-		self.infoLabel7.text = self.infoLabel6.text
-		self.infoLabel6.text = self.infoLabel5.text
-		self.infoLabel5.text = self.infoLabel4.text
-		self.infoLabel4.text = self.infoLabel3.text
-		self.infoLabel3.text = self.infoLabel2.text
-		self.infoLabel2.text = self.infoLabel1.text
-		self.infoLabel1.text = notification.description
+		DispatchQueue.main.async {
+			self.playPauseBtn.setImage(UIImage(named: "playImage"), for: UIControlState.normal)
+			self.leftPlayBtnConstraint.constant = self.pauseBtnConstraintConstant
+			self.trackIDLbl.text = ""
+			self.infoLabel10.text = self.infoLabel9.text
+			self.infoLabel9.text = self.infoLabel8.text
+			self.infoLabel8.text = self.infoLabel7.text
+			self.infoLabel7.text = self.infoLabel6.text
+			self.infoLabel6.text = self.infoLabel5.text
+			self.infoLabel5.text = self.infoLabel4.text
+			self.infoLabel4.text = self.infoLabel3.text
+			self.infoLabel3.text = self.infoLabel2.text
+			self.infoLabel2.text = self.infoLabel1.text
+			self.infoLabel1.text = notification.description
+		}
 	}
 	
 	func audioRouteChangeListener(notification:NSNotification) {
@@ -343,7 +368,15 @@ class RadioViewController: UIViewController, UITableViewDataSource, UITableViewD
 			print(self.player.isPlaying)
 			self.player.isPlaying = false
 			print(self.player.isPlaying)
-			updateUI()
+			DispatchQueue.main.async {
+				self.interruptedManually = false
+				
+				if self.player.isPlaying{
+					self.player.pauseSong {
+						self.updateUI()
+					}
+				}
+			}
 			
 		case AVAudioSessionRouteChangeReason.categoryChange.rawValue:
 			
@@ -376,7 +409,9 @@ class RadioViewController: UIViewController, UITableViewDataSource, UITableViewD
 				
 				MPNowPlayingInfoCenter.default().nowPlayingInfo![MPNowPlayingInfoPropertyElapsedPlaybackTime] = CMTimeGetSeconds(self.player.player.currentTime())
 				MPNowPlayingInfoCenter.default().nowPlayingInfo![MPNowPlayingInfoPropertyPlaybackRate] = 0
+				DispatchQueue.main.async {
 					self.updateUI()
+				}
 				})
 		}else {
 			//иначе - возобновляем проигрывание если возможно или начинаем проигрывать новый трек
@@ -385,7 +420,9 @@ class RadioViewController: UIViewController, UITableViewDataSource, UITableViewD
 				//Вылетает, если ничего не проигрывалось и играет трек из будильника и нажата кнопка PLAY
 				MPNowPlayingInfoCenter.default().nowPlayingInfo![MPNowPlayingInfoPropertyElapsedPlaybackTime] = CMTimeGetSeconds(self.player.player.currentTime())
 				MPNowPlayingInfoCenter.default().nowPlayingInfo![MPNowPlayingInfoPropertyPlaybackRate] = 1
-					self.updateUI()
+					DispatchQueue.main.async {
+						self.updateUI()
+					}
                 }
 				})
 		}
@@ -410,67 +447,77 @@ class RadioViewController: UIViewController, UITableViewDataSource, UITableViewD
 	
 	//обновление UI
 	func updateUI() {
-		DispatchQueue.main.async { [unowned self] in
-        
-        if self.isStartListening == true {
-            self.trackNameLbl.text = self.player.playingSong.name
-            self.authorNameLbl.text = self.player.playingSong.artistName
-        }
-		self.trackIDLbl.text = self.player.playingSong.trackID
-		self.isNowPlaying.text = String(self.player.isPlaying)
-			
-			
-		if CoreDataManager.instance.getCountOfTracks() < 3 && CoreDataManager.instance.getCountOfTracks() != 0 {
-//			self.playPauseBtn.isEnabled = false
-			self.nextButton.isEnabled = false
-			self.cachingView.removeFromSuperview()
-		}else if CoreDataManager.instance.getCountOfTracks() < 1 {
-			self.playPauseBtn.isEnabled = true
-			self.view.addSubview(self.cachingView)
-		}else {
-			self.playPauseBtn.isEnabled = true
-			self.nextButton.isEnabled = true
-			self.cachingView.removeFromSuperview()
-		}
 		
-		//обновляение прогресс бара
-		
-
-		//		self.timeObserverToken =
-		 self.timeObserverToken = self.player.player.addPeriodicTimeObserver(forInterval: CMTimeMakeWithSeconds(1.0, 1) , queue: DispatchQueue.main) { [unowned self] (time) in
-            if self.player.isPlaying == true {
-                if self.player.playingSong.trackLength != nil{
-                self.progressView.setProgress(Float(CGFloat(time.seconds) / CGFloat((self.player.playingSong.trackLength)!)), animated: false)
-					UserDefaults.standard.set(time.seconds.description, forKey:"lastTrackPosition")
-					UserDefaults.standard.set(self.player.playingSong.trackID as String, forKey:"lastTrack")
-					UserDefaults.standard.synchronize()
-//				self.progressView.progress = (CGFloat(time.seconds) / CGFloat((self.player.playingSong.trackLength)!))
-                }
+		DispatchQueue.main.async {
+			if self.isStartListening == true {
+				self.trackNameLbl.text = self.player.playingSong.name
+				self.authorNameLbl.text = self.player.playingSong.artistName
 			}
-			} as AnyObject?
-		
-		//обновление кнопки playPause
-		if self.player.isPlaying == false {
-			self.playPauseBtn.setImage(UIImage(named: "playImage"), for: UIControlState.normal)
-			//self.leftPlayBtnConstraint.constant = self.playBtnConstraintConstant
-		} else {
-			self.playPauseBtn.setImage(UIImage(named: "pauseImage"), for: UIControlState.normal)
-			//self.leftPlayBtnConstraint.constant = self.pauseBtnConstraintConstant
-		}
-		
-		self.getCountFilesInCache()
-		// обновление количевства записей в базе данных
-		self.numberOfFilesInDB.text = String(CoreDataManager.instance.chekCountOfEntitiesFor(entityName: "TrackEntity"))
-		// update table 
-		self.playedTracks = CoreDataManager.instance.getGroupedTracks()
-		self.tableView.reloadData()
-		
-		self.freeSpaceLbl.text = DiskStatus.GBFormatter(Int64(DiskStatus.freeDiskSpaceInBytes)) + " Gb"
-		self.folderSpaceLbl.text = DiskStatus.GBFormatter(Int64(DiskStatus.folderSize(folderPath: self.tracksUrlString))) + " Gb"
+			self.trackIDLbl.text = self.player.playingSong.trackID
+			self.isNowPlaying.text = String(self.player.isPlaying)
+				
+				
+			if CoreDataManager.instance.getCountOfTracks() < 3 && CoreDataManager.instance.getCountOfTracks() != 0 {
+	//			self.playPauseBtn.isEnabled = false
+				self.nextButton.isEnabled = false
+				self.cachingView.removeFromSuperview()
+			}else if CoreDataManager.instance.getCountOfTracks() < 1 {
+				self.playPauseBtn.isEnabled = true
+				self.view.addSubview(self.cachingView)
+			}else {
+				self.playPauseBtn.isEnabled = true
+				self.nextButton.isEnabled = true
+				self.cachingView.removeFromSuperview()
+			}
+			
+			//обновляение прогресс бара
+			
+
+			//		self.timeObserverToken =
+			self.timeObserverToken = self.player.player.addPeriodicTimeObserver(forInterval: CMTimeMakeWithSeconds(1.0, 1) , queue: nil) { (time) in
+					if self.player.isPlaying == true {
+						if self.player.playingSong.trackLength != nil{
+							self.progressView.setProgress(Float(CGFloat(time.seconds) / CGFloat((self.player.playingSong.trackLength)!)), animated: false)
+							UserDefaults.standard.set(time.seconds.description, forKey:"lastTrackPosition")
+							UserDefaults.standard.set(self.player.playingSong.trackID as String, forKey:"lastTrack")
+							UserDefaults.standard.synchronize()
+							
+							let dateFormatter = DateComponentsFormatter()
+							dateFormatter.allowedUnits = [.minute, .second]
+							let currentTime = dateFormatter.string(from: TimeInterval(time.seconds))
+							let elapsedTime = dateFormatter.string(from: TimeInterval(self.player.playingSong.trackLength! - time.seconds))
+							
+							self.currentTimeLbl.text = currentTime
+							self.elapsedTimeLbl.text = "-\(elapsedTime ?? "")"
+							//				self.progressView.progress = (CGFloat(time.seconds) / CGFloat((self.player.playingSong.trackLength)!))
+						}
+					}
+				} as AnyObject?
+			
+			//обновление кнопки playPause
+			if self.player.isPlaying == false {
+				self.playPauseBtn.setImage(UIImage(named: "playImage"), for: UIControlState.normal)
+				//self.leftPlayBtnConstraint.constant = self.playBtnConstraintConstant
+			} else {
+				self.playPauseBtn.setImage(UIImage(named: "pauseImage"), for: UIControlState.normal)
+				//self.leftPlayBtnConstraint.constant = self.pauseBtnConstraintConstant
+			}
+			
+			self.getCountFilesInCache()
+			// обновление количевства записей в базе данных
+			self.numberOfFilesInDB.text = String(CoreDataManager.instance.chekCountOfEntitiesFor(entityName: "TrackEntity"))
+			// update table
+			self.playedTracks = CoreDataManager.instance.getGroupedTracks()
+			self.tableView.reloadData()
+			
+			self.freeSpaceLbl.text = DiskStatus.GBFormatter(Int64(DiskStatus.freeDiskSpaceInBytes)) + " Gb"
+			self.folderSpaceLbl.text = DiskStatus.GBFormatter(Int64(DiskStatus.folderSize(folderPath: self.tracksUrlString))) + " Gb"
 		}
 	}
 	
-
+	func createPostNotificationSysInfo (message: String) {
+		NotificationCenter.default.post(name: NSNotification.Name(rawValue: "updateSysInfo"), object: nil, userInfo: ["message": message])
+	}
 	
 	// MARK: UITableViewDataSource
 	func tableView(_ tableView: UITableView, numberOfRowsInSection section: Int) -> Int {
@@ -510,23 +557,34 @@ class RadioViewController: UIViewController, UITableViewDataSource, UITableViewD
 			self.player.player.pause()
 		}
 //		self.progressView.isHidden = true
-		self.progressView.setProgress(0.0, animated: false)
-        
-		self.player.skipSong { [unowned self] in
-				self.updateUI()
+		DispatchQueue.main.async {
+			self.progressView.setProgress(0.0, animated: false)
 		}
-		if self.timeObserverToken != nil {
-			self.timeObserverToken = nil
+		DispatchQueue.main.async {
+			self.player.skipSong {
+				self.player.resumeSong {
+					self.updateUI()
+				}
+			}
+			if self.timeObserverToken != nil {
+				self.timeObserverToken = nil
+			}
 		}
 	}
 	
 	//обработчик нажатий на кнопку play/pause
 	@IBAction func playBtnPressed() {
         isStartListening = true
-        
+		if player.isPlaying{
+			self.interruptedManually = true
+		}
+		else{
+			self.interruptedManually = false
+		}
+		
 		guard self.player.playerItem != nil else {
 			
-			self.player.isPlaying = true
+			//self.player.isPlaying = true
 			nextTrackButtonPressed()
 			return
 		}
@@ -543,6 +601,56 @@ class RadioViewController: UIViewController, UITableViewDataSource, UITableViewD
 		self.player.fwdTrackToEnd()
 	}
 }
+
+@available(iOS 10.0, *)
+extension RadioViewController: CXCallObserverDelegate {
+	func callObserver(_ callObserver: CXCallObserver, callChanged call: CXCall) {
+		if call.isOutgoing == true && call.hasConnected == false {
+			if player.isPlaying {
+				self.interruptedManually = false
+			}
+			print("Звонок начался")
+			self.createPostNotificationSysInfo(message: "Call started")
+			self.activeCall = true
+			if self.player != nil {
+				player.pauseSong {
+					print("call start, song paused")
+					if player.isPlaying {
+						self.updateUI()
+					}
+				}
+			}
+		} else if call.isOutgoing == false && call.hasConnected == false && call.hasEnded == false {
+			
+			if player.isPlaying {
+				self.interruptedManually = false
+			}
+			print("Звонок начался")
+			self.createPostNotificationSysInfo(message: "Call started")
+			self.activeCall = true
+			if self.player != nil {
+				player.pauseSong {
+					print("call start, song paused")
+					if player.isPlaying {
+						self.updateUI()
+					}
+				}
+			}
+			
+		} else if call.hasEnded == true {
+			self.activeCall = false
+			print("Звонок завершен")
+			self.createPostNotificationSysInfo(message: "Call end")
+			if self.player.playingSong.trackID != nil && !self.interruptedManually {
+				player.resumeSong {
+					print("call stop, song resumed")
+				}
+				self.updateUI()
+			}
+		}
+	}
+}
+
 protocol RemoteAudioControls {
 	func remoteControlReceived(with event: UIEvent?)
 }
