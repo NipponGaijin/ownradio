@@ -284,7 +284,9 @@ class RadioViewController: UIViewController, UITableViewDataSource, UITableViewD
 	func songDidPlay() {
 		self.player.nextTrack { [unowned self] in
 			DispatchQueue.main.async {
-				self.updateUI()
+				self.player.resumeSong {
+					self.updateUI()
+				}
 			}
 		}
 //		self.progressView.isHidden = true
