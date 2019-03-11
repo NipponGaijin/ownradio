@@ -283,11 +283,17 @@ class RadioViewController: UIViewController, UITableViewDataSource, UITableViewD
 	// MARK: Notification Selectors
 	func songDidPlay() {
 		self.player.nextTrack { [unowned self] in
-			DispatchQueue.main.async {
+			//Вызывается при каждой загрузке трека
+		}
+		DispatchQueue.main.async {
+			if !self.activeCall{
 				self.player.resumeSong {
 					self.updateUI()
 				}
+			}else{
+				self.updateUI()
 			}
+			
 		}
 //		self.progressView.isHidden = true
 	}
@@ -368,7 +374,7 @@ class RadioViewController: UIViewController, UITableViewDataSource, UITableViewD
 		case AVAudioSessionRouteChangeReason.oldDeviceUnavailable.rawValue:
 			print("headphone pulled out")
 			print(self.player.isPlaying)
-			self.player.isPlaying = false
+			//self.player.isPlaying = false
 			print(self.player.isPlaying)
 			DispatchQueue.main.async {
 				self.interruptedManually = false
@@ -386,13 +392,17 @@ class RadioViewController: UIViewController, UITableViewDataSource, UITableViewD
 				
 				switch description.portType {
 				case AVAudioSessionPortBluetoothA2DP:
-					if self.player.isPlaying == false {
+					if self.player.isPlaying == true {
+						self.interruptedManually = false
 						self.player.pauseSong {
+							updateUI()
 						}
 					}
 				case AVAudioSessionPortBluetoothLE:
-					if self.player.isPlaying == false {
+					if self.player.isPlaying == true {
+						self.interruptedManually = false
 						self.player.pauseSong {
+							updateUI()
 						}
 					}
 				default: break
@@ -417,16 +427,20 @@ class RadioViewController: UIViewController, UITableViewDataSource, UITableViewD
 				})
 		}else {
 			//иначе - возобновляем проигрывание если возможно или начинаем проигрывать новый трек
-			player.resumeSong(complition: { [unowned self] in
-                if CoreDataManager.instance.getCountOfTracks() > 0 {
-				//Вылетает, если ничего не проигрывалось и играет трек из будильника и нажата кнопка PLAY
-				MPNowPlayingInfoCenter.default().nowPlayingInfo![MPNowPlayingInfoPropertyElapsedPlaybackTime] = CMTimeGetSeconds(self.player.player.currentTime())
-				MPNowPlayingInfoCenter.default().nowPlayingInfo![MPNowPlayingInfoPropertyPlaybackRate] = 1
-					DispatchQueue.main.async {
-						self.updateUI()
+			if !self.activeCall{
+				self.player.resumeSong(complition: { [unowned self] in
+					if CoreDataManager.instance.getCountOfTracks() > 0 {
+						//Вылетает, если ничего не проигрывалось и играет трек из будильника и нажата кнопка PLAY
+						MPNowPlayingInfoCenter.default().nowPlayingInfo![MPNowPlayingInfoPropertyElapsedPlaybackTime] = CMTimeGetSeconds(self.player.player.currentTime())
+						MPNowPlayingInfoCenter.default().nowPlayingInfo![MPNowPlayingInfoPropertyPlaybackRate] = 1
+						DispatchQueue.main.async {
+							self.updateUI()
+						}
 					}
-                }
 				})
+			}else{
+				self.updateUI()
+			}
 		}
 	}
 	
@@ -564,10 +578,17 @@ class RadioViewController: UIViewController, UITableViewDataSource, UITableViewD
 		}
 		DispatchQueue.main.async {
 			self.player.skipSong {
+				//Вызывается каждый раз когда скачивается трек
+			}
+			if !self.activeCall{
 				self.player.resumeSong {
 					self.updateUI()
 				}
 			}
+			else{
+				self.updateUI()
+			}
+			
 			if self.timeObserverToken != nil {
 				self.timeObserverToken = nil
 			}
@@ -607,9 +628,9 @@ class RadioViewController: UIViewController, UITableViewDataSource, UITableViewD
 @available(iOS 10.0, *)
 extension RadioViewController: CXCallObserverDelegate {
 	func callObserver(_ callObserver: CXCallObserver, callChanged call: CXCall) {
-		if call.isOutgoing == true && call.hasConnected == false {
+		if call.isOutgoing == true{
 			if player.isPlaying {
-				self.interruptedManually = false
+				self.interruptedManually = true
 			}
 			print("Звонок начался")
 			self.createPostNotificationSysInfo(message: "Call started")
@@ -639,13 +660,21 @@ extension RadioViewController: CXCallObserverDelegate {
 				}
 			}
 			
-		} else if call.hasEnded == true {
+		}
+		
+		if call.hasEnded == true {
 			self.activeCall = false
 			print("Звонок завершен")
 			self.createPostNotificationSysInfo(message: "Call end")
 			if self.player.playingSong.trackID != nil && !self.interruptedManually {
 				player.resumeSong {
 					print("call stop, song resumed")
+				}
+				self.updateUI()
+			}
+			else{
+				player.pauseSong {
+					print("song paused")
 				}
 				self.updateUI()
 			}

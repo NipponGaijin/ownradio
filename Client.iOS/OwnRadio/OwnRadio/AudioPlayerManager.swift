@@ -468,9 +468,9 @@ class AudioPlayerManager: NSObject, AVAssetResourceLoaderDelegate, NSURLConnecti
 	func addDateToHistoryTable(playingSong:SongObject) {
 		
 		let creatinDate = Date()
-		let dateFormetter = DateFormatter()
-		dateFormetter.dateFormat = "yyyy-MM-dd'T'H:m:s"
-		let creationDateString = dateFormetter.string(from: creatinDate)
+		let dateFormatter = DateFormatter()
+		dateFormatter.dateFormat = "yyyy-MM-dd'T'H:m:s"
+		let creationDateString = dateFormatter.string(from: creatinDate)
 		let historyEntity = HistoryEntity()
 		
 		historyEntity.recId = NSUUID().uuidString
