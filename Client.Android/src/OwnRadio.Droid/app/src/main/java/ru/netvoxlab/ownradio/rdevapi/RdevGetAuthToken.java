@@ -1,7 +1,9 @@
 package ru.netvoxlab.ownradio.rdevapi;
 
 import android.content.Context;
+import android.content.SharedPreferences;
 import android.os.AsyncTask;
+import android.preference.PreferenceManager;
 import android.util.Log;
 
 import com.google.gson.JsonObject;
@@ -18,15 +20,18 @@ import ru.netvoxlab.ownradio.Utilites;
 public class RdevGetAuthToken extends AsyncTask<String, Void, Map<String, String>> {
     private Object authResponse;
     Context mContext;
+    SharedPreferences sp;
 
     public RdevGetAuthToken(Context context){
         this.mContext = context;
+        this.sp = PreferenceManager.getDefaultSharedPreferences(mContext);
     }
+
     @Override
     protected Map<String, String> doInBackground(String... strings) {
         try {
+            Log.d("Auth", "Auth");
             //выполняем запрос к серверу getnexttrackid
-            //Response<Map<String, String>> response = RdevServiceGenerator.createService(RdevAPIService.class).getRdevAuthToken("admin", "2128506").execute();
             RdevAPIService rdevAPIService = RdevServiceGenerator.createService(RdevAPIService.class);
 
             JsonObject body = new JsonObject();
@@ -37,7 +42,10 @@ public class RdevGetAuthToken extends AsyncTask<String, Void, Map<String, String
             Log.d("ResponseStart1", body.toString());
             if (response.code() == 200 && !response.body().isEmpty()){
                 Log.d("ResponseSuccess", String.valueOf(response.code()));
+                sp.edit().putString("authToken", response.body().get("token")).commit();
+                Log.d("ResponseSuccess", response.body().get("token"));
                 return response.body();
+
             }else {
                 Log.d("ResponseFailure", String.valueOf(response.code()));
                 Log.d("ResponseFailure", response.message());

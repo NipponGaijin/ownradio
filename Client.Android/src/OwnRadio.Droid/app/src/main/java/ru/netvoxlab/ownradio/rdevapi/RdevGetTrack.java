@@ -3,7 +3,9 @@ package ru.netvoxlab.ownradio.rdevapi;
 import android.content.ContentValues;
 import android.content.Context;
 import android.content.Intent;
+import android.content.SharedPreferences;
 import android.os.AsyncTask;
+import android.preference.PreferenceManager;
 import android.util.Log;
 
 import java.io.File;
@@ -28,8 +30,10 @@ import static ru.netvoxlab.ownradio.MainActivity.ActionTrackInfoUpdate;
 
 public class RdevGetTrack extends AsyncTask<Map<String, String>, Void, Boolean> {
     Context mContext;
+    SharedPreferences sp;
     public RdevGetTrack(Context context){
         this.mContext = context;
+        this.sp = PreferenceManager.getDefaultSharedPreferences(mContext);
     }
 
     @Override
@@ -38,9 +42,9 @@ public class RdevGetTrack extends AsyncTask<Map<String, String>, Void, Boolean> 
         GetTrackFilestream body = new GetTrackFilestream(trackMap[0].get("recid"));
         try {
             Response<ResponseBody> response;
-            response = RdevServiceGenerator.createService(RdevAPIService.class).getTrackFilestream(trackMap[0].get("token"), body).execute();
-
-            if (response.isSuccessful()) {
+            String token = sp.getString("authToken", "");
+            response = RdevServiceGenerator.createService(RdevAPIService.class).getTrackFilestream("Bearer " + token, body).execute();
+            if (response.code() == 200) {
                 Log.d(TAG, "server contacted and has file");
                 final String trackURL = ((App) mContext).getMusicDirectory() + File.separator + trackMap[0].get("recid") + ".mp3";
 //				final String trackURL = mContext.getExternalFilesDir(Environment.DIRECTORY_MUSIC) + File.separator + trackMap[0].get("id") + ".mp3";
@@ -98,14 +102,21 @@ public class RdevGetTrack extends AsyncTask<Map<String, String>, Void, Boolean> 
 //						MediaPlayerService.player.pause();
 //						Intent intent = new Intent(ActionButtonImgUpdate);
 //						mContext.sendBroadcast(intent);
-
+                        return false;
                     }
                 }
-            } else {
+            }else if(response.code() == 401){
+                new Utilites().SendInformationTxt(mContext, "Unauthorized");
+                Log.d("Unauth", String.valueOf(response.code()));
+                return null;
+            }
+            else {
                 new Utilites().SendInformationTxt(mContext, "server contact failed");
+                return false;
             }
         } catch (Exception ex) {
             new Utilites().SendInformationTxt(mContext, " " + ex.getLocalizedMessage());
+            return false;
         }
         return false;
     }

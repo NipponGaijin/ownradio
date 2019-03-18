@@ -1,7 +1,10 @@
 package ru.netvoxlab.ownradio.rdevapi;
 
 import android.content.Context;
+import android.content.SharedPreferences;
 import android.os.AsyncTask;
+import android.preference.PreferenceManager;
+import android.util.Log;
 
 import java.util.Map;
 
@@ -11,9 +14,10 @@ import ru.netvoxlab.ownradio.rdevApiObjects.RegisterUserBody;
 
 public class RdevRegisterDevice extends AsyncTask<String, Void, Boolean> {
     Context mContext;
-
+    SharedPreferences sp;
     public RdevRegisterDevice(Context context){
         this.mContext = context;
+        this.sp = PreferenceManager.getDefaultSharedPreferences(mContext);
     }
 
 
@@ -21,10 +25,18 @@ public class RdevRegisterDevice extends AsyncTask<String, Void, Boolean> {
     protected Boolean doInBackground(String... strings) {
         try {
             RegisterUserBody body = new RegisterUserBody(strings[0], strings[1]);
-            Response<Map<String, Map<String, String>[]>> response = RdevServiceGenerator.createService(RdevAPIService.class).rdevRegisterNewDevice(strings[2], body).execute();
-            if (response.isSuccessful() && response.code() == 200){
+            String token = sp.getString("authToken", "");
+            Response<Map<String, Map<String, String>[]>> response = RdevServiceGenerator.createService(RdevAPIService.class).rdevRegisterNewDevice("Bearer " + token, body).execute();
+            if (response.code() == 200){
+                Log.d("Success", String.valueOf(response.code()));
                 return true;
-            } else {
+            }else if (response.code() == 401){
+                Log.d("Unauth", String.valueOf(response.code()));
+                new Utilites().SendInformationTxt(mContext, "No authorized -  " + String.valueOf(response.code()));
+
+                return null;
+            }
+            else {
                 return false;
             }
         } catch (Exception ex) {

@@ -1021,8 +1021,8 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
 			rdevApiCalls = new RdevApiCalls(MainActivity.this);
 			try {
 				DeviceId = sp.getString("DeviceID", "");
-				final Map<String, String> authMap = rdevApiCalls.GetAuthToken();
-				String token = authMap.get("token");
+//				final Map<String, String> authMap = rdevApiCalls.GetAuthToken();
+//				String token = authMap.get("token");
 				Intent downloaderIntent = new Intent(this, LongRequestAPIService.class);
 				if (DeviceId.isEmpty()) {
 					DeviceId = UUID.randomUUID().toString();
@@ -1031,11 +1031,11 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
 					new APICalls(getApplicationContext()).RegisterDevice(DeviceId, DeviceName + " " + getApplicationContext().getPackageManager().getPackageInfo(getApplicationContext().getPackageName(), PackageManager.GET_META_DATA).versionName);
 
 
-					new RdevApiCalls(getApplicationContext()).RegisterDevice(token, DeviceId, DeviceName + " " + getApplicationContext().getPackageManager().getPackageInfo(getApplicationContext().getPackageName(), PackageManager.GET_META_DATA).versionName);
+					new RdevApiCalls(getApplicationContext()).RegisterDevice(DeviceId, DeviceName + " " + getApplicationContext().getPackageManager().getPackageInfo(getApplicationContext().getPackageName(), PackageManager.GET_META_DATA).versionName);
 					//UserId = apiCalls.GetUserId(DeviceId);
 
 
-					UserId = rdevApiCalls.GetDeviceInfo(token, DeviceId);
+					UserId = rdevApiCalls.GetDeviceInfo(DeviceId);
 					sp.edit().putString("DeviceID", DeviceId).commit();
 					sp.edit().putString("UserID", UserId);
 					sp.edit().putString("UserName", UserName);
@@ -1046,7 +1046,7 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
 				} else {
 					UserId = sp.getString("UserID", "");
 					if (UserId.isEmpty()) {
-						UserId = rdevApiCalls.GetDeviceInfo(token, DeviceId);
+						UserId = rdevApiCalls.GetDeviceInfo(DeviceId);
 						sp.edit().putString("UserID", UserId).commit();
 
 						downloaderIntent.putExtra(EXTRA_USERID, UserId);
@@ -1372,9 +1372,9 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
 		
 		@Override
 		public void run() {
-			final Map<String, String> authMap = rdevApiCalls.GetAuthToken();
-			String token = authMap.get("token");
-			if (binder.GetMediaPlayerService().PlayNewTrack(TrackId, TrackTitle, TrackArtist, token)) {
+			//final Map<String, String> authMap = rdevApiCalls.GetAuthToken();
+			//String token = authMap.get("token");
+			if (binder.GetMediaPlayerService().PlayNewTrack(TrackId, TrackTitle, TrackArtist)) {
 				handler.sendEmptyMessage(0);
 			} else {
 				dialog.dismiss();

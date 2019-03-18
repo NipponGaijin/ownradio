@@ -82,11 +82,11 @@ public class WelcomeActivity extends AppCompatActivity implements NetworkStateRe
 
 				//new APICalls(getApplicationContext()).RegisterDevice(deviceId, DeviceName + " " + getApplicationContext().getPackageManager().getPackageInfo(getApplicationContext().getPackageName(), PackageManager.GET_META_DATA).versionName);
 				RdevApiCalls rdevApiCalls = new RdevApiCalls(getApplicationContext());
-				final Map<String, String> authMap = rdevApiCalls.GetAuthToken();
-				String token = authMap.get("token");
-				rdevApiCalls.RegisterDevice(token, deviceId, DeviceName + " " + getApplicationContext().getPackageManager().getPackageInfo(getApplicationContext().getPackageName(), PackageManager.GET_META_DATA).versionName);
+				//final Map<String, String> authMap = rdevApiCalls.GetAuthToken();
+				//String token = authMap.get("token");
+				rdevApiCalls.RegisterDevice(deviceId, DeviceName + " " + getApplicationContext().getPackageManager().getPackageInfo(getApplicationContext().getPackageName(), PackageManager.GET_META_DATA).versionName);
 
-				UserId = rdevApiCalls.GetDeviceInfo(token, deviceId);
+				UserId = rdevApiCalls.GetDeviceInfo(deviceId);
 				//String UserId = new APICalls(this).GetUserId(deviceId);
 				prefManager.setPrefItem("UserID", UserId);
 				prefManager.setPrefItem("UserName", UserName);

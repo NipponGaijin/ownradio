@@ -55,7 +55,7 @@ public class TrackToCache {
 
 	public String SaveTrackToCache(String deviceId, int trackCount) {
 		int numAttempts = 0;
-		boolean res = false;
+		Boolean res = false;
 		
 		if (!new CheckConnection().CheckInetConnection(mContext))
 			return "Подключение к интернету отсутствует";
@@ -77,12 +77,12 @@ public class TrackToCache {
 					    ((App) mContext).setCountDownloadTrying((((App) mContext).getCountDownloadTrying() + 1));
 					    Log.d(TAG, "Попытка " + (((App) mContext).getCountDownloadTrying() + 1));
 
-						final Map<String, String> authMap = rdevApiCalls.GetAuthToken();
-						String token = authMap.get("token");
+//						final Map<String, String> authMap = rdevApiCalls.GetAuthToken();
+//						String token = authMap.get("token");
 
 						String directorId = "11111111-0000-0888-0000-000000000000"; //Тестовый id (директорский)
 
-						final Map<String, Map<String, String>[]> rdevTrackMap = rdevApiCalls.GetNextTrack("Bearer " + token, directorId); //Сменить на deviceid
+						final Map<String, Map<String, String>[]> rdevTrackMap = rdevApiCalls.GetNextTrack(directorId); //Сменить на deviceid
 						//Map<String, String> trackMap = rdevTrackMap.get("result")[0];
 					    //final Map<String, String> trackMap = apiCalls.GetNextTrackID(deviceId);
 
@@ -101,13 +101,17 @@ public class TrackToCache {
 
 					    trackId = trackMap.get("recid");
 					    trackMap.put("deviceid", deviceId);
-					    trackMap.put("token", "Bearer " + token);
+					    //trackMap.put("token", "Bearer " + token);
 					    if (trackDataAccess.CheckTrackExistInDB(trackId)) {
 					        Log.d(TAG, "Трек был загружен ранее. TrackID" + trackId);
 					        break; }new Utilites().SendInformationTxt(mContext, "Download track " + trackId + " is started");
 					    //						boolean res = new DownloadTracks(mContext).execute(trackMap).get();
                         do {
                             res = new RdevGetTrack(mContext).execute(trackMap).get();
+                            if(res == null){
+                            	rdevApiCalls.GetAuthToken();
+                            	SaveTrackToCache(deviceId, trackCount);
+							}
                             numAttempts++; } while (!res && numAttempts < 3);
                          numAttempts = 0;if (new TrackDataAccess(mContext).GetExistTracksCount() >= 1) { Intent progressIntent = new Intent(ActionProgressBarFirstTracksLoad);
                          progressIntent.putExtra("ProgressOn", false);

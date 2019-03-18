@@ -45,12 +45,13 @@ public class RequestAPIService extends IntentService {
 				//Отправка на сервер накопленной истории прослушивания треков
 				final String deviceId = intent.getStringExtra(EXTRA_DEVICEID);
 				RdevApiCalls rdevApiCalls = new RdevApiCalls(getApplicationContext());
-				final Map<String, String> authMap = rdevApiCalls.GetAuthToken();
-				String token = authMap.get("token");
-				String userid = rdevApiCalls.GetDeviceInfo(token, deviceId);
+				//
+				// final Map<String, String> authMap = rdevApiCalls.GetAuthToken();
+				//String token = authMap.get("token");
+				String userid = rdevApiCalls.GetDeviceInfo(deviceId);
 				for (int i = 0; i < 3; i++) {
 //					new APICalls(getApplicationContext()).SendHistory(deviceId);
-					new RdevApiCalls(getApplicationContext()).SendHistoryInfo(token, userid, deviceId);
+					new RdevApiCalls(getApplicationContext()).SendHistoryInfo(userid, deviceId);
 				}
 			} else if(ACTION_SENDLOGS.equals(action)){
 				final String deviceId = intent.getStringExtra(EXTRA_DEVICEID);

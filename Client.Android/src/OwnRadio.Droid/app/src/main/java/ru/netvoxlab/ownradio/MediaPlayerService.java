@@ -44,6 +44,7 @@ import java.util.Map;
 import java.util.TimeZone;
 import java.util.concurrent.ExecutionException;
 
+import ru.netvoxlab.ownradio.rdevapi.RdevApiCalls;
 import ru.netvoxlab.ownradio.rdevapi.RdevGetTrack;
 import ru.netvoxlab.ownradio.utils.ResourceHelper;
 
@@ -660,21 +661,25 @@ public class MediaPlayerService extends Service implements MediaPlayer.OnComplet
 		}
 	}
 	
-	private Map<String, String> createMap(String id, String token) {
+	private Map<String, String> createMap(String id) {
 		Map<String, String> obj = new HashMap<String, String>();
 		obj.put("id", id);
 		obj.put("deviceid", null);
-		obj.put("token", "Bearer " + token);
 		
 		return obj;
 	}
 	
 	
-	public boolean DownloadFile(String token, String id) {
-		boolean isDownload = false;
+	public boolean DownloadFile(String id) {
+		Boolean isDownload = false;
 		try {
-			Map<String, String> obj = createMap(id, token);
+			Map<String, String> obj = createMap(id);
 			isDownload = new RdevGetTrack(getApplicationContext()).execute(obj).get();
+			if(isDownload == null){
+                RdevApiCalls rdevApiCalls = new RdevApiCalls(getApplicationContext());
+                rdevApiCalls.GetAuthToken();
+                DownloadFile(id);
+            }
 		} catch (InterruptedException e) {
 			e.printStackTrace();
 		} catch (ExecutionException e) {
@@ -707,7 +712,7 @@ public class MediaPlayerService extends Service implements MediaPlayer.OnComplet
 		Play();
 	}
 	
-	public boolean PlayNewTrack(String id, String title, String artist, String rdevToken) {
+	public boolean PlayNewTrack(String id, String title, String artist) {
 		if (player != null && player.isPlaying()) {
 			player.stop();
 			player = null;
@@ -717,7 +722,7 @@ public class MediaPlayerService extends Service implements MediaPlayer.OnComplet
 		
 		if (track == null) {
 			
-			boolean isDownload = DownloadFile(rdevToken, id);
+			boolean isDownload = DownloadFile(id);
 			
 			if (isDownload) {
 				track = trackDataAccess.GetTrackById(id);
@@ -746,7 +751,7 @@ public class MediaPlayerService extends Service implements MediaPlayer.OnComplet
 			
 			File file = new File(trackURL);
 			if (!file.exists()) {
-				boolean isDownload = DownloadFile(rdevToken, id);
+				boolean isDownload = DownloadFile(id);
 				if (!isDownload) {
 					return false;
 				}
