@@ -23,15 +23,18 @@ import android.widget.LinearLayout;
 import android.widget.ProgressBar;
 import android.widget.TextView;
 
+import java.util.Map;
 import java.util.Timer;
 import java.util.TimerTask;
 import java.util.UUID;
 
+import ru.netvoxlab.ownradio.rdevapi.RdevApiCalls;
 import ru.netvoxlab.ownradio.receivers.NetworkStateReceiver;
 
 import static ru.netvoxlab.ownradio.RequestAPIService.ACTION_GETNEXTTRACK;
 import static ru.netvoxlab.ownradio.RequestAPIService.EXTRA_COUNT;
 import static ru.netvoxlab.ownradio.RequestAPIService.EXTRA_DEVICEID;
+import static ru.netvoxlab.ownradio.RequestAPIService.EXTRA_USERID;
 
 public class WelcomeActivity extends AppCompatActivity implements NetworkStateReceiver.NetworkStateReceiverListener{
 	
@@ -47,6 +50,7 @@ public class WelcomeActivity extends AppCompatActivity implements NetworkStateRe
 //	private VideoView videoView;
 	private Uri uriVideoView;
 	private String deviceId;
+	private String UserId;
 	final Handler loadHandler = new Handler();
 	private NetworkStateReceiver networkStateReceiver;
 	
@@ -75,8 +79,15 @@ public class WelcomeActivity extends AppCompatActivity implements NetworkStateRe
 				prefManager.setDeviceId(deviceId);
 				String UserName = "NewUser";
 				String DeviceName = Build.BRAND + " " + Build.PRODUCT;
-				new APICalls(getApplicationContext()).RegisterDevice(deviceId, DeviceName + " " + getApplicationContext().getPackageManager().getPackageInfo(getApplicationContext().getPackageName(), PackageManager.GET_META_DATA).versionName);
-				String UserId = new APICalls(this).GetUserId(deviceId);
+
+				//new APICalls(getApplicationContext()).RegisterDevice(deviceId, DeviceName + " " + getApplicationContext().getPackageManager().getPackageInfo(getApplicationContext().getPackageName(), PackageManager.GET_META_DATA).versionName);
+				RdevApiCalls rdevApiCalls = new RdevApiCalls(getApplicationContext());
+				final Map<String, String> authMap = rdevApiCalls.GetAuthToken();
+				String token = authMap.get("token");
+				rdevApiCalls.RegisterDevice(token, deviceId, DeviceName + " " + getApplicationContext().getPackageManager().getPackageInfo(getApplicationContext().getPackageName(), PackageManager.GET_META_DATA).versionName);
+
+				UserId = rdevApiCalls.GetDeviceInfo(token, deviceId);
+				//String UserId = new APICalls(this).GetUserId(deviceId);
 				prefManager.setPrefItem("UserID", UserId);
 				prefManager.setPrefItem("UserName", UserName);
 				prefManager.setPrefItem("DeviceName", DeviceName);
@@ -90,6 +101,7 @@ public class WelcomeActivity extends AppCompatActivity implements NetworkStateRe
 			Intent downloaderIntent = new Intent(this, LongRequestAPIService.class);
 			downloaderIntent.setAction(ACTION_GETNEXTTRACK);
 			downloaderIntent.putExtra(EXTRA_DEVICEID, deviceId);
+			downloaderIntent.putExtra(EXTRA_USERID, UserId);
 			downloaderIntent.putExtra(EXTRA_COUNT, 3);
 			startService(downloaderIntent);
 		}

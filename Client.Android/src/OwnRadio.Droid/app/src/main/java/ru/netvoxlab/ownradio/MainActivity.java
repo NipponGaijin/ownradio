@@ -68,9 +68,11 @@ import java.io.InputStreamReader;
 import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 import java.util.UUID;
 import java.util.regex.Pattern;
 
+import ru.netvoxlab.ownradio.rdevapi.RdevApiCalls;
 import ru.netvoxlab.ownradio.receivers.NetworkStateReceiver;
 
 import static ru.netvoxlab.ownradio.Constants.ACTION_UPDATE_FILLCACHE_PROGRESS;
@@ -84,11 +86,13 @@ import static ru.netvoxlab.ownradio.Constants.IS_TIME_ALARM;
 import static ru.netvoxlab.ownradio.Constants.ONLY_WIFI;
 import static ru.netvoxlab.ownradio.Constants.TAG;
 import static ru.netvoxlab.ownradio.Constants.IS_TIMER_WORK;
+import static ru.netvoxlab.ownradio.RequestAPIService.EXTRA_USERID;
 
 public class MainActivity extends AppCompatActivity implements NavigationView.OnNavigationItemSelectedListener, View.OnTouchListener, NetworkStateReceiver.NetworkStateReceiverListener {
 	
 	private APICalls apiCalls;
-	
+	private RdevApiCalls rdevApiCalls;
+
 	String DeviceId;
 	String UserId;
 	SharedPreferences sp;
@@ -155,6 +159,8 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
 	public static final String ActionShowRateRequest = "ru.netvoxlab.ownradio.SHOW_RATING_REQUEST";
 	public static final String ActionNotFoundTrack = "ru.netvoxlab.ownradio.NOT_FOUND_TRACK";
 	public static final String ActionAlarm = "ru.netvoxlab.ownradio.ACTION_ALARM";
+
+
 
 //	private static final Bundle mQuerySkus = new Bundle();
 //	private static Bundle mSkuDetails;
@@ -1012,24 +1018,38 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
 			}
 			
 			apiCalls = new APICalls(MainActivity.this);
+			rdevApiCalls = new RdevApiCalls(MainActivity.this);
 			try {
 				DeviceId = sp.getString("DeviceID", "");
+				final Map<String, String> authMap = rdevApiCalls.GetAuthToken();
+				String token = authMap.get("token");
+				Intent downloaderIntent = new Intent(this, LongRequestAPIService.class);
 				if (DeviceId.isEmpty()) {
 					DeviceId = UUID.randomUUID().toString();
 					String UserName = "NewUser";
 					String DeviceName = Build.BRAND + " " + Build.PRODUCT;
 					new APICalls(getApplicationContext()).RegisterDevice(DeviceId, DeviceName + " " + getApplicationContext().getPackageManager().getPackageInfo(getApplicationContext().getPackageName(), PackageManager.GET_META_DATA).versionName);
-					UserId = apiCalls.GetUserId(DeviceId);
+
+
+					new RdevApiCalls(getApplicationContext()).RegisterDevice(token, DeviceId, DeviceName + " " + getApplicationContext().getPackageManager().getPackageInfo(getApplicationContext().getPackageName(), PackageManager.GET_META_DATA).versionName);
+					//UserId = apiCalls.GetUserId(DeviceId);
+
+
+					UserId = rdevApiCalls.GetDeviceInfo(token, DeviceId);
 					sp.edit().putString("DeviceID", DeviceId).commit();
 					sp.edit().putString("UserID", UserId);
 					sp.edit().putString("UserName", UserName);
 					sp.edit().putString("DeviceName", DeviceName);
 					sp.edit().commit();
+
+					downloaderIntent.putExtra(EXTRA_USERID, UserId);
 				} else {
 					UserId = sp.getString("UserID", "");
 					if (UserId.isEmpty()) {
-						UserId = apiCalls.GetUserId(DeviceId);
+						UserId = rdevApiCalls.GetDeviceInfo(token, DeviceId);
 						sp.edit().putString("UserID", UserId).commit();
+
+						downloaderIntent.putExtra(EXTRA_USERID, UserId);
 					}
 				}
 			} catch (Exception ex) {
@@ -1352,7 +1372,9 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
 		
 		@Override
 		public void run() {
-			if (binder.GetMediaPlayerService().PlayNewTrack(TrackId, TrackTitle, TrackArtist)) {
+			final Map<String, String> authMap = rdevApiCalls.GetAuthToken();
+			String token = authMap.get("token");
+			if (binder.GetMediaPlayerService().PlayNewTrack(TrackId, TrackTitle, TrackArtist, token)) {
 				handler.sendEmptyMessage(0);
 			} else {
 				dialog.dismiss();

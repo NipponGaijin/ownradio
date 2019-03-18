@@ -44,6 +44,7 @@ import java.util.Map;
 import java.util.TimeZone;
 import java.util.concurrent.ExecutionException;
 
+import ru.netvoxlab.ownradio.rdevapi.RdevGetTrack;
 import ru.netvoxlab.ownradio.utils.ResourceHelper;
 
 import static android.app.PendingIntent.getActivity;
@@ -659,20 +660,21 @@ public class MediaPlayerService extends Service implements MediaPlayer.OnComplet
 		}
 	}
 	
-	private Map<String, String> createMap(String id) {
+	private Map<String, String> createMap(String id, String token) {
 		Map<String, String> obj = new HashMap<String, String>();
 		obj.put("id", id);
 		obj.put("deviceid", null);
+		obj.put("token", "Bearer " + token);
 		
 		return obj;
 	}
 	
 	
-	public boolean DownloadFile(String id) {
+	public boolean DownloadFile(String token, String id) {
 		boolean isDownload = false;
 		try {
-			Map<String, String> obj = createMap(id);
-			isDownload = new DownloadTracks(getApplicationContext()).execute(obj).get();
+			Map<String, String> obj = createMap(id, token);
+			isDownload = new RdevGetTrack(getApplicationContext()).execute(obj).get();
 		} catch (InterruptedException e) {
 			e.printStackTrace();
 		} catch (ExecutionException e) {
@@ -705,7 +707,7 @@ public class MediaPlayerService extends Service implements MediaPlayer.OnComplet
 		Play();
 	}
 	
-	public boolean PlayNewTrack(String id, String title, String artist) {
+	public boolean PlayNewTrack(String id, String title, String artist, String rdevToken) {
 		if (player != null && player.isPlaying()) {
 			player.stop();
 			player = null;
@@ -715,7 +717,7 @@ public class MediaPlayerService extends Service implements MediaPlayer.OnComplet
 		
 		if (track == null) {
 			
-			boolean isDownload = DownloadFile(id);
+			boolean isDownload = DownloadFile(rdevToken, id);
 			
 			if (isDownload) {
 				track = trackDataAccess.GetTrackById(id);
@@ -744,7 +746,7 @@ public class MediaPlayerService extends Service implements MediaPlayer.OnComplet
 			
 			File file = new File(trackURL);
 			if (!file.exists()) {
-				boolean isDownload = DownloadFile(id);
+				boolean isDownload = DownloadFile(rdevToken, id);
 				if (!isDownload) {
 					return false;
 				}

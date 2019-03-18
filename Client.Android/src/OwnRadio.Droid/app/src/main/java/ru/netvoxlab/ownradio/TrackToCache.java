@@ -6,14 +6,22 @@ import android.content.Intent;
 import android.content.SharedPreferences;
 import android.os.Build;
 import android.os.StatFs;
+import android.util.ArrayMap;
 import android.util.Log;
+
+import com.google.gson.JsonObject;
 
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.io.FilenameUtils;
 
 import java.io.File;
+import java.lang.reflect.Array;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+
+import ru.netvoxlab.ownradio.rdevapi.RdevApiCalls;
+import ru.netvoxlab.ownradio.rdevapi.RdevGetTrack;
 
 import static ru.netvoxlab.ownradio.MainActivity.ActionProgressBarFirstTracksLoad;
 import static ru.netvoxlab.ownradio.MainActivity.ActionTrackInfoUpdate;
@@ -55,6 +63,7 @@ public class TrackToCache {
 		final TrackDataAccess trackDataAccess = new TrackDataAccess(mContext);
 
 		APICalls apiCalls = new APICalls(mContext);
+		RdevApiCalls rdevApiCalls = new RdevApiCalls(mContext);
 
 		for (int i = 0; i < trackCount; i++) {
 			final String trackId;
@@ -67,15 +76,38 @@ public class TrackToCache {
 					try {
 					    ((App) mContext).setCountDownloadTrying((((App) mContext).getCountDownloadTrying() + 1));
 					    Log.d(TAG, "Попытка " + (((App) mContext).getCountDownloadTrying() + 1));
-					    final Map<String, String> trackMap = apiCalls.GetNextTrackID(deviceId);
-					    trackId = trackMap.get("id");
+
+						final Map<String, String> authMap = rdevApiCalls.GetAuthToken();
+						String token = authMap.get("token");
+
+						String directorId = "11111111-0000-0888-0000-000000000000"; //Тестовый id (директорский)
+
+						final Map<String, Map<String, String>[]> rdevTrackMap = rdevApiCalls.GetNextTrack("Bearer " + token, directorId); //Сменить на deviceid
+						//Map<String, String> trackMap = rdevTrackMap.get("result")[0];
+					    //final Map<String, String> trackMap = apiCalls.GetNextTrackID(deviceId);
+
+						//Test track
+//						Map<String, String> trackMap = new HashMap<String, String>();
+//						trackMap.put("recid", "9bc7d80e-fc2f-4880-a060-8c9c667281fc");
+//						trackMap.put("artist", "Joyride");
+//						trackMap.put("recname", "Roxette");
+//						trackMap.put("length", "263");
+
+						Map<String, String> trackMap = new HashMap<String, String>();
+						trackMap.put("recid", "de3a5a17-f7d9-4c88-8293-11f988424ff5");
+						trackMap.put("artist", "БГ");
+						trackMap.put("recname", "Никита Рязанский");
+						trackMap.put("length", "148");
+
+					    trackId = trackMap.get("recid");
 					    trackMap.put("deviceid", deviceId);
+					    trackMap.put("token", "Bearer " + token);
 					    if (trackDataAccess.CheckTrackExistInDB(trackId)) {
 					        Log.d(TAG, "Трек был загружен ранее. TrackID" + trackId);
 					        break; }new Utilites().SendInformationTxt(mContext, "Download track " + trackId + " is started");
 					    //						boolean res = new DownloadTracks(mContext).execute(trackMap).get();
                         do {
-                            res = new DownloadTracks(mContext).execute(trackMap).get();
+                            res = new RdevGetTrack(mContext).execute(trackMap).get();
                             numAttempts++; } while (!res && numAttempts < 3);
                          numAttempts = 0;if (new TrackDataAccess(mContext).GetExistTracksCount() >= 1) { Intent progressIntent = new Intent(ActionProgressBarFirstTracksLoad);
                          progressIntent.putExtra("ProgressOn", false);
