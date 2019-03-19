@@ -90,18 +90,18 @@
 	<string name="alarm_clock">Будильник </string>
 	
 	<!-- Settings -->
-	<string name="pref_header_internet_connection">Подключение к интернету</string>
+	<string name="pref_header_internet_connection">Оптимизация трафика</string>
 	
 	<string-array name="pref_internet_connection_titles">
-		<item>@string/pref_only_wifi</item>
-		<item>@string/pref_mobile_and_wifi</item>
+		<item>@string/pref_optimize_turn_off</item>
+		<item>@string/pref_optimize_turn_on</item>
 	</string-array>
 	<string-array name="pref_internet_connection_values">
 		<item>0</item>
 		<item>1</item>
 	</string-array>
-	<string name="pref_only_wifi">Только wifi</string>
-	<string name="pref_mobile_and_wifi">Moб. интернет и wifi</string>
+	<string name="pref_optimize_turn_off">Выключено</string>
+	<string name="pref_optimize_turn_on">Включено</string>
 	
 	<string name="pref_header_only_own_tracks">Слушать только свои треки</string>
 	<string name="pref_read_about_microserver">Подробнее о том как установить микросервер. Только для пользователей ipv6</string>

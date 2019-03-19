@@ -51,6 +51,9 @@ import ru.netvoxlab.ownradio.utils.ResourceHelper;
 import static android.app.PendingIntent.getActivity;
 import static ru.netvoxlab.ownradio.Constants.CURRENT_TRACK_ARTIST;
 import static ru.netvoxlab.ownradio.Constants.CURRENT_TRACK_TITLE;
+import static ru.netvoxlab.ownradio.Constants.OPTIMIZE_DISABLED;
+import static ru.netvoxlab.ownradio.Constants.OPTIMIZE_ENABLED;
+import static ru.netvoxlab.ownradio.Constants.OPTIMIZE_STATUS;
 import static ru.netvoxlab.ownradio.MainActivity.ActionButtonImgUpdate;
 import static ru.netvoxlab.ownradio.MainActivity.ActionNotFoundTrack;
 import static ru.netvoxlab.ownradio.MainActivity.ActionProgressBarFirstTracksLoad;
@@ -673,14 +676,21 @@ public class MediaPlayerService extends Service implements MediaPlayer.OnComplet
 	
 	public boolean DownloadFile(String id) {
 		Boolean isDownload = false;
+		TrackDataAccess trackInfo = new TrackDataAccess(getApplicationContext());
 		try {
 			Map<String, String> obj = createMap(id);
-			isDownload = new RdevGetTrack(getApplicationContext()).execute(obj).get();
-			if(isDownload == null){
-                RdevApiCalls rdevApiCalls = new RdevApiCalls(getApplicationContext());
-                rdevApiCalls.GetAuthToken();
-                DownloadFile(id);
-            }
+			String optimizeStatus = prefManager.getPrefItem(OPTIMIZE_STATUS, OPTIMIZE_ENABLED);
+			int cachedTrackCount = trackInfo.GetExistTracksCount();
+			if(optimizeStatus.equals(OPTIMIZE_ENABLED) && cachedTrackCount > 50){
+				return isDownload;
+			}else{
+				isDownload = new RdevGetTrack(getApplicationContext()).execute(obj).get();
+				if(isDownload == null){
+					RdevApiCalls rdevApiCalls = new RdevApiCalls(getApplicationContext());
+					rdevApiCalls.GetAuthToken();
+					DownloadFile(id);
+				}
+			}
 		} catch (InterruptedException e) {
 			e.printStackTrace();
 		} catch (ExecutionException e) {
