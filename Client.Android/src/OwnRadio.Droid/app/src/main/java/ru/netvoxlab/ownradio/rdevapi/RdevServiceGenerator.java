@@ -22,7 +22,7 @@ public class RdevServiceGenerator {
 
         HttpLoggingInterceptor logging = new HttpLoggingInterceptor();
         logging.setLevel(HttpLoggingInterceptor.Level.BODY);
-//        httpClient.addInterceptor(logging);
+        httpClient.addInterceptor(logging);
 
         Retrofit retrofit = builder.client(httpClient.build()).build();
         return retrofit.create(serviceClass);//Создаем объект, при помощи которого будем выполнять запросы

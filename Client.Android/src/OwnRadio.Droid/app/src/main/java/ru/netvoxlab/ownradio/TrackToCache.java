@@ -83,8 +83,8 @@ public class TrackToCache {
 						String directorId = "11111111-0000-0888-0000-000000000000"; //Тестовый id (директорский)
 
 						final Map<String, Map<String, String>[]> rdevTrackMap = rdevApiCalls.GetNextTrack(directorId); //Сменить на deviceid
-						//Map<String, String> trackMap = rdevTrackMap.get("result")[0];
-					    //final Map<String, String> trackMap = apiCalls.GetNextTrackID(deviceId);
+						Map<String, String> trackMap = rdevTrackMap.get("result")[0];
+//					    final Map<String, String> trackMap = apiCalls.GetNextTrackID(deviceId);
 
 						//Test track
 //						Map<String, String> trackMap = new HashMap<String, String>();
@@ -93,11 +93,11 @@ public class TrackToCache {
 //						trackMap.put("recname", "Roxette");
 //						trackMap.put("length", "263");
 
-						Map<String, String> trackMap = new HashMap<String, String>();
-						trackMap.put("recid", "de3a5a17-f7d9-4c88-8293-11f988424ff5");
-						trackMap.put("artist", "БГ");
-						trackMap.put("recname", "Никита Рязанский");
-						trackMap.put("length", "148");
+//						Map<String, String> trackMap = new HashMap<String, String>();
+//						trackMap.put("recid", "de3a5a17-f7d9-4c88-8293-11f988424ff5");
+//						trackMap.put("artist", "БГ");
+//						trackMap.put("recname", "Никита Рязанский");
+//						trackMap.put("length", "148");
 
 					    trackId = trackMap.get("recid");
 					    trackMap.put("deviceid", deviceId);

@@ -309,7 +309,7 @@ public class MediaPlayerService extends Service implements MediaPlayer.OnComplet
 							player.release();
 							player = null;
 						}
-						new APICalls(getApplicationContext()).SetIsCorrect(DeviceID, track.getAsString("id"), 0);
+						//new APICalls(getApplicationContext()).SetIsCorrect(DeviceID, track.getAsString("id"), 0);
 						new TrackToCache(getApplicationContext()).DeleteTrackFromCache(track);
 						utilites.SendInformationTxt(getApplicationContext(), "Битый трек удален и помечен");
 						PlayNext();
@@ -358,11 +358,12 @@ public class MediaPlayerService extends Service implements MediaPlayer.OnComplet
 		}
 		if (!trackDataAccess.CheckEnoughTimeFromStartPlaying(track.getAsString("id"))) {
 			new TrackToCache(getApplicationContext()).DeleteTrackFromCache(track);
-			if (GetDuration() < minTrackDuration)
-				new APICalls(getApplicationContext()).SetIsCorrect(DeviceID, track.getAsString("id"), 0);
-			else
-				new APICalls(getApplicationContext()).SetIsCorrect(DeviceID, track.getAsString("id"), 2);
-			
+			if (GetDuration() < minTrackDuration) {
+//				new APICalls(getApplicationContext()).SetIsCorrect(DeviceID, track.getAsString("id"), 0);
+			}
+			else {
+//				new APICalls(getApplicationContext()).SetIsCorrect(DeviceID, track.getAsString("id"), 2);
+			}
 			try {
 				utilites.SendInformationTxt(getApplicationContext(), "track id: " + track.get("id") + ", \n track duration (server): " + track.get("length") + ", \n track duration (player): " + GetDuration());
 			} catch (Exception ex) {

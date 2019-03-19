@@ -58,7 +58,7 @@ public class RdevSaveHistoryInfo extends AsyncTask<String, Void, Boolean> {
 
             String gsonBody = new Gson().toJson(body);
             Log.d("Json", gsonBody);
-            //Response<Void> rweesponse = ServiceGenerator.createService(APIService.class).sendHistory(data[0], historyRec.getAsString("trackid"), historyData).execute();
+            //Response<Void> response = ServiceGenerator.createService(APIService.class).sendHistory(data[0], historyRec.getAsString("trackid"), historyData).execute();
             String token = sp.getString("authToken", "");
             Response<ResponseBody> response = RdevServiceGenerator.createService(RdevAPIService.class).sendListensHistory("Bearer " + token, body).execute();
             //Log.d("resp", response.body().string());

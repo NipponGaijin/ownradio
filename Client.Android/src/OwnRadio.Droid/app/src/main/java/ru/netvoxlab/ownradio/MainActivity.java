@@ -1028,7 +1028,7 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
 					DeviceId = UUID.randomUUID().toString();
 					String UserName = "NewUser";
 					String DeviceName = Build.BRAND + " " + Build.PRODUCT;
-					new APICalls(getApplicationContext()).RegisterDevice(DeviceId, DeviceName + " " + getApplicationContext().getPackageManager().getPackageInfo(getApplicationContext().getPackageName(), PackageManager.GET_META_DATA).versionName);
+					//new APICalls(getApplicationContext()).RegisterDevice(DeviceId, DeviceName + " " + getApplicationContext().getPackageManager().getPackageInfo(getApplicationContext().getPackageName(), PackageManager.GET_META_DATA).versionName);
 
 
 					new RdevApiCalls(getApplicationContext()).RegisterDevice(DeviceId, DeviceName + " " + getApplicationContext().getPackageManager().getPackageInfo(getApplicationContext().getPackageName(), PackageManager.GET_META_DATA).versionName);
