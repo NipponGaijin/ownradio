@@ -37,11 +37,7 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
 //		}
 		
 		//Проверяем в первый ли раз было запущено приложение
-		if userDefaults.object(forKey: "isAppAlreadyLaunchedOnce") == nil {
-			ApiService.shared.registerDevice()
-			userDefaults.set(true, forKey: "isAppAlreadyLaunchedOnce")
-			print("Приложение запущено впервые")
-		}
+		
 		//Регистрируем настройки по умолчанию (не меняя имеющиеся значения, если они уже есть)
 		userDefaults.register(defaults: ["maxMemorySize" : 10])
 		userDefaults.register(defaults: ["isOnlyWiFi" : false])
@@ -49,6 +45,16 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
 		userDefaults.register(defaults: ["authToken" : ""])
 		userDefaults.register(defaults: ["deviceIdentifier" : ""])
 		//userDefaults.set("", forKey: "authToken")
+		if userDefaults.object(forKey: "isAppAlreadyLaunchedOnce") == nil {
+//			ApiService.shared.registerDevice()
+			RdevApiService().RegisterDevice(){comp in
+				if comp{
+					print("deviceRegistered")
+				}
+			}
+			userDefaults.set(true, forKey: "isAppAlreadyLaunchedOnce")
+			print("Приложение запущено впервые")
+		}
 
 		// создаем папку Tracks если ее нет
 		let applicationSupportPath = FileManager.default.urls(for: .applicationSupportDirectory, in: .userDomainMask).first!

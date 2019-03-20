@@ -15,6 +15,7 @@ class Downloader: NSObject {
 	static let sharedInstance = Downloader()
 	//	var taskQueue: OperationQueue?
 	let baseURL = URL(string: "http://api.ownradio.ru/v5/tracks/")
+    let rdevApiUrl = URL(string: "http://rdev.ownradio.ru/api/executejs")
 	let applicationSupportPath = FileManager.default.urls(for: .applicationSupportDirectory, in: .userDomainMask).first!
 	let tracksPath = FileManager.default.urls(for: .applicationSupportDirectory, in: .userDomainMask).first!.appendingPathComponent("Tracks/")
 	let tracksUrlString =  FileManager.applicationSupportDir().appending("/Tracks/")
@@ -81,12 +82,12 @@ class Downloader: NSObject {
 			}else{
 				maxTryes = 9
 			}
-			
+			self.maxRequest = maxTryes
 			self.deleteCount = 0
 			//получаем trackId следующего трека и информацию о нем
 			self.completionHandler = complition
 			RdevApiService().GetTrackInfo(requestCount: self.requestCount) { [unowned self] (dict) in
-				guard dict["recid"] != nil else {
+				guard dict["recid"] != nil && dict["NotAuthorized"] == nil else {
 					return
 				}
 				print(dict["recid"])
@@ -101,9 +102,8 @@ class Downloader: NSObject {
 						return
 					}
 					//добавляем трек в очередь загрузки
-					let downloadRequest = self.createDownloadTask(audioUrl: audioUrl, destinationUrl: destinationUrl, dict: dict)
+					self.createDownloadTask(destinationUrl: destinationUrl, dict: dict)
 					
-					downloadRequest.resume()
 					
 					//						}
 				}
@@ -140,9 +140,19 @@ class Downloader: NSObject {
 		}
 	}
 	
-	func createDownloadTask(audioUrl:URL, destinationUrl:URL, dict:[String:Any]) -> URLSessionDownloadTask {
+	func createDownloadTask(destinationUrl:URL, dict:[String:Any]){
 		print("call createDownloadTask")
-		return URLSession.shared.downloadTask(with: audioUrl, completionHandler: { (location, response, error) -> Void in
+        
+        let json = ["fields":["recid":dict["recid"] as! String], "method":"gettrack", "resulttype":"filestream"] as [String : Any]
+        let jsonBody = try? JSONSerialization.data(withJSONObject: json)
+        let token = UserDefaults.standard.string(forKey: "authToken")
+        var request = URLRequest(url: rdevApiUrl!)
+        request.httpMethod = "POST"
+		request.setValue("application/json", forHTTPHeaderField: "Content-Type")
+		request.setValue("Bearer \(token!)", forHTTPHeaderField: "Authorization")
+        request.httpBody = jsonBody
+        
+        let task =  URLSession.shared.downloadTask(with: request,completionHandler: { (location, response, error) -> Void in
 			guard error == nil else {
 				self.createPostNotificationSysInfo(message: error.debugDescription)
 				return
@@ -222,9 +232,55 @@ class Downloader: NSObject {
 					} catch let error as NSError {
 						print(error.localizedDescription)
 					}
-				}
-			}
+                }else if httpResponse.statusCode == 401{
+                    NotificationCenter.default.post(name: NSNotification.Name(rawValue: "updateSysInfo"), object: nil, userInfo: ["message":"Create downloadTask not auth"])
+                    RdevApiService().GetAuthToken(){_ in
+                        //self.createDownloadTask(destinationUrl: destinationUrl, dict: dict)
+                    }
+					self.createDownloadTask(destinationUrl: destinationUrl, dict: dict)
+                }
+                else if httpResponse.statusCode == 500{
+                    NotificationCenter.default.post(name: NSNotification.Name(rawValue: "updateSysInfo"), object: nil, userInfo: ["message":"Create downloadtask ServerError"])
+					if self.requestCount < self.maxRequest {
+						if self.completionHandler != nil {
+							self.completionHandler!()
+						}
+						//self.requestCount += 1
+						if UserDefaults.standard.bool(forKey: "trafficOptimize"){
+							self.requestCount += 1
+						}
+						self.load(isSelfFlag: true, complition: self.completionHandler!)
+						
+					} else {
+						if self.completionHandler != nil {
+							self.completionHandler!()
+						}
+						self.requestCount = 0
+						self.maxRequest = self.maxTryes
+					}
+                }
+                else{
+                    NotificationCenter.default.post(name: NSNotification.Name(rawValue: "updateSysInfo"), object: nil, userInfo: ["message":"Create downloadtask error: \(httpResponse.statusCode.description)"])
+					if self.requestCount < self.maxRequest {
+						if self.completionHandler != nil {
+							self.completionHandler!()
+						}
+						self.requestCount += 1
+						self.load(isSelfFlag: true, complition: self.completionHandler!)
+						
+					} else {
+						if self.completionHandler != nil {
+							self.completionHandler!()
+						}
+						self.requestCount = 0
+						self.maxRequest = self.maxTryes
+					}
+                }
+            }else{
+                NotificationCenter.default.post(name: NSNotification.Name(rawValue: "updateSysInfo"), object: nil, userInfo: ["message":"Create downloadtask error: NOT http"])
+            }
 		})
+        task.resume()
 	}
 
 	func createPostNotificationSysInfo (message:String) {

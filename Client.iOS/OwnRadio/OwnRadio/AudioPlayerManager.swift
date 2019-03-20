@@ -167,7 +167,7 @@ class AudioPlayerManager: NSObject, AVAssetResourceLoaderDelegate, NSURLConnecti
                     print(path)
                     if FileManager.default.fileExists(atPath: path) {
                         do{
-                            ApiService.shared.setTrackIsCorrect(trackId: self.playingSong.trackID, isCorrect: 0)
+                           // ApiService.shared.setTrackIsCorrect(trackId: self.playingSong.trackID, isCorrect: 0)
                             // удаляем обьект по пути
                             try FileManager.default.removeItem(atPath: path)
                             print("Поврежденный файл был удален")
@@ -483,6 +483,9 @@ class AudioPlayerManager: NSObject, AVAssetResourceLoaderDelegate, NSURLConnecti
 	
 	func fwdTrackToEnd(){
 		isSkipped = true
-		player.seek(to: (player.currentItem?.duration)!-CMTimeMake(3, 1))
+		if player.currentItem != nil{
+			player.seek(to: (player.currentItem?.duration)!-CMTimeMake(3, 1))
+		}
+		
 	}
 }
