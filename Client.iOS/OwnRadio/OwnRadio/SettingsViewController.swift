@@ -40,7 +40,7 @@ class SettingsViewController: UITableViewController {
         
 		
 
-		onlyWiFiSwitch.isOn = (userDefaults.object(forKey: "isOnlyWiFi") as? Bool)!
+		onlyWiFiSwitch.isOn = (userDefaults.object(forKey: "trafficOptimize") as? Bool)!
 		
 		stepper.wraps = true
 		stepper.autorepeat = true
@@ -94,7 +94,7 @@ class SettingsViewController: UITableViewController {
 	}
 	
 	@IBAction func onlyWiFiSwitchValueChanged(_ sender: UISwitch) {
-		UserDefaults.standard.set(onlyWiFiSwitch.isOn, forKey: "isOnlyWiFi")
+		UserDefaults.standard.set(onlyWiFiSwitch.isOn, forKey: "trafficOptimize")
 		UserDefaults.standard.synchronize()
 	}
 	

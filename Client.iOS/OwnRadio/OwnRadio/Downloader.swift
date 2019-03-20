@@ -26,6 +26,7 @@ class Downloader: NSObject {
 	var requestCount = 0
 	var deleteCount = 0
 	var maxRequest = 9
+	var maxTryes = 0
 	var completionHandler:(()->Void)? = nil
 
 	func load(isSelfFlag: Bool, complition: @escaping (() -> Void)) {
@@ -68,18 +69,31 @@ class Downloader: NSObject {
 		
 		//делаем 10 попыток скачивания треков, если место свободное место закончилось, но есть прослушанные треки - удаляем их и загружаем новые, иначе перестаем пытаться скачать
 		if DiskStatus.folderSize(folderPath: tracksUrlString) < maxMemory  {
+			if UserDefaults.standard.bool(forKey: "trafficOptimize"){
+				if CoreDataManager.instance.chekCountOfEntitiesFor(entityName: "TrackEntity") <= 10{
+					maxTryes = 1
+				}else if CoreDataManager.instance.chekCountOfEntitiesFor(entityName: "TrackEntity") <= 50{
+					maxTryes = 0
+				}
+				else{
+					return
+				}
+			}else{
+				maxTryes = 9
+			}
+			
 			self.deleteCount = 0
 			//получаем trackId следующего трека и информацию о нем
 			self.completionHandler = complition
-			ApiService.shared.getTrackIDFromServer(requestCount: self.requestCount) { [unowned self] (dict) in
-				guard dict["id"] != nil else {
+			RdevApiService().GetTrackInfo(requestCount: self.requestCount) { [unowned self] (dict) in
+				guard dict["recid"] != nil else {
 					return
 				}
-				print(dict["id"])
-				let trackURL = self.baseURL?.appendingPathComponent(dict["id"] as! String).appendingPathComponent((UIDevice.current.identifierForVendor?.uuidString.lowercased())!)
+				print(dict["recid"])
+				let trackURL = self.baseURL?.appendingPathComponent(dict["recid"] as! String).appendingPathComponent((UIDevice.current.identifierForVendor?.uuidString.lowercased())!)
 				if let audioUrl = trackURL {
 					//задаем директорию для сохранения трека
-					let destinationUrl = self.tracksPath.appendingPathComponent(dict["id"] as! String)
+					let destinationUrl = self.tracksPath.appendingPathComponent(dict["recid"] as! String)
 					//если этот трек не еще не загружен - загружаем трек
 					//						let mp3Path = destinationUrl.appendingPathExtension("mp3")
 					guard FileManager.default.fileExists(atPath: destinationUrl.path ) == false else {
@@ -97,7 +111,7 @@ class Downloader: NSObject {
 			
 		} else {
 			// если память заполнена удаляем трек
-			if self.deleteCount < 9 {
+			if self.deleteCount < maxTryes {
 				if self.completionHandler != nil {
 					self.completionHandler!()
 				}
@@ -126,7 +140,7 @@ class Downloader: NSObject {
 		}
 	}
 	
-	func createDownloadTask(audioUrl:URL, destinationUrl:URL, dict:[String:AnyObject]) -> URLSessionDownloadTask {
+	func createDownloadTask(audioUrl:URL, destinationUrl:URL, dict:[String:Any]) -> URLSessionDownloadTask {
 		print("call createDownloadTask")
 		return URLSession.shared.downloadTask(with: audioUrl, completionHandler: { (location, response, error) -> Void in
 			guard error == nil else {
@@ -178,9 +192,9 @@ class Downloader: NSObject {
 						trackEntity.path = String(describing: endPath.lastPathComponent)
 						trackEntity.countPlay = 0
 						trackEntity.artistName = dict["artist"] as? String
-						trackEntity.trackName = dict["name"] as? String
-						trackEntity.trackLength = NSString(string: dict["length"] as! String).doubleValue
-						trackEntity.recId = dict["id"] as! String?
+						trackEntity.trackName = dict["recname"] as? String
+						trackEntity.trackLength = dict["length"] as! Double
+						trackEntity.recId = dict["recid"] as! String?
 						trackEntity.playingDate = NSDate.init(timeIntervalSinceNow: -315360000.0042889)
 						
 						CoreDataManager.instance.saveContext()
@@ -198,7 +212,7 @@ class Downloader: NSObject {
 								self.completionHandler!()
 							}
 							self.requestCount = 0
-							self.maxRequest = 9
+							self.maxRequest = self.maxTryes
 						}
 						
 						//				complition()

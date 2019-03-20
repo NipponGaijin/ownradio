@@ -45,6 +45,10 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
 		//Регистрируем настройки по умолчанию (не меняя имеющиеся значения, если они уже есть)
 		userDefaults.register(defaults: ["maxMemorySize" : 10])
 		userDefaults.register(defaults: ["isOnlyWiFi" : false])
+		userDefaults.register(defaults: ["trafficOptimize" : false])
+		userDefaults.register(defaults: ["authToken" : ""])
+		userDefaults.register(defaults: ["deviceIdentifier" : ""])
+		//userDefaults.set("", forKey: "authToken")
 
 		// создаем папку Tracks если ее нет
 		let applicationSupportPath = FileManager.default.urls(for: .applicationSupportDirectory, in: .userDomainMask).first!

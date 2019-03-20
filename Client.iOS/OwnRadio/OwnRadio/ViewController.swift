@@ -88,11 +88,13 @@ class RadioViewController: UIViewController, UITableViewDataSource, UITableViewD
 		}
 	}
 	
+	//a3644efe-b4fd-4cfc-98b1-e8558014532e
 	
 	// MARK: Override
 	//выполняется при загрузке окна
 	override func viewDidLoad() {
 		super.viewDidLoad()
+		
 		view.isUserInteractionEnabled = true
 		//включаем отображение навигационной панели
 		self.navigationController?.isNavigationBarHidden = false
