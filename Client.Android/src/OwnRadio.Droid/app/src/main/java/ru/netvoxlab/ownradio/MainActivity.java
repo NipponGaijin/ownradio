@@ -68,27 +68,31 @@ import java.io.InputStreamReader;
 import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 import java.util.UUID;
 import java.util.regex.Pattern;
 
+import ru.netvoxlab.ownradio.rdevapi.RdevApiCalls;
 import ru.netvoxlab.ownradio.receivers.NetworkStateReceiver;
 
 import static ru.netvoxlab.ownradio.Constants.ACTION_UPDATE_FILLCACHE_PROGRESS;
-import static ru.netvoxlab.ownradio.Constants.ALL_CONNECTION_TYPES;
+import static ru.netvoxlab.ownradio.Constants.OPTIMIZE_DISABLED;
 import static ru.netvoxlab.ownradio.Constants.CURRENT_TRACK_ID;
 import static ru.netvoxlab.ownradio.Constants.CURRENT_TRACK_URL;
 import static ru.netvoxlab.ownradio.Constants.EXTRA_FILLCACHE_PROGRESS;
-import static ru.netvoxlab.ownradio.Constants.INTERNET_CONNECTION_TYPE;
+import static ru.netvoxlab.ownradio.Constants.OPTIMIZE_STATUS;
 import static ru.netvoxlab.ownradio.Constants.IS_ALARM_WORK;
 import static ru.netvoxlab.ownradio.Constants.IS_TIME_ALARM;
-import static ru.netvoxlab.ownradio.Constants.ONLY_WIFI;
+import static ru.netvoxlab.ownradio.Constants.OPTIMIZE_ENABLED;
 import static ru.netvoxlab.ownradio.Constants.TAG;
 import static ru.netvoxlab.ownradio.Constants.IS_TIMER_WORK;
+import static ru.netvoxlab.ownradio.RequestAPIService.EXTRA_USERID;
 
 public class MainActivity extends AppCompatActivity implements NavigationView.OnNavigationItemSelectedListener, View.OnTouchListener, NetworkStateReceiver.NetworkStateReceiverListener {
 	
 	private APICalls apiCalls;
-	
+	private RdevApiCalls rdevApiCalls;
+
 	String DeviceId;
 	String UserId;
 	SharedPreferences sp;
@@ -124,7 +128,7 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
 	
 	TextView txtFillCacheProgress;
 	
-	SwitchCompat switchOnlyWIFI;
+	SwitchCompat switchOptimizeStatus;
 	
 	Toolbar toolbar;
 	ViewStub viewStubRate;
@@ -155,6 +159,8 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
 	public static final String ActionShowRateRequest = "ru.netvoxlab.ownradio.SHOW_RATING_REQUEST";
 	public static final String ActionNotFoundTrack = "ru.netvoxlab.ownradio.NOT_FOUND_TRACK";
 	public static final String ActionAlarm = "ru.netvoxlab.ownradio.ACTION_ALARM";
+
+
 
 //	private static final Bundle mQuerySkus = new Bundle();
 //	private static Bundle mSkuDetails;
@@ -248,11 +254,11 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
 			public void onDrawerStateChanged(int newState) {
 				if (newState == DrawerLayout.STATE_SETTLING) {
 					if (!drawer.isDrawerOpen(GravityCompat.START)) {
-						String connectionType = prefManager.getPrefItem(INTERNET_CONNECTION_TYPE, ALL_CONNECTION_TYPES); //получаем настройки подключения
-						if (connectionType.equals(ONLY_WIFI))
-							switchOnlyWIFI.setChecked(true);
+						String optimizeStatus = prefManager.getPrefItem(OPTIMIZE_STATUS, OPTIMIZE_DISABLED); //получаем настройки подключения
+						if (optimizeStatus.equals(OPTIMIZE_ENABLED))
+							switchOptimizeStatus.setChecked(true);
 						else
-							switchOnlyWIFI.setChecked(false);
+							switchOptimizeStatus.setChecked(false);
 					}
 					invalidateOptionsMenu();
 				}
@@ -271,16 +277,20 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
 			
 		}
 		Menu menu = navigationView.getMenu();
-		
-		
-		switchOnlyWIFI = MenuItemCompat.getActionView(menu.findItem(R.id.app_bar_switch_only_wifi)).findViewById(R.id.switchWidget);
-		switchOnlyWIFI.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
+
+
+		switchOptimizeStatus = MenuItemCompat.getActionView(menu.findItem(R.id.app_bar_switch_only_wifi)).findViewById(R.id.switchWidget);
+		switchOptimizeStatus.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
 			@Override
 			public void onCheckedChanged(CompoundButton compoundButton, boolean state) {
-				if (state)
-					prefManager.setPrefItem(INTERNET_CONNECTION_TYPE, ONLY_WIFI);
-				else
-					prefManager.setPrefItem(INTERNET_CONNECTION_TYPE, ALL_CONNECTION_TYPES);
+				if (state){
+					prefManager.setPrefItem(OPTIMIZE_STATUS, OPTIMIZE_ENABLED);
+					Log.d("State", String.valueOf(state));
+				}
+				else {
+					prefManager.setPrefItem(OPTIMIZE_STATUS, OPTIMIZE_DISABLED);
+					Log.d("State", String.valueOf(state));
+				}
 			}
 		});
 		//Z
@@ -557,10 +567,10 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
 		
 		switch (id) {
 			case R.id.app_bar_switch_only_wifi:
-				if (switchOnlyWIFI.isChecked())
-					switchOnlyWIFI.setChecked(false);
+				if (switchOptimizeStatus.isChecked())
+					switchOptimizeStatus.setChecked(false);
 				else
-					switchOnlyWIFI.setChecked(true);
+					switchOptimizeStatus.setChecked(true);
 				break;
 			case R.id.app_bar_write_to_developers:
 				startActivity(new Intent(Intent.ACTION_VIEW, Uri.parse("https://vk.me/ownradio")));
@@ -1012,24 +1022,38 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
 			}
 			
 			apiCalls = new APICalls(MainActivity.this);
+			rdevApiCalls = new RdevApiCalls(MainActivity.this);
 			try {
 				DeviceId = sp.getString("DeviceID", "");
+//				final Map<String, String> authMap = rdevApiCalls.GetAuthToken();
+//				String token = authMap.get("token");
+				Intent downloaderIntent = new Intent(this, LongRequestAPIService.class);
 				if (DeviceId.isEmpty()) {
 					DeviceId = UUID.randomUUID().toString();
 					String UserName = "NewUser";
 					String DeviceName = Build.BRAND + " " + Build.PRODUCT;
-					new APICalls(getApplicationContext()).RegisterDevice(DeviceId, DeviceName + " " + getApplicationContext().getPackageManager().getPackageInfo(getApplicationContext().getPackageName(), PackageManager.GET_META_DATA).versionName);
-					UserId = apiCalls.GetUserId(DeviceId);
+					//new APICalls(getApplicationContext()).RegisterDevice(DeviceId, DeviceName + " " + getApplicationContext().getPackageManager().getPackageInfo(getApplicationContext().getPackageName(), PackageManager.GET_META_DATA).versionName);
+
+
+					new RdevApiCalls(getApplicationContext()).RegisterDevice(DeviceId, DeviceName + " " + getApplicationContext().getPackageManager().getPackageInfo(getApplicationContext().getPackageName(), PackageManager.GET_META_DATA).versionName);
+					//UserId = apiCalls.GetUserId(DeviceId);
+
+
+					UserId = rdevApiCalls.GetDeviceInfo(DeviceId);
 					sp.edit().putString("DeviceID", DeviceId).commit();
 					sp.edit().putString("UserID", UserId);
 					sp.edit().putString("UserName", UserName);
 					sp.edit().putString("DeviceName", DeviceName);
 					sp.edit().commit();
+
+					downloaderIntent.putExtra(EXTRA_USERID, UserId);
 				} else {
 					UserId = sp.getString("UserID", "");
 					if (UserId.isEmpty()) {
-						UserId = apiCalls.GetUserId(DeviceId);
+						UserId = rdevApiCalls.GetDeviceInfo(DeviceId);
 						sp.edit().putString("UserID", UserId).commit();
+
+						downloaderIntent.putExtra(EXTRA_USERID, UserId);
 					}
 				}
 			} catch (Exception ex) {
@@ -1352,6 +1376,8 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
 		
 		@Override
 		public void run() {
+			//final Map<String, String> authMap = rdevApiCalls.GetAuthToken();
+			//String token = authMap.get("token");
 			if (binder.GetMediaPlayerService().PlayNewTrack(TrackId, TrackTitle, TrackArtist)) {
 				handler.sendEmptyMessage(0);
 			} else {

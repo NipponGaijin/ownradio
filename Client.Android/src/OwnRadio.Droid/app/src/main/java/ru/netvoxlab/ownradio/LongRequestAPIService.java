@@ -8,6 +8,8 @@ import static ru.netvoxlab.ownradio.Constants.ACTION_FILLCACHE;
 import static ru.netvoxlab.ownradio.Constants.ACTION_GETNEXTTRACK;
 import static ru.netvoxlab.ownradio.Constants.EXTRA_COUNT;
 import static ru.netvoxlab.ownradio.Constants.EXTRA_DEVICEID;
+import static ru.netvoxlab.ownradio.Constants.OPTIMIZE_ENABLED;
+import static ru.netvoxlab.ownradio.Constants.OPTIMIZE_STATUS;
 import static ru.netvoxlab.ownradio.Constants.TAG;
 
 /**
@@ -46,7 +48,23 @@ public class LongRequestAPIService extends IntentService {
 			if (ACTION_GETNEXTTRACK.equals(action)) {
 				//Получение информации о следующем треке и его загрузка
 				final String deviceId = intent.getStringExtra(EXTRA_DEVICEID);
-				final Integer countTracks = intent.getIntExtra(EXTRA_COUNT, 3);
+				Integer countTracks = intent.getIntExtra(EXTRA_COUNT, 3);
+
+				TrackDataAccess trackInfo = new TrackDataAccess(getApplicationContext());
+				PrefManager prefManager = new PrefManager(getApplicationContext());
+				String optimizeStatus = prefManager.getPrefItem(OPTIMIZE_STATUS, OPTIMIZE_ENABLED);
+
+				int cachedTrackCount = trackInfo.GetExistTracksCount();
+				if(optimizeStatus.equals(OPTIMIZE_ENABLED) && cachedTrackCount <= 10){
+					countTracks = 2;
+				}
+				else if(optimizeStatus.equals(OPTIMIZE_ENABLED) && cachedTrackCount <= 50){
+					countTracks = 1;
+				}
+				else if(optimizeStatus.equals(OPTIMIZE_ENABLED) && cachedTrackCount > 50){
+					countTracks = 0;
+				}
+
 				new TrackToCache(getApplicationContext()).SaveTrackToCache(deviceId, countTracks);
 			} else if(ACTION_FILLCACHE.equals(action)) {
 				new TrackToCache(getApplicationContext()).FillCache();

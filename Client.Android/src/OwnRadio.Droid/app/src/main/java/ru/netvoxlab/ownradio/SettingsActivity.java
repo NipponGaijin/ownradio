@@ -401,9 +401,11 @@ public class SettingsActivity extends AppCompatPreferenceActivity {
 			Preference storageSettings = findPreference("key_number");
 			if(prefManager.getPrefItemBool("is_subscribed", false) || subscribeStatus  || (android.os.Build.VERSION.SDK_INT < 24 && android.os.Build.VERSION.SDK_INT >= 19)){
 				storageSettings.setEnabled(true);
+
 			}
 			else {
 				storageSettings.setEnabled(false);
+				Toast.makeText(context, "Подписка не оплачена, максимальный объем кэша 1Gb, заполнение кэша недоступно", Toast.LENGTH_LONG).show();
 			}
 
 			Preference sysInfo = findPreference("sys_info");
