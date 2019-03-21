@@ -170,7 +170,7 @@ class RdevApiService {
 							if resultDict["recname"] is NSNull{
 								resultDict["recname"] = "Track"
 							}
-							complition(resultDict)
+							return complition(resultDict)
 						}
 						
 					} catch (let error) {
@@ -182,7 +182,7 @@ class RdevApiService {
 					self.GetTrackInfo(requestCount: requestCount, complition: { (_) in
 					})
 					NotificationCenter.default.post(name: NSNotification.Name(rawValue: "updateSysInfo"), object: nil, userInfo: ["message":"GetTrackNotAuthorized"])
-					complition(["NotAuthorized":httpResponse.statusCode.description])
+					return complition(["NotAuthorized":httpResponse.statusCode.description])
 				}
 				else if httpResponse.statusCode == 500{
 					print(self.userDefault.string(forKey: "deviceIdentifier"))
@@ -192,11 +192,11 @@ class RdevApiService {
 						NotificationCenter.default.post(name: NSNotification.Name(rawValue: "updateSysInfo"), object: nil, userInfo: ["message":"GetTrack deviceNotRegistered"])
 						if !result{
 							NotificationCenter.default.post(name: NSNotification.Name(rawValue: "updateSysInfo"), object: nil, userInfo: ["message":"GetTrack deviceStillNotRegistered"])
-							return
+							return complition(["NotAuthorized":httpResponse.statusCode.description])
 						}else{
 							self.GetTrackInfo(requestCount: requestCount){getTrackResponse in
 								NotificationCenter.default.post(name: NSNotification.Name(rawValue: "updateSysInfo"), object: nil, userInfo: ["message":"GetTrack device was not registered"])
-								complition(getTrackResponse)
+								return complition(getTrackResponse)
 							}
 						}
 					}

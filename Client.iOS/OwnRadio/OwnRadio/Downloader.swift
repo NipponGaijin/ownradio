@@ -86,8 +86,15 @@ class Downloader: NSObject {
 			self.deleteCount = 0
 			//получаем trackId следующего трека и информацию о нем
 			self.completionHandler = complition
-			RdevApiService().GetTrackInfo(requestCount: self.requestCount) { [unowned self] (dict) in
-				guard dict["recid"] != nil && dict["NotAuthorized"] == nil else {
+			RdevApiService().GetTrackInfo(requestCount: self.requestCount) {dict in
+				
+				if dict["NotAuthorized"] != nil{
+					self.load(isSelfFlag: true){
+						
+					}
+				}
+				
+				guard dict["recid"] != nil else {
 					return
 				}
 				print(dict["recid"])
