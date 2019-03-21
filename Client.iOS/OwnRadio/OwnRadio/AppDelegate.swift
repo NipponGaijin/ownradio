@@ -47,16 +47,16 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
 		try? userDefaults.register(defaults: ["playingSongObject" : PropertyListEncoder().encode(SongObject())])
 		userDefaults.register(defaults: ["trackPosition" : 0])
 		//userDefaults.set("", forKey: "authToken")
-		if userDefaults.object(forKey: "isAppAlreadyLaunchedOnce") == nil {
-//			ApiService.shared.registerDevice()
-			RdevApiService().RegisterDevice(){comp in
-				if comp{
-					print("deviceRegistered")
-				}
-			}
-			userDefaults.set(true, forKey: "isAppAlreadyLaunchedOnce")
-			print("Приложение запущено впервые")
-		}
+//		if userDefaults.object(forKey: "isAppAlreadyLaunchedOnce") == nil {
+////			ApiService.shared.registerDevice()
+//			RdevApiService().RegisterDevice(){comp in
+//				if comp{
+//					print("deviceRegistered")
+//				}
+//			}
+//			userDefaults.set(true, forKey: "isAppAlreadyLaunchedOnce")
+//			print("Приложение запущено впервые")
+//		}
 
 		// создаем папку Tracks если ее нет
 		let applicationSupportPath = FileManager.default.urls(for: .applicationSupportDirectory, in: .userDomainMask).first!

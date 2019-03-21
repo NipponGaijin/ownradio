@@ -94,7 +94,7 @@ class RdevApiService {
 			guard let data = data, error == nil else{
 				print("error: \(error!.localizedDescription)")
 				NotificationCenter.default.post(name: NSNotification.Name(rawValue: "updateSysInfo"), object: nil, userInfo: ["message":"Register request fail: \(error.debugDescription)"])
-				return
+				return completion(false)
 			}
 			if let httpResponse = response as? HTTPURLResponse{
 				print(httpResponse.statusCode)
