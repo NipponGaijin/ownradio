@@ -138,16 +138,21 @@ class SettingsViewController: UITableViewController {
 				
 				for track in tracksContents {
 					// проверка для удаления только треков
-					if track.contains("mp3") {
-						let path = tracksUrlString.appending(track)
-						do{
-							print(path)
-							try FileManager.default.removeItem(atPath: path)
-							
-						} catch  {
-							print("Ошибка при удалении файла  - \(error)")
+					let songObjectEncoded = UserDefaults.standard.data(forKey: "playingSongObject")
+					let currentSongObject = try! PropertyListDecoder().decode(SongObject.self, from: songObjectEncoded!)
+					if track.isEqual(currentSongObject.trackID + (".mp3")) == false{
+						if track.contains("mp3") {
+							let path = tracksUrlString.appending(track)
+							do{
+								print(path)
+								try FileManager.default.removeItem(atPath: path)
+								
+							} catch  {
+								print("Ошибка при удалении файла  - \(error)")
+							}
 						}
 					}
+					
 				}
 				
 				//удаляем треки из базы
@@ -178,20 +183,25 @@ class SettingsViewController: UITableViewController {
 			let listenTracks = CoreDataManager.instance.getListenTracks()
 			print("\(listenTracks.count)")
 			for _track in listenTracks {
-				let path = tracksUrlString.appending((_track.path!))
-				
-				if FileManager.default.fileExists(atPath: path) {
-					do{
-						// удаляем файл
-						try FileManager.default.removeItem(atPath: path)
+				let songObjectEncoded = UserDefaults.standard.data(forKey: "playingSongObject")
+				let currentSongObject = try! PropertyListDecoder().decode(SongObject.self, from: songObjectEncoded!)
+				if _track.trackID.isEqual(currentSongObject.trackID) == false{
+					let path = tracksUrlString.appending((_track.path!))
+					
+					if FileManager.default.fileExists(atPath: path) {
+						do{
+							// удаляем файл
+							try FileManager.default.removeItem(atPath: path)
+						}
+						catch {
+							print("Ошибка при удалении файла - \(error)")
+						}
 					}
-					catch {
-						print("Ошибка при удалении файла - \(error)")
-					}
+					// удаляем трек с базы
+					CoreDataManager.instance.deleteTrackFor(trackID: _track.trackID)
+					CoreDataManager.instance.saveContext()
 				}
-				// удаляем трек с базы
-				CoreDataManager.instance.deleteTrackFor(trackID: _track.trackID)
-				CoreDataManager.instance.saveContext()
+				
 			}
 			
 			self.viewDidLoad()

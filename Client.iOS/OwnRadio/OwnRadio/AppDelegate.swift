@@ -44,6 +44,8 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
 		userDefaults.register(defaults: ["trafficOptimize" : false])
 		userDefaults.register(defaults: ["authToken" : ""])
 		userDefaults.register(defaults: ["deviceIdentifier" : ""])
+		try? userDefaults.register(defaults: ["playingSongObject" : PropertyListEncoder().encode(SongObject())])
+		userDefaults.register(defaults: ["trackPosition" : 0])
 		//userDefaults.set("", forKey: "authToken")
 		if userDefaults.object(forKey: "isAppAlreadyLaunchedOnce") == nil {
 //			ApiService.shared.registerDevice()

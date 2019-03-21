@@ -52,14 +52,25 @@ class Downloader: NSObject {
 		//удаляем "лишние" треки - в первую очередь прослушанные, затем, если необходимо - самые старые из загруженных
 		while (!isSelfFlag && DiskStatus.folderSize(folderPath: tracksUrlString) > maxMemory) {
 			// получаем трек проиграный большее кол-во раз
-			let song: SongObject? = CoreDataManager.instance.getOldTrack(onlyListen: false)
+			let song: [SongObject] = CoreDataManager.instance.getOldTrack(onlyListen: false) as! [SongObject]
 			// получаем путь файла
-			guard song != nil && song?.trackID != nil else {
+			guard song != nil && song[0].trackID != nil else {
 				self.createPostNotificationSysInfo(message: "Не найден трек для удаления")
 				return
 			}
 			self.createPostNotificationSysInfo(message: "Память заполнена. Удаляем трек \(self.deleteCount)")
-			deleteOldTrack(song: song)
+			
+			let songObjectEncoded = UserDefaults.standard.data(forKey: "playingSongObject")
+			let currentSongObject = try! PropertyListDecoder().decode(SongObject.self, from: songObjectEncoded!)
+			if (song[0].trackID.isEqual(currentSongObject.trackID)) != true{
+				deleteOldTrack(song: song[0])
+			}
+			else{
+				if song.count > 1{
+					deleteOldTrack(song: song[1])
+				}
+			}
+			
 		}
 		
 		//проверка подключения к интернету
@@ -126,15 +137,25 @@ class Downloader: NSObject {
 				
 				
 				// получаем трек проиграный большее кол-во раз
-				let song: SongObject? = CoreDataManager.instance.getOldTrack(onlyListen: true)
+				let song: [SongObject] = CoreDataManager.instance.getOldTrack(onlyListen: true) as! [SongObject]
 				// получаем путь файла
-				guard song != nil && song?.trackID != nil else {
+				guard song != nil && song[0].trackID != nil else {
 					self.createPostNotificationSysInfo(message: "Память заполнена, нет прослуш треков")
 					self.requestCount = 0
 					return
 				}
 				self.createPostNotificationSysInfo(message: "Память заполнена. Удаляем трек \(self.deleteCount)")
-				deleteOldTrack(song: song)
+				
+				let songObjectEncoded = UserDefaults.standard.data(forKey: "playingSongObject")
+				let currentSongObject = try! PropertyListDecoder().decode(SongObject.self, from: songObjectEncoded!)
+				
+				if	(song[0].trackID.isEqual(currentSongObject.trackID)) != true{
+					deleteOldTrack(song: song[0])
+				}else{
+					if song.count > 1{
+						deleteOldTrack(song: song[1])
+					}
+				}
 				
 				self.load (isSelfFlag: true){
 					

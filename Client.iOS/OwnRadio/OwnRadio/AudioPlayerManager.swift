@@ -452,6 +452,13 @@ class AudioPlayerManager: NSObject, AVAssetResourceLoaderDelegate, NSURLConnecti
 		self.playAudioWith(trackURL: url as URL)
 		self.playingSongID = self.playingSong.trackID
 		self.configurePlayingSong(song: self.playingSong)
+		//Сохранение обЪекта трека
+		do{
+			try UserDefaults.standard.set(PropertyListEncoder().encode(self.playingSong), forKey: "playingSongObject")
+		}catch{
+			NotificationCenter.default.post(name: NSNotification.Name(rawValue: "updateSysInfo"), object: nil, userInfo: ["message":"Объект трека не сохранен в UD"])
+		}
+		
 		if complition != nil {
 			complition!()
 		}
