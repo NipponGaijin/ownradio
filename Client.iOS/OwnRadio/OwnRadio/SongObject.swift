@@ -9,8 +9,8 @@
 
 import Foundation
 
-class SongObject: NSObject, Codable {
-
+class SongObject: NSObject, Codable{
+	
 	var name: String!
 	var artistName: String!
 	var trackID: String!
@@ -19,7 +19,7 @@ class SongObject: NSObject, Codable {
 	var isListen: Int32?
 	var path: String?
 
-	func initWithDict(dict: Dictionary<String, AnyObject>) {
+	func initWithDict(dict:Dictionary<String,AnyObject>) {
 		self.name = dict["name"] as? String
 		self.trackID = dict["id"] as! String!
 		self.trackLength =  NSString(string: dict["length"] as! String).doubleValue

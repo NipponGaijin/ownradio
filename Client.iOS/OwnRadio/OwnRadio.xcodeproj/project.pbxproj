@@ -32,22 +32,8 @@
 		09D52F8C1E3F36EF006B66E6 /* CachingView.xib in Resources */ = {isa = PBXBuildFile; fileRef = 09D52F8B1E3F36EF006B66E6 /* CachingView.xib */; };
 		09D52F8E1E3F3F37006B66E6 /* CachingView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 09D52F8D1E3F3F37006B66E6 /* CachingView.swift */; };
 		09EA799B1DE57D040034B8DF /* AudioPlayerManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = 09EA799A1DE57D040034B8DF /* AudioPlayerManager.swift */; };
-		2816CC2A220D6A410047EFB9 /* StoreKit.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 2816CC29220D6A410047EFB9 /* StoreKit.framework */; };
-		2816CC38221165330047EFB9 /* LogObject.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2816CC37221165330047EFB9 /* LogObject.swift */; };
-		2816CC4022117BB40047EFB9 /* LogViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2816CC3F22117BB40047EFB9 /* LogViewController.swift */; };
-		2816CC4222117E220047EFB9 /* LogTableViewCell.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2816CC4122117E220047EFB9 /* LogTableViewCell.swift */; };
-		2816CC482211AFE50047EFB9 /* LogDetailsTableViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2816CC472211AFE50047EFB9 /* LogDetailsTableViewController.swift */; };
-		2822658D221A9666009553ED /* PageViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2822658C221A9665009553ED /* PageViewController.swift */; };
-		2822658F221AA4A6009553ED /* StartupViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2822658E221AA4A6009553ED /* StartupViewController.swift */; };
-		28226591221C1B93009553ED /* DownloadObject.swift in Sources */ = {isa = PBXBuildFile; fileRef = 28226590221C1B93009553ED /* DownloadObject.swift */; };
-		285EC272220B08EF00D1574C /* CopyManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = 285EC271220B08EF00D1574C /* CopyManager.swift */; };
-		28A621942223B63100210763 /* HGCircularSlider.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 28E7D55821F1E7BE00111F7D /* HGCircularSlider.framework */; };
-		28A621952223B63100210763 /* HGCircularSlider.framework in Embed Frameworks */ = {isa = PBXBuildFile; fileRef = 28E7D55821F1E7BE00111F7D /* HGCircularSlider.framework */; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
-		28A621972223D35B00210763 /* Colors.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 28A621962223D35B00210763 /* Colors.xcassets */; };
-		28DE354121D5FDAC00B41A5D /* TimerViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 28DE354021D5FDAC00B41A5D /* TimerViewController.swift */; };
+		28D320A2224123E500368780 /* RdevApiService.swift in Sources */ = {isa = PBXBuildFile; fileRef = 28D320A1224123E500368780 /* RdevApiService.swift */; };
 		28E7D51E21EC773900111F7D /* ViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 091679561DE451CF00619B3F /* ViewController.swift */; };
-		28E7D53621EF65B300111F7D /* AlertClockViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 28DE353B21D4EE0600B41A5D /* AlertClockViewController.swift */; };
-		28E7D55921F1E7BF00111F7D /* HGCircularSlider.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 28E7D55821F1E7BE00111F7D /* HGCircularSlider.framework */; };
 		4E09FC7A1F331E810055CD84 /* ItemViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4E09FC791F331E810055CD84 /* ItemViewController.swift */; };
 		4E09FC7C1F3325C40055CD84 /* StartVideoViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4E09FC7B1F3325C40055CD84 /* StartVideoViewController.swift */; };
 		4E09FC7F1F344DC00055CD84 /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 4E09FC7E1F344DC00055CD84 /* Assets.xcassets */; };
@@ -83,7 +69,6 @@
 			dstSubfolderSpec = 10;
 			files = (
 				0949CA2A1E3100010066F5A9 /* Alamofire.framework in Embed Frameworks */,
-				28A621952223B63100210763 /* HGCircularSlider.framework in Embed Frameworks */,
 			);
 			name = "Embed Frameworks";
 			runOnlyForDeploymentPostprocessing = 0;
@@ -133,20 +118,8 @@
 		09D52F8B1E3F36EF006B66E6 /* CachingView.xib */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = file.xib; path = CachingView.xib; sourceTree = "<group>"; };
 		09D52F8D1E3F3F37006B66E6 /* CachingView.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = CachingView.swift; sourceTree = "<group>"; };
 		09EA799A1DE57D040034B8DF /* AudioPlayerManager.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = AudioPlayerManager.swift; sourceTree = "<group>"; usesTabs = 1; };
-		2816CC29220D6A410047EFB9 /* StoreKit.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = StoreKit.framework; path = System/Library/Frameworks/StoreKit.framework; sourceTree = SDKROOT; };
-		2816CC37221165330047EFB9 /* LogObject.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LogObject.swift; sourceTree = "<group>"; };
-		2816CC3F22117BB40047EFB9 /* LogViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LogViewController.swift; sourceTree = "<group>"; };
-		2816CC4122117E220047EFB9 /* LogTableViewCell.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LogTableViewCell.swift; sourceTree = "<group>"; };
-		2816CC472211AFE50047EFB9 /* LogDetailsTableViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LogDetailsTableViewController.swift; sourceTree = "<group>"; };
-		2822658C221A9665009553ED /* PageViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PageViewController.swift; sourceTree = "<group>"; };
-		2822658E221AA4A6009553ED /* StartupViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = StartupViewController.swift; sourceTree = "<group>"; };
-		28226590221C1B93009553ED /* DownloadObject.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DownloadObject.swift; sourceTree = "<group>"; };
-		285EC271220B08EF00D1574C /* CopyManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CopyManager.swift; sourceTree = "<group>"; };
-		28A621962223D35B00210763 /* Colors.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Colors.xcassets; sourceTree = "<group>"; };
-		28DE353B21D4EE0600B41A5D /* AlertClockViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AlertClockViewController.swift; sourceTree = "<group>"; };
-		28DE354021D5FDAC00B41A5D /* TimerViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TimerViewController.swift; sourceTree = "<group>"; };
+		28D320A1224123E500368780 /* RdevApiService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RdevApiService.swift; sourceTree = "<group>"; };
 		28E7D51F21EC8B5B00111F7D /* OwnRadio.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = OwnRadio.entitlements; sourceTree = "<group>"; };
-		28E7D55821F1E7BE00111F7D /* HGCircularSlider.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = HGCircularSlider.framework; path = Carthage/Build/iOS/HGCircularSlider.framework; sourceTree = "<group>"; };
 		4E09FC791F331E810055CD84 /* ItemViewController.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = ItemViewController.swift; sourceTree = "<group>"; };
 		4E09FC7B1F3325C40055CD84 /* StartVideoViewController.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = StartVideoViewController.swift; sourceTree = "<group>"; };
 		4E09FC7D1F344D760055CD84 /* video.mp4 */ = {isa = PBXFileReference; lastKnownFileType = file; name = video.mp4; path = ../video.mp4; sourceTree = "<group>"; };
@@ -162,11 +135,8 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				28E7D55921F1E7BF00111F7D /* HGCircularSlider.framework in Frameworks */,
-				28A621942223B63100210763 /* HGCircularSlider.framework in Frameworks */,
 				099EAE511E30FC0B005478F2 /* Alamofire.framework in Frameworks */,
 				0979B1B41DF00FCE003C01C7 /* CoreData.framework in Frameworks */,
-				2816CC2A220D6A410047EFB9 /* StoreKit.framework in Frameworks */,
 				50D8269B1DE74B0800238F96 /* Crashlytics.framework in Frameworks */,
 				50D8269A1DE74B0800238F96 /* Fabric.framework in Frameworks */,
 			);
@@ -201,7 +171,6 @@
 		091679481DE451CF00619B3F = {
 			isa = PBXGroup;
 			children = (
-				0979B1C31DF02BA8003C01C7 /* CoreDataManager */,
 				0979B1C21DF01EA4003C01C7 /* CoreData */,
 				0979B1B51DF01020003C01C7 /* DataModel.xcdatamodeld */,
 				091679531DE451CF00619B3F /* OwnRadio */,
@@ -226,38 +195,28 @@
 		091679531DE451CF00619B3F /* OwnRadio */ = {
 			isa = PBXGroup;
 			children = (
-				2822658E221AA4A6009553ED /* StartupViewController.swift */,
-				2822658C221A9665009553ED /* PageViewController.swift */,
-				2816CC472211AFE50047EFB9 /* LogDetailsTableViewController.swift */,
-				2816CC4122117E220047EFB9 /* LogTableViewCell.swift */,
-				2816CC3F22117BB40047EFB9 /* LogViewController.swift */,
-				2816CC37221165330047EFB9 /* LogObject.swift */,
 				28E7D51F21EC8B5B00111F7D /* OwnRadio.entitlements */,
-				285EC271220B08EF00D1574C /* CopyManager.swift */,
+				28D320A1224123E500368780 /* RdevApiService.swift */,
 				091679541DE451CF00619B3F /* AppDelegate.swift */,
 				09B953A01DFEBED70098417C /* CircularView.swift */,
 				09A054141DF168170008ACE7 /* Utilities.swift */,
-				28DE354021D5FDAC00B41A5D /* TimerViewController.swift */,
 				0971662E1DF84A7F005AB0CE /* DiskStatus.swift */,
 				093FBD0B1DEEFEB800038EF0 /* SongObject.swift */,
 				0989BD761DF5B01C005FE001 /* Downloader.swift */,
-				28DE353B21D4EE0600B41A5D /* AlertClockViewController.swift */,
 				4E09FC7B1F3325C40055CD84 /* StartVideoViewController.swift */,
 				091679C61DE47D4400619B3F /* ApiService.swift */,
 				09EA799A1DE57D040034B8DF /* AudioPlayerManager.swift */,
 				091679561DE451CF00619B3F /* ViewController.swift */,
 				4ED299571F28977A00E2616F /* SettingsViewController.swift */,
 				4E8D43561F2B778B00D77C87 /* AboutAppViewController.swift */,
-				28226590221C1B93009553ED /* DownloadObject.swift */,
 				4E09FC791F331E810055CD84 /* ItemViewController.swift */,
 				09D52F8A1E3F36BA006B66E6 /* View */,
 				091679581DE451CF00619B3F /* Main.storyboard */,
-				28A621962223D35B00210763 /* Colors.xcassets */,
 				4E09FC7E1F344DC00055CD84 /* Assets.xcassets */,
-				090501101DE70FB400B1841C /* Fonts */,
 				0916795D1DE451CF00619B3F /* LaunchScreen.storyboard */,
 				091679601DE451CF00619B3F /* Info.plist */,
 				4E09FC7D1F344D760055CD84 /* video.mp4 */,
+				090501101DE70FB400B1841C /* Fonts */,
 			);
 			path = OwnRadio;
 			sourceTree = "<group>";
@@ -283,8 +242,6 @@
 		091679C81DE47D9900619B3F /* Frameworks */ = {
 			isa = PBXGroup;
 			children = (
-				2816CC29220D6A410047EFB9 /* StoreKit.framework */,
-				28E7D55821F1E7BE00111F7D /* HGCircularSlider.framework */,
 				0979B1B31DF00FCE003C01C7 /* CoreData.framework */,
 				50D826981DE74B0800238F96 /* Fabric.framework */,
 				50D826991DE74B0800238F96 /* Crashlytics.framework */,
@@ -296,6 +253,7 @@
 		0979B1C21DF01EA4003C01C7 /* CoreData */ = {
 			isa = PBXGroup;
 			children = (
+				0979B1C31DF02BA8003C01C7 /* CoreDataManager */,
 				0989BD7E1DF6F33C005FE001 /* TrackEntity+CoreDataClass.swift */,
 				098886851DFB069700E401B9 /* TrackEntity+CoreDataProperties.swift */,
 				098B51541DF95E5000293DE5 /* HistoryEntity+CoreDataClass.swift */,
@@ -396,12 +354,6 @@
 						DevelopmentTeam = V37A835M4B;
 						ProvisioningStyle = Manual;
 						SystemCapabilities = {
-							com.apple.BackgroundModes = {
-								enabled = 1;
-							};
-							com.apple.InAppPurchase = {
-								enabled = 1;
-							};
 							com.apple.Push = {
 								enabled = 0;
 							};
@@ -452,7 +404,6 @@
 				0916795F1DE451CF00619B3F /* LaunchScreen.storyboard in Resources */,
 				099EAE491E2FAA05005478F2 /* SFUIText-Regular.otf in Resources */,
 				4E09FC801F3453FD0055CD84 /* video.mp4 in Resources */,
-				28A621972223D35B00210763 /* Colors.xcassets in Resources */,
 				4E09FC7F1F344DC00055CD84 /* Assets.xcassets in Resources */,
 				0916795A1DE451CF00619B3F /* Main.storyboard in Resources */,
 			);
@@ -477,19 +428,17 @@
 /* Begin PBXShellScriptBuildPhase section */
 		0979B1B21DF008A5003C01C7 /* Run Script */ = {
 			isa = PBXShellScriptBuildPhase;
-			buildActionMask = 8;
+			buildActionMask = 2147483647;
 			files = (
 			);
 			inputPaths = (
-				"$(SRCROOT)/Carthage/Build/iOS/HGCircularSlider.framework",
-				"$(SRCROOT)/Carthage/Build/iOS/Alamofire.framework",
 			);
 			name = "Run Script";
 			outputPaths = (
 			);
-			runOnlyForDeploymentPostprocessing = 1;
+			runOnlyForDeploymentPostprocessing = 0;
 			shellPath = /bin/sh;
-			shellScript = "buildNumber=$(/usr/libexec/PlistBuddy -c \"Print CFBundleVersion\" \"${PROJECT_DIR}/${INFOPLIST_FILE}\")\nbuildNumber=$(($buildNumber + 1))\n/usr/libexec/PlistBuddy -c \"Set :CFBundleVersion $buildNumber\" \"${PROJECT_DIR}/${INFOPLIST_FILE}\"\n/usr/local/bin/carthage copy-frameworks\n\n# skip if we run in debug\nif [ \"$CONFIGURATION\" == \"Debug\" ]; then\necho \"Skip frameworks cleaning in debug version\"\nexit 0\nfi\n\nAPP_PATH=\"${TARGET_BUILD_DIR}/${WRAPPER_NAME}\"\n";
+			shellScript = "buildNumber=$(/usr/libexec/PlistBuddy -c \"Print CFBundleVersion\" \"${PROJECT_DIR}/${INFOPLIST_FILE}\")\nbuildNumber=$(($buildNumber + 1))\n/usr/libexec/PlistBuddy -c \"Set :CFBundleVersion $buildNumber\" \"${PROJECT_DIR}/${INFOPLIST_FILE}\"\n/usr/local/bin/carthage copy-frameworks\n\n# skip if we run in debug\nif [ \"$CONFIGURATION\" == \"Debug\" ]; then\necho \"Skip frameworks cleaning in debug version\"\nexit 0\nfi\n\nAPP_PATH=\"${TARGET_BUILD_DIR}/${WRAPPER_NAME}\"\n\n\n# This script loops through the frameworks embedded in the application and\n# removes unused architectures.\nfind \"$APP_PATH\" -name '*.framework' -type d | while read -r FRAMEWORK\ndo\nFRAMEWORK_EXECUTABLE_NAME=$(defaults read \"$FRAMEWORK/Info.plist\" CFBundleExecutable)\nFRAMEWORK_EXECUTABLE_PATH=\"$FRAMEWORK/$FRAMEWORK_EXECUTABLE_NAME\"\necho \"Executable is $FRAMEWORK_EXECUTABLE_PATH\"\n\nEXTRACTED_ARCHS=()\n\nfor ARCH in $ARCHS\ndo\necho \"Extracting $ARCH from $FRAMEWORK_EXECUTABLE_NAME\"\nlipo -extract \"$ARCH\" \"$FRAMEWORK_EXECUTABLE_PATH\" -o \"$FRAMEWORK_EXECUTABLE_PATH-$ARCH\"\nEXTRACTED_ARCHS+=(\"$FRAMEWORK_EXECUTABLE_PATH-$ARCH\")\ndone\n\necho \"Merging extracted architectures: ${ARCHS}\"\nlipo -o \"$FRAMEWORK_EXECUTABLE_PATH-merged\" -create \"${EXTRACTED_ARCHS[@]}\"\nrm \"${EXTRACTED_ARCHS[@]}\"\n\necho \"Replacing original executable with thinned version\"\nrm \"$FRAMEWORK_EXECUTABLE_PATH\"\nmv \"$FRAMEWORK_EXECUTABLE_PATH-merged\" \"$FRAMEWORK_EXECUTABLE_PATH\"\n\ndone\n";
 		};
 		50D826971DE747C900238F96 /* Fabric */ = {
 			isa = PBXShellScriptBuildPhase;
@@ -513,13 +462,11 @@
 			buildActionMask = 2147483647;
 			files = (
 				4E09FC7C1F3325C40055CD84 /* StartVideoViewController.swift in Sources */,
-				2816CC38221165330047EFB9 /* LogObject.swift in Sources */,
-				28226591221C1B93009553ED /* DownloadObject.swift in Sources */,
-				2816CC4222117E220047EFB9 /* LogTableViewCell.swift in Sources */,
 				09B953A11DFEBED70098417C /* CircularView.swift in Sources */,
 				0979B1B91DF01085003C01C7 /* CoreDataManager.swift in Sources */,
 				28E7D51E21EC773900111F7D /* ViewController.swift in Sources */,
 				4E8D43571F2B778B00D77C87 /* AboutAppViewController.swift in Sources */,
+				28D320A2224123E500368780 /* RdevApiService.swift in Sources */,
 				0989BD801DF6F33C005FE001 /* TrackEntity+CoreDataClass.swift in Sources */,
 				093FBD0C1DEEFEB800038EF0 /* SongObject.swift in Sources */,
 				09D52F8E1E3F3F37006B66E6 /* CachingView.swift in Sources */,
@@ -528,19 +475,12 @@
 				091679C71DE47D4400619B3F /* ApiService.swift in Sources */,
 				0989BD771DF5B01C005FE001 /* Downloader.swift in Sources */,
 				0979B1B71DF01020003C01C7 /* DataModel.xcdatamodeld in Sources */,
-				2822658D221A9666009553ED /* PageViewController.swift in Sources */,
 				091679551DE451CF00619B3F /* AppDelegate.swift in Sources */,
-				28E7D53621EF65B300111F7D /* AlertClockViewController.swift in Sources */,
-				2816CC4022117BB40047EFB9 /* LogViewController.swift in Sources */,
 				4ED299581F28977A00E2616F /* SettingsViewController.swift in Sources */,
 				098886861DFB069700E401B9 /* TrackEntity+CoreDataProperties.swift in Sources */,
 				098B515C1DF9623A00293DE5 /* HistoryEntity+CoreDataProperties.swift in Sources */,
-				285EC272220B08EF00D1574C /* CopyManager.swift in Sources */,
 				4E09FC7A1F331E810055CD84 /* ItemViewController.swift in Sources */,
 				098B51561DF95E5000293DE5 /* HistoryEntity+CoreDataClass.swift in Sources */,
-				2816CC482211AFE50047EFB9 /* LogDetailsTableViewController.swift in Sources */,
-				2822658F221AA4A6009553ED /* StartupViewController.swift in Sources */,
-				28DE354121D5FDAC00B41A5D /* TimerViewController.swift in Sources */,
 				09EA799B1DE57D040034B8DF /* AudioPlayerManager.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
@@ -645,7 +585,7 @@
 				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
 				GCC_WARN_UNUSED_FUNCTION = YES;
 				GCC_WARN_UNUSED_VARIABLE = YES;
-				IPHONEOS_DEPLOYMENT_TARGET = 11.0;
+				IPHONEOS_DEPLOYMENT_TARGET = 10.0;
 				MTL_ENABLE_DEBUG_INFO = YES;
 				ONLY_ACTIVE_ARCH = YES;
 				SDKROOT = iphoneos;
@@ -699,7 +639,7 @@
 				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
 				GCC_WARN_UNUSED_FUNCTION = YES;
 				GCC_WARN_UNUSED_VARIABLE = YES;
-				IPHONEOS_DEPLOYMENT_TARGET = 11.0;
+				IPHONEOS_DEPLOYMENT_TARGET = 10.0;
 				MTL_ENABLE_DEBUG_INFO = NO;
 				SDKROOT = iphoneos;
 				SWIFT_OPTIMIZATION_LEVEL = "-Owholemodule";
@@ -712,7 +652,7 @@
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
-				CODE_SIGN_IDENTITY = "iPhone Developer";
+				CODE_SIGN_IDENTITY = "iPhone Distribution";
 				"CODE_SIGN_IDENTITY[sdk=iphoneos*]" = "iPhone Developer";
 				CODE_SIGN_STYLE = Manual;
 				DEVELOPMENT_TEAM = V37A835M4B;
@@ -722,7 +662,7 @@
 					"$(PROJECT_DIR)",
 				);
 				INFOPLIST_FILE = OwnRadio/Info.plist;
-				IPHONEOS_DEPLOYMENT_TARGET = 11.0;
+				IPHONEOS_DEPLOYMENT_TARGET = 10.0;
 				LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/Frameworks";
 				LIBRARY_SEARCH_PATHS = (
 					"$(inherited)",
@@ -734,7 +674,6 @@
 				PROVISIONING_PROFILE_SPECIFIER = dev.serov;
 				"SWIFT_ACTIVE_COMPILATION_CONDITIONS[sdk=iphonesimulator*]" = DEBUG;
 				SWIFT_VERSION = 3.0;
-				TARGETED_DEVICE_FAMILY = "1,2";
 			};
 			name = Debug;
 		};
@@ -752,7 +691,7 @@
 					"$(PROJECT_DIR)",
 				);
 				INFOPLIST_FILE = OwnRadio/Info.plist;
-				IPHONEOS_DEPLOYMENT_TARGET = 11.0;
+				IPHONEOS_DEPLOYMENT_TARGET = 10.0;
 				LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/Frameworks";
 				LIBRARY_SEARCH_PATHS = (
 					"$(inherited)",
@@ -763,8 +702,6 @@
 				PROVISIONING_PROFILE = "94e173a1-66a5-4589-bb8b-2e5a1105db71";
 				PROVISIONING_PROFILE_SPECIFIER = "imac:comnetvoxlab.ownradio";
 				SWIFT_VERSION = 3.0;
-				TARGETED_DEVICE_FAMILY = "1,2";
-				VALID_ARCHS = "arm64 armv7 armv7s arm64e";
 			};
 			name = Release;
 		};
@@ -874,7 +811,6 @@
 			path = DataModel.xcdatamodeld;
 			sourceTree = "<group>";
 			versionGroupType = wrapper.xcdatamodel;
-			wrapsLines = 1;
 		};
 /* End XCVersionGroup section */
 	};
