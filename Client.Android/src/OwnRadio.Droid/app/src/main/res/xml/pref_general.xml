@@ -98,10 +98,10 @@
 		<Preference android:title="@string/buy_sub"
 					android:key="buy_subscription">
 		</Preference>
-		<Preference android:layout="@layout/pref_listens_ratio"
-					android:key="tracks_listen_ratio"
-					>
-		</Preference>
+		<ru.netvoxlab.ownradio.SeekBarPreference
+			android:key="tracks_listen_ratio">
+		</ru.netvoxlab.ownradio.SeekBarPreference>
+
 	</PreferenceCategory>
 	<PreferenceCategory
 		android:title="@string/pref_header_system_info"

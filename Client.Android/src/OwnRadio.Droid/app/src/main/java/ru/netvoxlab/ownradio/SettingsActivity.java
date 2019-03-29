@@ -33,7 +33,6 @@ import android.support.v7.app.AlertDialog;
 import android.support.v7.widget.Toolbar;
 //import android.support.v7.preference.Preference;
 import android.support.v7.preference.PreferenceViewHolder;
-import android.support.v7.preference.SeekBarPreference;
 import android.text.TextUtils;
 import android.util.Base64;
 import android.util.Log;
@@ -174,8 +173,11 @@ public class SettingsActivity extends AppCompatPreferenceActivity {
 						.getString(preference.getKey(), ""));
 	}
 
+
+
 	@Override
 	protected void onCreate(Bundle savedInstanceState) {
+
 
 
 
@@ -559,35 +561,22 @@ public class SettingsActivity extends AppCompatPreferenceActivity {
 			else{
 				buySubscription.setEnabled(false);
 			}
+
 			//Ползунок для установки отношения треков "свои/рекомендованные"
 
-            View view = LayoutInflater.from(context).inflate(R.layout.pref_listens_ratio, null);
+//            Preference pref = findPreference("tracks_listen_ratio");
+//            pref.setOnPreferenceChangeListener(new Preference.OnPreferenceChangeListener() {
+//                @Override
+//                public boolean onPreferenceChange(Preference preference, Object newValue) {
+//                    return false;
+//                }
+//            });
+            SeekBarPreference ratio = (SeekBarPreference) findPreference("tracks_listen_ratio");
+            SharedPreferences sp = PreferenceManager.getDefaultSharedPreferences(context);
+            Integer currentRatio = sp.getInt("tracksRatio", 100);
+            ratio.setValue(currentRatio);
 
-
-			SeekBar ratio = view.findViewById(R.id.listenSeekBar);
-
-
-			SharedPreferences sp = PreferenceManager.getDefaultSharedPreferences(context);
-			Integer value = sp.getInt("ownTracksRatio", 10);
-            ratio.setProgress(value);
-			ratio.setOnSeekBarChangeListener(new SeekBar.OnSeekBarChangeListener() {
-                @Override
-                public void onProgressChanged(SeekBar seekBar, int progress, boolean fromUser) {
-                    Log.d("value", String.valueOf(seekBar.getProgress()));
-                }
-
-                @Override
-                public void onStartTrackingTouch(SeekBar seekBar) {
-
-                }
-
-                @Override
-                public void onStopTrackingTouch(SeekBar seekBar) {
-                    Log.d("value", String.valueOf(seekBar.getProgress()));
-                }
-            });
-
-			//Пункт меню "Заполнить кэш" - забивает доступный для приложения объем памяти треками (ограничения задаются настройками)
+            //Пункт меню "Заполнить кэш" - забивает доступный для приложения объем памяти треками (ограничения задаются настройками)
 			final Preference fillCache = findPreference("fill_cache");
 			if(prefManager.getPrefItemBool("is_subscribed", false) || subscribeStatus || (android.os.Build.VERSION.SDK_INT < 24 && android.os.Build.VERSION.SDK_INT >= 19)){
 				fillCache.setEnabled(true);
