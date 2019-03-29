@@ -70,6 +70,9 @@
 		<Preference android:title="@string/buy_sub"
 					android:key="buy_subscription">
 		</Preference>
+		<!--<Preference android:title="@string/tracks_ratio"-->
+					<!--android:key="tracks_listen_ratio">-->
+		<!--</Preference>-->
 	</PreferenceCategory>
 	<PreferenceCategory
 		android:title="@string/pref_header_system_info"

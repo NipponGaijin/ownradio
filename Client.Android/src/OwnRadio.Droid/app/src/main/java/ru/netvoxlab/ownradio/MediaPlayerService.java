@@ -313,6 +313,7 @@ public class MediaPlayerService extends Service implements MediaPlayer.OnComplet
 							player = null;
 						}
 						//new APICalls(getApplicationContext()).SetIsCorrect(DeviceID, track.getAsString("id"), 0);
+						new RdevApiCalls(getApplicationContext()).SetIsCorrect(track.getAsString("id"), false);
 						new TrackToCache(getApplicationContext()).DeleteTrackFromCache(track);
 						utilites.SendInformationTxt(getApplicationContext(), "Битый трек удален и помечен");
 						PlayNext();

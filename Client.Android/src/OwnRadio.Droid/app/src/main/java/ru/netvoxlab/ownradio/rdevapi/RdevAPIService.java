@@ -9,7 +9,9 @@ import retrofit2.Call;
 import retrofit2.http.Body;
 import retrofit2.http.Header;
 import retrofit2.http.Headers;
+import retrofit2.http.PATCH;
 import retrofit2.http.POST;
+import retrofit2.http.Path;
 import retrofit2.http.Streaming;
 import ru.netvoxlab.ownradio.rdevApiObjects.DeviceInfoBody;
 import ru.netvoxlab.ownradio.rdevApiObjects.DeviceInfoResponse;
@@ -17,6 +19,7 @@ import ru.netvoxlab.ownradio.rdevApiObjects.GetTrackFilestream;
 import ru.netvoxlab.ownradio.rdevApiObjects.NextTrackBody;
 import ru.netvoxlab.ownradio.rdevApiObjects.RegisterUserBody;
 import ru.netvoxlab.ownradio.rdevApiObjects.SendHistoryInfoBody;
+import ru.netvoxlab.ownradio.rdevApiObjects.SetIsCorrectBody;
 
 public interface RdevAPIService {
     //Запрос на получение auth-токена
@@ -49,5 +52,10 @@ public interface RdevAPIService {
     @POST("api/executejs")
     @Headers("Content-Type: application/json")
     Call<ResponseBody> sendListensHistory(@Header("Authorization") String token, @Body SendHistoryInfoBody body);
+
+    //Запрос на обновление записи в таблице tracks
+    @PATCH("odata/tracks({trackid})")
+    @Headers("Content-Type: application/json")
+    Call<Void> setIsCorrect(@Header("Authorization") String token, @Path("trackid")String trackid, @Body SetIsCorrectBody body);
 
 }

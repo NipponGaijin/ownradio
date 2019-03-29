@@ -97,7 +97,7 @@ public class RdevApiCalls {
             }
             return result;
         } catch (Exception ex) {
-            new Utilites().SendInformationTxt(mContext, "Error by registerDevice " + ex.getLocalizedMessage());
+            new Utilites().SendInformationTxt(mContext, "Error by GetDeviceInfo " + ex.getLocalizedMessage());
             return null;
         }
     }
@@ -119,9 +119,31 @@ public class RdevApiCalls {
             return false;
 
         } catch (Exception ex) {
-            new Utilites().SendInformationTxt(mContext, "Error by registerDevice " + ex.getLocalizedMessage());
+            new Utilites().SendInformationTxt(mContext, "Error by SendHistoryInfo " + ex.getLocalizedMessage());
             return null;
         }
     }
+
+    public void SetIsCorrect(String trackId, Boolean isCorrect){
+        CheckConnection checkConnection = new CheckConnection();
+        if (!checkConnection.CheckInetConnection(mContext)) {
+            return;
+        }
+
+        try{
+            Boolean result = new RdevSetIsCorrect(mContext).execute(trackId, String.valueOf(isCorrect)).get();
+            if(result != null && result){
+                return;
+            }else if(result == null){
+                GetAuthToken();
+                SetIsCorrect(trackId, isCorrect);
+            }
+
+        }catch (Exception ex) {
+            new Utilites().SendInformationTxt(mContext, "Error by SetIsCorrect " + ex.getLocalizedMessage());
+                return;
+        }
+    }
+
 
 }

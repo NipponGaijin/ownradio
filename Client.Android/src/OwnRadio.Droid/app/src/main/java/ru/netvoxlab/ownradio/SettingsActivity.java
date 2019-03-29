@@ -10,6 +10,7 @@ import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.IntentSender;
 import android.content.ServiceConnection;
+import android.content.SharedPreferences;
 import android.content.res.Configuration;
 import android.media.Ringtone;
 import android.media.RingtoneManager;
@@ -26,17 +27,24 @@ import android.preference.PreferenceManager;
 import android.preference.PreferenceScreen;
 import android.preference.RingtonePreference;
 import android.provider.Settings;
+import android.support.constraint.ConstraintLayout;
 import android.support.v7.app.ActionBar;
 import android.support.v7.app.AlertDialog;
 import android.support.v7.widget.Toolbar;
+//import android.support.v7.preference.Preference;
+import android.support.v7.preference.PreferenceViewHolder;
+import android.support.v7.preference.SeekBarPreference;
 import android.text.TextUtils;
 import android.util.Base64;
 import android.util.Log;
 import android.util.Patterns;
 import android.util.TypedValue;
+import android.view.LayoutInflater;
 import android.view.MenuItem;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.RelativeLayout;
+import android.widget.SeekBar;
 import android.widget.Toast;
 
 import com.android.vending.billing.IInAppBillingService;
@@ -77,7 +85,6 @@ public class SettingsActivity extends AppCompatPreferenceActivity {
 	static boolean isCachingStarted = false;
 	static IInAppBillingService mBillingService;
 	static boolean subscribeStatus = false;
-
 	ServiceConnection mBillingServiceConn = new ServiceConnection() {
 		@Override
 		public void onServiceConnected(ComponentName name, IBinder service) {
@@ -95,30 +102,30 @@ public class SettingsActivity extends AppCompatPreferenceActivity {
 		@Override
 		public boolean onPreferenceChange(Preference preference, Object value) {
 			String stringValue = value.toString();
-			
+
 			if (preference instanceof ListPreference) {
 				// For list preferences, look up the correct display value in
 				// the preference's 'entries' list.
 				ListPreference listPreference = (ListPreference) preference;
 				int index = listPreference.findIndexOfValue(stringValue);
-				
+
 				// Set the summary to reflect the new value.
 				preference.setSummary(
 						index >= 0
 								? listPreference.getEntries()[index]
 								: null);
-				
+
 			} else if (preference instanceof RingtonePreference) {
 				// For ringtone preferences, look up the correct display value
 				// using RingtoneManager.
 				if (TextUtils.isEmpty(stringValue)) {
 					// Empty values correspond to 'silent' (no ringtone).
 					preference.setSummary(R.string.pref_ringtone_silent);
-					
+
 				} else {
 					Ringtone ringtone = RingtoneManager.getRingtone(
 							preference.getContext(), Uri.parse(stringValue));
-					
+
 					if (ringtone == null) {
 						// Clear the summary if there was a lookup error.
 						preference.setSummary(null);
@@ -137,7 +144,7 @@ public class SettingsActivity extends AppCompatPreferenceActivity {
 			return true;
 		}
 	};
-	
+
 	/**
 	 * Helper method to determine if the device has an extra-large screen. For
 	 * example, 10" tablets are extra-large.
@@ -146,7 +153,7 @@ public class SettingsActivity extends AppCompatPreferenceActivity {
 		return (context.getResources().getConfiguration().screenLayout
 				& Configuration.SCREENLAYOUT_SIZE_MASK) >= Configuration.SCREENLAYOUT_SIZE_XLARGE;
 	}
-	
+
 	/**
 	 * Binds a preference's summary to its value. More specifically, when the
 	 * preference's value is changed, its summary (line of text below the
@@ -166,7 +173,7 @@ public class SettingsActivity extends AppCompatPreferenceActivity {
 						.getDefaultSharedPreferences(preference.getContext())
 						.getString(preference.getKey(), ""));
 	}
-	
+
 	@Override
 	protected void onCreate(Bundle savedInstanceState) {
 
@@ -209,7 +216,7 @@ public class SettingsActivity extends AppCompatPreferenceActivity {
 		}
 	}
 
-	
+
 	/**
 	 * Set up the {@link android.app.ActionBar}, if the API is available.
 	 */
@@ -243,9 +250,9 @@ public class SettingsActivity extends AppCompatPreferenceActivity {
 //				onBackPressed();
 //			}
 //		});
-		
+
 	}
-	
+
 	/**
 	 * {@inheritDoc}
 	 */
@@ -253,7 +260,7 @@ public class SettingsActivity extends AppCompatPreferenceActivity {
 	public boolean onIsMultiPane() {
 		return isXLargeTablet(this);
 	}
-	
+
 	/**
 	 * {@inheritDoc}
 	 */
@@ -262,7 +269,7 @@ public class SettingsActivity extends AppCompatPreferenceActivity {
 	public void onBuildHeaders(List<Header> target) {
 		loadHeadersFromResource(R.xml.pref_headers, target);
 	}
-	
+
 	/**
 	 * This method stops fragment injection in malicious applications.
 	 * Make sure to deny any unknown fragments here.
@@ -274,7 +281,7 @@ public class SettingsActivity extends AppCompatPreferenceActivity {
 	}
 
 
-	
+
 	/**
 	 * This fragment shows general preferences only. It is used when the
 	 * activity is showing a two-pane settings UI.
@@ -309,13 +316,13 @@ public class SettingsActivity extends AppCompatPreferenceActivity {
 			Preference ownTracksSwitch = findPreference("own_tracks_switch");
 			if(ownTracksSwitch!=null)
 				ownTracksSwitch.setEnabled(false);
-			
+
 			Preference freeMemorySize = findPreference("free_memory_size");
 			if (freeSpace / bytesInGB > 0.1d)
 				freeMemorySize.setTitle(getResources().getString(R.string.pref_free_memory_size) + " " + BigDecimal.valueOf(freeSpace / bytesInGB).setScale(2, BigDecimal.ROUND_DOWN) + "Gb");
 			else
 				freeMemorySize.setTitle(getResources().getString(R.string.pref_free_memory_size) + " " + BigDecimal.valueOf(freeSpace / bytesInMB).setScale(2, BigDecimal.ROUND_DOWN) + "Mb");
-			
+
 
 			Preference listeningTracksMemorySize = findPreference("listening_tracks_size");
 			if (listeningTracksSpace / bytesInGB > 0.1d)
@@ -410,10 +417,10 @@ public class SettingsActivity extends AppCompatPreferenceActivity {
 
 			Preference sysInfo = findPreference("sys_info");
 			sysInfo.setTitle("Version: " + prefManager.getPrefItem(version) + "\nDeviceID: " + prefManager.getDeviceId());// + "\nTrackID:" + MediaPlayerService.player.get);
-			
+
 			Preference countTracksTable = findPreference("pref_count_tracks_table");
 			countTracksTable.setTitle(trackInfo.GetCountPlayTracksTable());
-			
+
 			Preference aboutApp = findPreference("about_app");
 			aboutApp.setOnPreferenceClickListener(new Preference.OnPreferenceClickListener() {
 				@Override
@@ -423,7 +430,7 @@ public class SettingsActivity extends AppCompatPreferenceActivity {
 					return true;
 				}
 			});
-			
+
 			Preference lastLogs = findPreference("pref_last_log_recs");
 			lastLogs.setOnPreferenceClickListener(new Preference.OnPreferenceClickListener() {
 				@Override
@@ -433,7 +440,7 @@ public class SettingsActivity extends AppCompatPreferenceActivity {
 					return true;
 				}
 			});
-			
+
 			//Пункт меню "свободная память" открывает системную информацию
 			Preference freeMemory = findPreference("free_memory_size");
 			freeMemory.setOnPreferenceClickListener(new Preference.OnPreferenceClickListener() {
@@ -443,7 +450,7 @@ public class SettingsActivity extends AppCompatPreferenceActivity {
 					return true;
 				}
 			});
-			
+
 			//Пункт меню "удалить прослушанные треки"
 			Preference deleteListenedTracks = findPreference("delete_listening_tracks");
 			deleteListenedTracks.setOnPreferenceClickListener(new Preference.OnPreferenceClickListener() {
@@ -474,12 +481,12 @@ public class SettingsActivity extends AppCompatPreferenceActivity {
 						AlertDialog alert = builder.create();
 						alert.show();
 					}catch (Exception ex){
-						
+
 					}
 					return true;
 				}
 			});
-			
+
 			//Пункт меню "удалить все треки"
 			Preference deleteAllTracks = findPreference("delete_all_tracks");
 			deleteAllTracks.setOnPreferenceClickListener(new Preference.OnPreferenceClickListener() {
@@ -552,6 +559,33 @@ public class SettingsActivity extends AppCompatPreferenceActivity {
 			else{
 				buySubscription.setEnabled(false);
 			}
+			//Ползунок для установки отношения треков "свои/рекомендованные"
+
+            View view = LayoutInflater.from(context).inflate(R.layout.pref_listens_ratio, null);
+
+
+			SeekBar ratio = view.findViewById(R.id.listenSeekBar);
+
+
+			SharedPreferences sp = PreferenceManager.getDefaultSharedPreferences(context);
+			Integer value = sp.getInt("ownTracksRatio", 10);
+            ratio.setProgress(value);
+			ratio.setOnSeekBarChangeListener(new SeekBar.OnSeekBarChangeListener() {
+                @Override
+                public void onProgressChanged(SeekBar seekBar, int progress, boolean fromUser) {
+                    Log.d("value", String.valueOf(seekBar.getProgress()));
+                }
+
+                @Override
+                public void onStartTrackingTouch(SeekBar seekBar) {
+
+                }
+
+                @Override
+                public void onStopTrackingTouch(SeekBar seekBar) {
+                    Log.d("value", String.valueOf(seekBar.getProgress()));
+                }
+            });
 
 			//Пункт меню "Заполнить кэш" - забивает доступный для приложения объем памяти треками (ограничения задаются настройками)
 			final Preference fillCache = findPreference("fill_cache");
@@ -613,7 +647,7 @@ public class SettingsActivity extends AppCompatPreferenceActivity {
 			}
 
 		}
-		
+
 		@Override
 		public boolean onOptionsItemSelected(MenuItem item) {
 			int id = item.getItemId();
@@ -629,11 +663,11 @@ public class SettingsActivity extends AppCompatPreferenceActivity {
 
 	public static class MyPrefListener implements Preference.OnPreferenceClickListener {
 		private Context mContext;
-		
+
 		public MyPrefListener(Context context) {
 			this.mContext = context;
 		}
-		
+
 		@Override
 		public boolean onPreferenceClick(Preference preference) {
 			return true;

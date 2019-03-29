@@ -1,7 +1,8 @@
 <PreferenceScreen xmlns:android="http://schemas.android.com/apk/res/android"
-				  xmlns:example="http://schemas.android.com/apk/res/ru.netvoxlab.ownradio">
-	<Preference>
-	</Preference>
+	              xmlns:asp="http://schemas.android.com/apk/res-auto"
+	              xmlns:app="http://schemas.android.com/apk/res-auto">
+
+
 	<PreferenceCategory
 		android:title="@string/pref_header_internet_connection"
 		android:key="pref_key_storage_settings"
@@ -96,6 +97,10 @@
 		</Preference>
 		<Preference android:title="@string/buy_sub"
 					android:key="buy_subscription">
+		</Preference>
+		<Preference android:layout="@layout/pref_listens_ratio"
+					android:key="tracks_listen_ratio"
+					>
 		</Preference>
 	</PreferenceCategory>
 	<PreferenceCategory
