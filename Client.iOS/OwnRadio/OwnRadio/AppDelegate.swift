@@ -22,7 +22,6 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
 	//с этой функции начинается загрузка приложения
 	func application(_ application: UIApplication, didFinishLaunchingWithOptions launchOptions: [UIApplicationLaunchOptionsKey: Any]?) -> Bool {
 		// Override point for customization after application launch.
-		
 		URLCache.shared.removeAllCachedResponses()
 		let userDefaults = UserDefaults.standard
 		//для получения отчетов об ошибках на фабрик
@@ -46,6 +45,7 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
 		userDefaults.register(defaults: ["deviceIdentifier" : ""])
 		try? userDefaults.register(defaults: ["playingSongObject" : PropertyListEncoder().encode(SongObject())])
 		userDefaults.register(defaults: ["trackPosition" : 0])
+		userDefaults.register(defaults: ["getTracksRatio" : 100])
 		//userDefaults.set("", forKey: "authToken")
 //		if userDefaults.object(forKey: "isAppAlreadyLaunchedOnce") == nil {
 ////			ApiService.shared.registerDevice()

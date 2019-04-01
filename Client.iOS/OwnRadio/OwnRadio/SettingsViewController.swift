@@ -20,13 +20,15 @@ class SettingsViewController: UITableViewController {
 	@IBOutlet weak var delAllTracksLbl: UILabel!
 	@IBOutlet weak var versionLbl: UILabel!
 	@IBOutlet weak var deviceIdLbl: UILabel!
-	
+    @IBOutlet weak var tracksRatio: UISlider!
+    
 	@IBOutlet weak var fromFreeSpace: UILabel!
 
 	@IBOutlet weak var delAllTracksCell: UITableViewCell!
 	@IBOutlet weak var countPlayingTracksTable: UILabel!
     @IBOutlet weak var tracksCountLbl: UILabel!
-    
+	
+	var player: AudioPlayerManager?
 	var remoteAudioControls: RemoteAudioControls?
 	//получаем таблицу с количеством треков сгруппированных по количестсву их прослушиваний
 	var playedTracks: NSArray = CoreDataManager.instance.getGroupedTracks()
@@ -36,8 +38,6 @@ class SettingsViewController: UITableViewController {
 	
 	override func viewDidLoad() {
 		super.viewDidLoad()
-        
-        
 		
 
 		onlyWiFiSwitch.isOn = (userDefaults.object(forKey: "trafficOptimize") as? Bool)!
@@ -91,12 +91,24 @@ class SettingsViewController: UITableViewController {
 		
 		countPlayingTracksTable.numberOfLines = playedTracks.count
 		countPlayingTracksTable.text = str as String
+		
+		//Инициализация регулятора выдачи треков
+		let thumbImage = UIImage(named: "trackThumb")
+		let size = CGSize(width: (thumbImage?.size.width)! * 1.5, height: (thumbImage?.size.height)! * 1.5)
+		UIGraphicsBeginImageContextWithOptions(size, false, 2.0)
+		thumbImage?.draw(in: CGRect(x: 0, y: 0, width: size.width, height: size.height))
+		let newThumbImage = UIGraphicsGetImageFromCurrentImageContext()
+		UIGraphicsEndImageContext()
+		tracksRatio.setThumbImage(newThumbImage, for: .normal)
+		let ratio = UserDefaults.standard.integer(forKey: "getTracksRatio") ?? 100
+		tracksRatio.setValue(Float(ratio), animated: false)
 	}
 	
 	@IBAction func onlyWiFiSwitchValueChanged(_ sender: UISwitch) {
 		UserDefaults.standard.set(onlyWiFiSwitch.isOn, forKey: "trafficOptimize")
 		UserDefaults.standard.synchronize()
 	}
+	
 	
 	//Сохраняем настроки "занимать не более" и выводим актуальное значение при его изменении
 	@IBAction func stepperValueChanged(_ sender: UIStepper) {
@@ -132,27 +144,32 @@ class SettingsViewController: UITableViewController {
 		let dellAllTracksAlert = UIAlertController(title: "Удаление всех треков", message: "Вы уверены что хотите удалить все треки из кэша? Приложение не сможет проигрывать треки в офлайне пока не будет наполнен кэш.", preferredStyle: UIAlertControllerStyle.alert)
 		
 		dellAllTracksAlert.addAction(UIAlertAction(title: "ОК", style: .default, handler: { (action: UIAlertAction!) in
+			self.player?.pauseSong {
+				if let rootController = UIApplication.shared.keyWindow?.rootViewController {
+					let navigationController = rootController as! UINavigationController
+					
+					if let radioViewContr = navigationController.topViewController  as? RadioViewController {
+						radioViewContr.updateUI()
+					}
+				}
+			}
+			
 			let tracksUrlString = FileManager.applicationSupportDir().appending("/Tracks/")
 			// получаем содержимое папки Tracks
 			if let tracksContents = try? FileManager.default.contentsOfDirectory(atPath: tracksUrlString ){
 				
 				for track in tracksContents {
 					// проверка для удаления только треков
-					let songObjectEncoded = UserDefaults.standard.data(forKey: "playingSongObject")
-					let currentSongObject = try! PropertyListDecoder().decode(SongObject.self, from: songObjectEncoded!)
-					if track.isEqual(currentSongObject.trackID + (".mp3")) == false{
 						if track.contains("mp3") {
-							let path = tracksUrlString.appending(track)
-							do{
-								print(path)
-								try FileManager.default.removeItem(atPath: path)
+						let path = tracksUrlString.appending(track)
+						do{
+							print(path)
+							try FileManager.default.removeItem(atPath: path)
 								
-							} catch  {
-								print("Ошибка при удалении файла  - \(error)")
-							}
+						} catch  {
+							print("Ошибка при удалении файла  - \(error)")
 						}
 					}
-					
 				}
 				
 				//удаляем треки из базы
@@ -224,7 +241,11 @@ class SettingsViewController: UITableViewController {
 	@IBAction func rateAppBtn(_ sender: UIButton) {
 		UIApplication.shared.openURL(NSURL(string: "itms://itunes.apple.com/ru/app/ownradio/id1179868370")! as URL)
 	}
-	
+    @IBAction func ratioChangeAction(_ sender: Any) {
+		UserDefaults.standard.set(Int(tracksRatio.value), forKey: "getTracksRatio")
+    }
+    
+    
 //	override func tableView(_ tableView: UITableView, heightForRowAt indexPath: IndexPath) -> CGFloat {
 ////		if indexPath.section == 4 && indexPath.row == 0 {
 ////

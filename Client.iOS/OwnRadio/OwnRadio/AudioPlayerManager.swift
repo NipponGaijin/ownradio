@@ -144,7 +144,30 @@ class AudioPlayerManager: NSObject, AVAssetResourceLoaderDelegate, NSURLConnecti
 							})
 						}
 					}
+					
+					let path = self.tracksUrlString.appending((self.playingSong.path!))
+					print(path)
+					if FileManager.default.fileExists(atPath: path) {
+						do{
+							// ApiService.shared.setTrackIsCorrect(trackId: self.playingSong.trackID, isCorrect: 0)
+							RdevApiService().SetIsCorrect(trackId: self.playingSong.trackID, isCorrect: false)
+							// удаляем обьект по пути
+							try FileManager.default.removeItem(atPath: path)
+							NotificationCenter.default.post(name: NSNotification.Name(rawValue: "updateSysInfo"), object: nil, userInfo: ["message":"Поврежденный файл удален"])
+							print("Поврежденный файл был удален")
+						}
+						catch {
+							print("Ошибка при удалении файла: файл не существует")
+						}
+					}
+					// удаляем трек с базы
+					CoreDataManager.instance.deleteTrackFor(trackID: self.playingSong.trackID)
+					CoreDataManager.instance.saveContext()
+					
+					print("Поврежденный файл был найден и удален")
+					NotificationCenter.default.post(name: NSNotification.Name(rawValue: "updateSysInfo"), object: nil, userInfo: ["message":"Поврежденный файл был удален"])
 				}
+				
 				break
 			case .unknown:
 				break
@@ -168,8 +191,10 @@ class AudioPlayerManager: NSObject, AVAssetResourceLoaderDelegate, NSURLConnecti
                     if FileManager.default.fileExists(atPath: path) {
                         do{
                            // ApiService.shared.setTrackIsCorrect(trackId: self.playingSong.trackID, isCorrect: 0)
+							RdevApiService().SetIsCorrect(trackId: self.playingSong.trackID, isCorrect: false)
                             // удаляем обьект по пути
                             try FileManager.default.removeItem(atPath: path)
+							NotificationCenter.default.post(name: NSNotification.Name(rawValue: "updateSysInfo"), object: nil, userInfo: ["message":"Поврежденный файл удален"])
                             print("Поврежденный файл был удален")
                         }
                         catch {

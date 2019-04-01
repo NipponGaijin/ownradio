@@ -84,6 +84,9 @@ class RadioViewController: UIViewController, UITableViewDataSource, UITableViewD
 		if segue.identifier == "SettingsByButton" || segue.identifier == "SettingsBySwipe"{
 			if let nextViewController = segue.destination as? SettingsViewController {
 				nextViewController.remoteAudioControls = self
+				if player != nil{
+					nextViewController.player = self.player;
+				}
 			}
 		}
 	}
@@ -205,6 +208,21 @@ class RadioViewController: UIViewController, UITableViewDataSource, UITableViewD
 		
 		DispatchQueue.main.async {
 			self.updateUI()
+		}
+		
+		if CoreDataManager.instance.getCountOfTracks() < 1{
+			DispatchQueue.main.async {
+				self.progressView.setProgress(0.0, animated: false)
+				self.currentTimeLbl.text = ""
+				self.elapsedTimeLbl.text = ""
+				self.authorNameLbl.text = ""
+				self.trackNameLbl.text = ""
+			}
+			self.isStartListening = false
+			self.playPauseBtn.isEnabled = false
+			updateUI()
+			downloadTracks()
+			cachingView.awakeFromNib()
 		}
 	}
 	
@@ -576,6 +594,8 @@ class RadioViewController: UIViewController, UITableViewDataSource, UITableViewD
 //		self.progressView.isHidden = true
 		DispatchQueue.main.async {
 			self.progressView.setProgress(0.0, animated: false)
+			self.currentTimeLbl.text = ""
+			self.elapsedTimeLbl.text = ""
 		}
 		DispatchQueue.main.async {
 			self.player.skipSong {
@@ -598,6 +618,13 @@ class RadioViewController: UIViewController, UITableViewDataSource, UITableViewD
 	
 	//обработчик нажатий на кнопку play/pause
 	@IBAction func playBtnPressed() {
+		
+		if CoreDataManager.instance.getCountOfTracks() < 1 && !player.isPlaying{
+			self.downloadTracks()
+			updateUI()
+			return
+		}
+		
         isStartListening = true
 		if player.isPlaying{
 			self.interruptedManually = true

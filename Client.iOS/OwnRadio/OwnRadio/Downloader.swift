@@ -9,6 +9,7 @@
 
 import Foundation
 import UIKit
+import Alamofire
 
 class Downloader: NSObject {
 	
@@ -120,8 +121,8 @@ class Downloader: NSObject {
 						return
 					}
 					//добавляем трек в очередь загрузки
-					self.createDownloadTask(destinationUrl: destinationUrl, dict: dict)
-					
+					//self.createDownloadTask(destinationUrl: destinationUrl, dict: dict)
+					self.downloadFile(destinationUrl: destinationUrl, dict: dict)
 					
 					//						}
 				}
@@ -167,6 +168,125 @@ class Downloader: NSObject {
 			
 		}
 	}
+	func downloadFile(destinationUrl:URL, dict:[String:Any]){
+		print("call createDownloadTask")
+		
+		let json: Parameters = ["fields":["recid":dict["recid"] as! String], "method":"gettrack", "resulttype":"filestream"]
+		let token = UserDefaults.standard.string(forKey: "authToken") as! String
+		let headers: HTTPHeaders = [
+			"Content-Type":"application/json",
+			"Authorization":"Bearer \(token)"
+		]
+		let mp3Path = destinationUrl.appendingPathExtension("mp3")
+		let destination: DownloadRequest.DownloadFileDestination = {_, _ in
+			return (mp3Path, [.removePreviousFile])
+		}
+		guard FileManager.default.fileExists(atPath: mp3Path.path ) == false else {
+			self.createPostNotificationSysInfo(message: "MP3 file exist")
+			return
+		}
+		download(rdevApiUrl!, method: .post, parameters: json, encoding: JSONEncoding.default, headers: headers, to: destination).response { (response) in
+			if let statusCode = response.response?.statusCode{
+				if statusCode == 200{
+					let filedata = NSData(contentsOf: mp3Path)
+					if let contentLength = Int(response.response?.allHeaderFields["Content-Length"] as! String) {
+						if filedata!.length != contentLength || filedata!.length == 0 {
+							if FileManager.default.fileExists(atPath: mp3Path.path) {
+								do{
+									// удаляем обьект по пути
+									try FileManager.default.removeItem(atPath: mp3Path.path)
+									self.createPostNotificationSysInfo(message: "Файл с длиной = \(filedata!.length), ContentLength = \(contentLength) удален")
+								}
+								catch {
+									print("Ошибка при удалении недокачанного трека")
+								}
+							}
+							return
+						}
+					}
+					//сохраняем информацию о файле в базу данных
+					
+					
+					let trackEntity = TrackEntity()
+					
+					trackEntity.path = String(describing: mp3Path.lastPathComponent)
+					trackEntity.countPlay = 0
+					trackEntity.artistName = dict["artist"] as? String
+					trackEntity.trackName = dict["recname"] as? String
+					trackEntity.trackLength = dict["length"] as! Double
+					trackEntity.recId = dict["recid"] as! String?
+					trackEntity.playingDate = NSDate.init(timeIntervalSinceNow: -315360000.0042889)
+					
+					CoreDataManager.instance.saveContext()
+					
+					self.createPostNotificationSysInfo(message: "Трек (\(self.requestCount+1)) загружен \(trackEntity.recId ?? "")")
+					
+					if self.requestCount < self.maxRequest {
+						if self.completionHandler != nil {
+							self.completionHandler!()
+						}
+						self.requestCount += 1
+						self.load(isSelfFlag: true, complition: self.completionHandler!)
+						
+					} else {
+						if self.completionHandler != nil {
+							self.completionHandler!()
+						}
+						self.requestCount = 0
+						self.maxRequest = self.maxTryes
+					}
+					
+					//				complition()
+					
+					print("File moved to documents folder")
+				}
+				else if statusCode == 401{
+					NotificationCenter.default.post(name: NSNotification.Name(rawValue: "updateSysInfo"), object: nil, userInfo: ["message":"Create downloadTask not auth"])
+					RdevApiService().GetAuthToken(){_ in
+						//self.createDownloadTask(destinationUrl: destinationUrl, dict: dict)
+					}
+					self.createDownloadTask(destinationUrl: destinationUrl, dict: dict)
+				}else if statusCode == 500{
+					NotificationCenter.default.post(name: NSNotification.Name(rawValue: "updateSysInfo"), object: nil, userInfo: ["message":"Create downloadtask ServerError"])
+					if self.requestCount < self.maxRequest {
+						if self.completionHandler != nil {
+							self.completionHandler!()
+						}
+						//self.requestCount += 1
+						if UserDefaults.standard.bool(forKey: "trafficOptimize"){
+							self.requestCount += 1
+						}
+						self.load(isSelfFlag: true, complition: self.completionHandler!)
+						
+					} else {
+						if self.completionHandler != nil {
+							self.completionHandler!()
+						}
+						self.requestCount = 0
+						self.maxRequest = self.maxTryes
+					}
+				}
+				else{
+					NotificationCenter.default.post(name: NSNotification.Name(rawValue: "updateSysInfo"), object: nil, userInfo: ["message":"Create downloadtask error: \(statusCode.description)"])
+					if self.requestCount < self.maxRequest {
+						if self.completionHandler != nil {
+							self.completionHandler!()
+						}
+						self.requestCount += 1
+						self.load(isSelfFlag: true, complition: self.completionHandler!)
+						
+					} else {
+						if self.completionHandler != nil {
+							self.completionHandler!()
+						}
+						self.requestCount = 0
+						self.maxRequest = self.maxTryes
+					}
+				}
+			}
+		}
+
+	}
 	
 	func createDownloadTask(destinationUrl:URL, dict:[String:Any]){
 		print("call createDownloadTask")
@@ -174,6 +294,7 @@ class Downloader: NSObject {
         let json = ["fields":["recid":dict["recid"] as! String], "method":"gettrack", "resulttype":"filestream"] as [String : Any]
         let jsonBody = try? JSONSerialization.data(withJSONObject: json)
         let token = UserDefaults.standard.string(forKey: "authToken")
+		
         var request = URLRequest(url: rdevApiUrl!)
         request.httpMethod = "POST"
 		request.setValue("application/json", forHTTPHeaderField: "Content-Type")
