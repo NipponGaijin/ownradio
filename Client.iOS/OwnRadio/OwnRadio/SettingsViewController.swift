@@ -21,6 +21,7 @@ class SettingsViewController: UITableViewController {
 	@IBOutlet weak var versionLbl: UILabel!
 	@IBOutlet weak var deviceIdLbl: UILabel!
     @IBOutlet weak var tracksRatio: UISlider!
+    @IBOutlet weak var ratioLabel: UILabel!
     
 	@IBOutlet weak var fromFreeSpace: UILabel!
 
@@ -100,7 +101,8 @@ class SettingsViewController: UITableViewController {
 		let newThumbImage = UIGraphicsGetImageFromCurrentImageContext()
 		UIGraphicsEndImageContext()
 		tracksRatio.setThumbImage(newThumbImage, for: .normal)
-		let ratio = UserDefaults.standard.integer(forKey: "getTracksRatio") ?? 100
+		let ratio = UserDefaults.standard.integer(forKey: "getTracksRatio")
+        ratioLabel.text = "\(ratio)%"
 		tracksRatio.setValue(Float(ratio), animated: false)
 	}
 	
@@ -241,8 +243,10 @@ class SettingsViewController: UITableViewController {
 	@IBAction func rateAppBtn(_ sender: UIButton) {
 		UIApplication.shared.openURL(NSURL(string: "itms://itunes.apple.com/ru/app/ownradio/id1179868370")! as URL)
 	}
-    @IBAction func ratioChangeAction(_ sender: Any) {
-		UserDefaults.standard.set(Int(tracksRatio.value), forKey: "getTracksRatio")
+    @IBAction func ratioChangeAction(_ sender: UISlider) {
+		sender.setValue(sender.value.rounded(.down), animated: true)
+		UserDefaults.standard.set(Int(tracksRatio.value.rounded(.down)), forKey: "getTracksRatio")
+        ratioLabel.text = "\(Int(tracksRatio.value.rounded(.down)))%"
     }
     
     

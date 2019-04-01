@@ -984,14 +984,27 @@
                                                     <color key="textColor" white="0.66666666669999997" alpha="1" colorSpace="custom" customColorSpace="genericGamma22GrayColorSpace"/>
                                                     <nil key="highlightedColor"/>
                                                 </label>
+                                                <label opaque="NO" userInteractionEnabled="NO" contentMode="left" horizontalHuggingPriority="251" verticalHuggingPriority="251" text="ratio" textAlignment="right" lineBreakMode="tailTruncation" baselineAdjustment="alignBaselines" adjustsFontSizeToFit="NO" translatesAutoresizingMaskIntoConstraints="NO" id="VgP-ox-Xcg">
+                                                    <rect key="frame" x="332" y="11" width="60" height="21"/>
+                                                    <constraints>
+                                                        <constraint firstAttribute="height" constant="21" id="Rvb-Nd-9Rw"/>
+                                                        <constraint firstAttribute="width" constant="60" id="x84-Ux-cGe"/>
+                                                    </constraints>
+                                                    <fontDescription key="fontDescription" type="system" pointSize="17"/>
+                                                    <nil key="textColor"/>
+                                                    <nil key="highlightedColor"/>
+                                                </label>
                                             </subviews>
                                             <constraints>
+                                                <constraint firstItem="VgP-ox-Xcg" firstAttribute="trailing" secondItem="TUY-5J-s1Q" secondAttribute="trailingMargin" id="0Rb-Rp-CaB"/>
                                                 <constraint firstItem="3ii-Zd-SLI" firstAttribute="top" secondItem="TUY-5J-s1Q" secondAttribute="topMargin" id="9pp-VD-3bk"/>
                                                 <constraint firstAttribute="bottomMargin" secondItem="31r-LZ-J6p" secondAttribute="bottom" constant="2" id="Era-aw-D6g"/>
                                                 <constraint firstItem="1g3-1E-J6D" firstAttribute="top" secondItem="bvx-3q-uNd" secondAttribute="bottom" id="HLv-Hp-Tke"/>
                                                 <constraint firstItem="bvx-3q-uNd" firstAttribute="trailing" secondItem="TUY-5J-s1Q" secondAttribute="trailingMargin" id="HwI-sU-45f"/>
                                                 <constraint firstItem="31r-LZ-J6p" firstAttribute="top" secondItem="3ii-Zd-SLI" secondAttribute="bottom" constant="29" id="IIT-du-YSB"/>
                                                 <constraint firstItem="3ii-Zd-SLI" firstAttribute="leading" secondItem="TUY-5J-s1Q" secondAttribute="leadingMargin" id="P2j-as-LMw"/>
+                                                <constraint firstItem="1g3-1E-J6D" firstAttribute="top" secondItem="VgP-ox-Xcg" secondAttribute="bottom" constant="31.5" id="Qva-YU-Trf"/>
+                                                <constraint firstItem="VgP-ox-Xcg" firstAttribute="top" secondItem="TUY-5J-s1Q" secondAttribute="topMargin" constant="3" id="VyN-td-Z05"/>
                                                 <constraint firstItem="3ii-Zd-SLI" firstAttribute="leading" secondItem="31r-LZ-J6p" secondAttribute="leading" id="Xft-Oz-0gt"/>
                                                 <constraint firstItem="1g3-1E-J6D" firstAttribute="trailing" secondItem="bvx-3q-uNd" secondAttribute="trailing" id="aqV-Vw-mwP"/>
                                                 <constraint firstItem="bvx-3q-uNd" firstAttribute="leading" secondItem="TUY-5J-s1Q" secondAttribute="leadingMargin" id="bM5-be-5wz"/>
@@ -1150,6 +1163,7 @@
                         <outlet property="listenTracksSize" destination="llY-KR-mWa" id="cJi-hH-D9d"/>
                         <outlet property="maxMemoryLbl" destination="v2M-8V-EQ3" id="imC-sc-VjT"/>
                         <outlet property="onlyWiFiSwitch" destination="pU4-dy-kii" id="taH-wq-PQn"/>
+                        <outlet property="ratioLabel" destination="VgP-ox-Xcg" id="RE5-2U-6It"/>
                         <outlet property="stepper" destination="CRv-cC-Qp5" id="QzB-MO-74N"/>
                         <outlet property="tracksCountLbl" destination="2Lj-EU-rBt" id="Fex-kQ-xFE"/>
                         <outlet property="tracksRatio" destination="bvx-3q-uNd" id="495-3d-5CM"/>
