@@ -3,9 +3,9 @@
 
     <item
         android:id="@android:id/background"
-        android:drawable="@color/main_gray_color"/>
+        android:drawable="@drawable/ic_tracks_seekbar_ruler"/>
     <item android:id="@android:id/progress">
-        <clip android:drawable="@color/ColorPrimaryBtn70" />
+        <clip android:drawable="@drawable/ic_tracks_seekbar_ruler_blue" />
     </item>
 
 </layer-list>

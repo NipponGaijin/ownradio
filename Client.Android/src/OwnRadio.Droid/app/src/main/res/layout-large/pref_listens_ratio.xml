@@ -8,21 +8,25 @@
 
     <SeekBar
 
-        android:thumb="@drawable/ic_tracks_ratio_seekbar"
         android:id="@+id/listenSeekBar"
-        android:layout_width="349dp"
+        android:layout_width="426dp"
         android:layout_height="29dp"
         android:layout_marginLeft="10dp"
         android:layout_marginTop="-4dp"
         android:layout_marginRight="12dp"
+        android:layout_marginBottom="8dp"
         android:max="100"
         android:maxHeight="7dp"
         android:minHeight="3dp"
         android:progress="10"
         android:progressDrawable="@drawable/ratio_slider"
+        android:thumb="@drawable/ic_tracks_ratio_seekbar"
+        app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintHorizontal_bias="0.703"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@+id/listenRatio" />
+        app:layout_constraintTop_toBottomOf="@+id/listenRatio"
+        app:layout_constraintVertical_bias="0.004" />
     <!--style="@style/Widget.AppCompat.SeekBar.Discrete"-->
     <!--android:tickMark="@drawable/track_ratio_tickmark"-->
     <TextView

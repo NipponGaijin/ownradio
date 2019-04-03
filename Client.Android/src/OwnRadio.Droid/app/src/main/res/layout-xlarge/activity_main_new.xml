@@ -24,7 +24,24 @@
 	<android.support.constraint.ConstraintLayout
 		android:layout_width="match_parent"
 		android:layout_height="match_parent"
-		android:background="@android:color/white">
+		android:background="@android:color/white"
+		android:id="@+id/main_layout"
+		>
+
+		<ImageButton
+			android:id="@+id/rateAppBtn"
+			style="@style/RateButtonTheme"
+			android:layout_width="74dp"
+			android:layout_height="62dp"
+			android:layout_marginStart="8dp"
+			android:layout_marginEnd="8dp"
+			android:layout_marginBottom="8dp"
+			android:scaleType="center"
+			app:layout_constraintBottom_toTopOf="@+id/progressBar"
+			app:layout_constraintEnd_toEndOf="parent"
+			app:layout_constraintHorizontal_bias="0.977"
+			app:layout_constraintStart_toStartOf="parent"
+			app:srcCompat="@drawable/ic_star_popup" />
 
 		<ImageButton
 			android:id="@+id/buttonShareTrack3"

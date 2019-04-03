@@ -59,6 +59,7 @@ import static ru.netvoxlab.ownradio.MainActivity.ActionNotFoundTrack;
 import static ru.netvoxlab.ownradio.MainActivity.ActionProgressBarFirstTracksLoad;
 import static ru.netvoxlab.ownradio.MainActivity.ActionProgressBarUpdate;
 import static ru.netvoxlab.ownradio.MainActivity.ActionTrackInfoUpdate;
+import static ru.netvoxlab.ownradio.MainActivity.ActionCheckListensCount;
 import static ru.netvoxlab.ownradio.RequestAPIService.ACTION_GETNEXTTRACK;
 import static ru.netvoxlab.ownradio.RequestAPIService.ACTION_SENDHISTORY;
 import static ru.netvoxlab.ownradio.RequestAPIService.EXTRA_COUNT;
@@ -386,6 +387,13 @@ public class MediaPlayerService extends Service implements MediaPlayer.OnComplet
 			historySenderIntent.setAction(ACTION_SENDHISTORY);
 			historySenderIntent.putExtra(EXTRA_DEVICEID, DeviceID);
 			startService(historySenderIntent);
+
+
+			SharedPreferences sp = PreferenceManager.getDefaultSharedPreferences(getApplicationContext());
+			int currentListens = sp.getInt("rateListensCount", 0);
+			sp.edit().putInt("rateListensCount", currentListens + 1).apply();
+			Intent mainIntent = new Intent(ActionCheckListensCount);
+			getApplicationContext().sendBroadcast(mainIntent);
 		}
 	}
 	

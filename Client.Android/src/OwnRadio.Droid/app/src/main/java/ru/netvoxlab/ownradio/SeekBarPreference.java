@@ -3,8 +3,12 @@ package ru.netvoxlab.ownradio;
 import android.content.Context;
 import android.content.SharedPreferences;
 import android.content.res.TypedArray;
+import android.graphics.Bitmap;
+import android.graphics.Canvas;
+import android.graphics.drawable.Drawable;
 import android.preference.Preference;
 import android.preference.PreferenceManager;
+import android.support.v7.widget.AppCompatSeekBar;
 import android.util.AttributeSet;
 import android.view.View;
 import android.widget.SeekBar;
@@ -14,6 +18,8 @@ public class SeekBarPreference extends Preference implements OnSeekBarChangeList
     private SeekBar mSeekBar;
     private int mProgress;
     private SharedPreferences sp;
+    private Drawable mTickMark;
+
     public SeekBarPreference(Context context) {
         this(context, null, 0);
     }
@@ -46,7 +52,7 @@ public class SeekBarPreference extends Preference implements OnSeekBarChangeList
 
     @Override
     public void onStartTrackingTouch(SeekBar seekBar) {
-        setValue(seekBar.getProgress());
+        //setValue(seekBar.getProgress());
     }
 
     @Override

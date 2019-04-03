@@ -8,9 +8,8 @@
 
     <SeekBar
 
-        android:thumb="@drawable/ic_tracks_ratio_seekbar"
         android:id="@+id/listenSeekBar"
-        android:layout_width="349dp"
+        android:layout_width="736dp"
         android:layout_height="29dp"
         android:layout_marginLeft="10dp"
         android:layout_marginTop="-4dp"
@@ -20,6 +19,7 @@
         android:minHeight="3dp"
         android:progress="10"
         android:progressDrawable="@drawable/ratio_slider"
+        android:thumb="@drawable/ic_tracks_ratio_seekbar"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toBottomOf="@+id/listenRatio" />
