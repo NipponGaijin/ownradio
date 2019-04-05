@@ -107,8 +107,10 @@ class RdevApiService {
 	func GetTrackInfo(requestCount: Int, complition:  @escaping ([String:Any]) -> Void){
 		let token = userDefault.string(forKey: "authToken") as! String
 		let deviceid = userDefault.string(forKey: "deviceIdentifier")
+		let tracksRatio = userDefault.integer(forKey: "getTracksRatio")
 		
-		let json: Parameters = ["fields":["chapter":"", "deviceid": deviceid, "mediatype":"track"], "method":"nexttrack"]
+		
+		let json: Parameters = ["fields":["chapter":"", "deviceid": deviceid, "mediatype":"track", "ratio":tracksRatio], "method":"nexttrack"]
 
 		let headers: HTTPHeaders = [
 			"Content-Type":"application/json",
