@@ -518,6 +518,7 @@ class RadioViewController: UIViewController, UITableViewDataSource, UITableViewD
 							UserDefaults.standard.synchronize()
 							
 							let dateFormatter = DateComponentsFormatter()
+							dateFormatter.zeroFormattingBehavior = .pad
 							dateFormatter.allowedUnits = [.minute, .second]
 							let currentTime = dateFormatter.string(from: TimeInterval(time.seconds))
 							let elapsedTime = dateFormatter.string(from: TimeInterval(self.player.playingSong.trackLength! - time.seconds))

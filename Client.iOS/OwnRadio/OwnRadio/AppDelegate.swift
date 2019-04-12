@@ -46,6 +46,15 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
 		try? userDefaults.register(defaults: ["playingSongObject" : PropertyListEncoder().encode(SongObject())])
 		userDefaults.register(defaults: ["trackPosition" : 0])
 		userDefaults.register(defaults: ["getTracksRatio" : 100])
+		
+		//Регистрация при отсутствии токена аутентификации
+		if userDefaults.string(forKey: "authToken") == "" || userDefaults.string(forKey: "deviceIdentifier") == ""{
+			RdevApiService().GetAuthToken { (registerResult) in
+				RdevApiService().RegisterDevice(completion: { (_) in
+				})
+			}
+		}
+		
 		//userDefaults.set("", forKey: "authToken")
 //		if userDefaults.object(forKey: "isAppAlreadyLaunchedOnce") == nil {
 ////			ApiService.shared.registerDevice()

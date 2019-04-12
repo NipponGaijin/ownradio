@@ -110,7 +110,7 @@ class RdevApiService {
 		let tracksRatio = userDefault.integer(forKey: "getTracksRatio")
 		
 		
-		let json: Parameters = ["fields":["chapter":"", "deviceid": deviceid, "mediatype":"track", "ratio":tracksRatio], "method":"nexttrack"]
+		let json: Parameters = ["fields":["chapter":"", "deviceid": deviceid, "mediatype":"track", "ratio":tracksRatio], "method":"nexttrackbyratio"]
 
 		let headers: HTTPHeaders = [
 			"Content-Type":"application/json",
