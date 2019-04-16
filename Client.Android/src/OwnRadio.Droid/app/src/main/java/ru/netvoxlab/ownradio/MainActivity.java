@@ -69,6 +69,7 @@ import java.io.File;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.io.Serializable;
+import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
@@ -869,11 +870,15 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
 										Log.d(TAG, "curVolume = " + curVolume + " seconds = " + curSeconds);
 									}
 									
-									int curHours = curSeconds / 3600;
-									curSeconds -= curHours * 3600;
-									int curMin = curSeconds / 60;
-									curSeconds -= curMin * 60;
-									String curTime = (curHours != 0 ? (curHours + ":") : "") + (curMin != 0 ? (curMin + ":") : "") + (curSeconds != 0 ? (curSeconds) : "");
+//									int curHours = curSeconds / 3600;
+//									curSeconds -= curHours * 3600;
+//									int curMin = curSeconds / 60;
+//									curSeconds -= curMin * 60;
+									//String curTime = (curHours != 0 ? (curHours + ":") : "") + (curMin != 0 ? (curMin + ":") : "") + (curSeconds != 0 ? (curSeconds) : "");
+
+                                    SimpleDateFormat df = new SimpleDateFormat("m:ss");
+                                    String curTime = df.format(curSeconds * 1000);
+
 									int nextSeconds = (duration - binder.GetMediaPlayerService().GetPosition()) / 1000;
 									
 									if (nextSeconds < 10 && curVolume >= 0f) {
@@ -882,14 +887,16 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
 										Log.d(TAG, "curVolume = " + curVolume + " seconds = " + nextSeconds);
 									}
 									
-									int nextHours = nextSeconds / 3600;
-									nextSeconds -= nextHours * 3600;
-									int nextMin = nextSeconds / 60;
-									nextSeconds -= nextMin * 60;
-									String nextTime = "-" + (nextHours != 0 ? (nextHours + ":") : "") + (nextMin != 0 ? (nextMin + ":") : "") + (nextSeconds != 0 ? (nextSeconds) : "");
-									
+//									int nextHours = nextSeconds / 3600;
+//									nextSeconds -= nextHours * 3600;
+//									int nextMin = nextSeconds / 60;
+//									nextSeconds -= nextMin * 60;
+									//String nextTime = "-" + (nextHours != 0 ? (nextHours + ":") : "") + (nextMin != 0 ? (nextMin + ":") : "") + (nextSeconds != 0 ? (nextSeconds) : "");
+
+                                    String nextTime = df.format(nextSeconds * 1000);
+
 									txtProgressLeft.setText(curTime);
-									txtProgressRight.setText(nextTime);
+									txtProgressRight.setText("-" + nextTime);
 								}
 							});
 						}

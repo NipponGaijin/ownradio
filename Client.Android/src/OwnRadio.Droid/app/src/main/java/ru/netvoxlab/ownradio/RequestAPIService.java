@@ -1,6 +1,7 @@
 package ru.netvoxlab.ownradio;
 
 import android.app.IntentService;
+import android.app.Notification;
 import android.content.Intent;
 import android.content.SharedPreferences;
 
@@ -31,6 +32,7 @@ public class RequestAPIService extends IntentService {
 	
 	public void onCreate() {
 		super.onCreate();
+		startForeground(4, new Notification());
 	}
 	
 	@Override

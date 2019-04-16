@@ -125,6 +125,7 @@ public class MediaPlayerService extends Service implements MediaPlayer.OnComplet
 	@Override
 	public void onCreate() {
 		super.onCreate();
+		startForeground(3, new Notification());
 		prefManager = new PrefManager(this);
 		trackDataAccess = new TrackDataAccess(getApplicationContext());
 		utilites = new Utilites();
@@ -334,9 +335,10 @@ public class MediaPlayerService extends Service implements MediaPlayer.OnComplet
 		player.setOnPreparedListener(this);
 		
 		//Блокирует отключение 3G когда экран не активен
-		wl = pm.newWakeLock(PowerManager.PARTIAL_WAKE_LOCK | PowerManager.ACQUIRE_CAUSES_WAKEUP, "OwnRadioPlayback");
+		wl = pm.newWakeLock(PowerManager.PARTIAL_WAKE_LOCK | PowerManager.ACQUIRE_CAUSES_WAKEUP, "NVXOwnRadio:NVXOwnRadioPlayback");
 		if (!wl.isHeld())
 			wl.acquire();
+
 	}
 	
 	public void onCompletion(MediaPlayer mediaPlayer) {
@@ -386,7 +388,12 @@ public class MediaPlayerService extends Service implements MediaPlayer.OnComplet
 			Intent historySenderIntent = new Intent(this, RequestAPIService.class);
 			historySenderIntent.setAction(ACTION_SENDHISTORY);
 			historySenderIntent.putExtra(EXTRA_DEVICEID, DeviceID);
-			startService(historySenderIntent);
+
+			if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+				startForegroundService(historySenderIntent);
+			}else{
+				startService(historySenderIntent);
+			}
 
 
 			SharedPreferences sp = PreferenceManager.getDefaultSharedPreferences(getApplicationContext());
@@ -406,6 +413,17 @@ public class MediaPlayerService extends Service implements MediaPlayer.OnComplet
 	}
 	
 	public void Play() {
+
+		AudioManager mAudioManager = (AudioManager) this.getSystemService(Context.AUDIO_SERVICE);
+
+		if (mAudioManager.isMusicActive()) {
+			int focusResult = audioManager.requestAudioFocus(this, AudioManager.STREAM_MUSIC, AudioManager.AUDIOFOCUS_GAIN_TRANSIENT);
+			Intent i = new Intent("com.android.music.musicservicecommand");
+
+			i.putExtra("command", "pause");
+			getApplicationContext().sendBroadcast(i);
+		}
+
 		Log.d(TAG, "Play(): ");
 		playbackWithHSisInterrupted = false;
 		
@@ -494,7 +512,7 @@ public class MediaPlayerService extends Service implements MediaPlayer.OnComplet
 			
 			utilites.SendInformationTxt(getApplicationContext(), "SetTimeAndCountStartPlayback for track " + track.getAsString("id"));
 			
-			wl = pm.newWakeLock(PowerManager.PARTIAL_WAKE_LOCK | PowerManager.ACQUIRE_CAUSES_WAKEUP, "OwnRadioPlayback");
+			wl = pm.newWakeLock(PowerManager.PARTIAL_WAKE_LOCK | PowerManager.ACQUIRE_CAUSES_WAKEUP, "NVXOwnRadio:NVXOwnRadioPlayback");
 			if (!wl.isHeld())
 				wl.acquire();
 
@@ -534,10 +552,20 @@ public class MediaPlayerService extends Service implements MediaPlayer.OnComplet
 		}
 		
 		Intent downloaderIntent = new Intent(this, LongRequestAPIService.class);
+
 		downloaderIntent.setAction(ACTION_GETNEXTTRACK);
 		downloaderIntent.putExtra(EXTRA_DEVICEID, DeviceID);
 		downloaderIntent.putExtra(EXTRA_COUNT, 10);//Увеличила количество треков для загрузки с 3 до 10 - задача 12850
-		startService(downloaderIntent);
+		try{
+			if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+				this.startForegroundService(downloaderIntent);
+			}else{
+				this.startService(downloaderIntent);
+			}
+		}catch (Exception ex){
+			Log.d("DownloaderException", ex.getLocalizedMessage());
+		}
+
 	}
 	
 	
@@ -650,7 +678,11 @@ public class MediaPlayerService extends Service implements MediaPlayer.OnComplet
 		Intent historySenderIntent = new Intent(this, RequestAPIService.class);
 		historySenderIntent.setAction(ACTION_SENDHISTORY);
 		historySenderIntent.putExtra(EXTRA_DEVICEID, DeviceID);
-		startService(historySenderIntent);
+		if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+			startForegroundService(historySenderIntent);
+		}else{
+			startService(historySenderIntent);
+		}
 	}
 	
 	private void SaveHistory(int listedTillTheEnd, ContentValues trackInstance) {
@@ -1023,7 +1055,7 @@ public class MediaPlayerService extends Service implements MediaPlayer.OnComplet
 			
 			// create android channel
 			NotificationChannel androidChannel = new NotificationChannel("ownradio_channel",
-					"Воспроизведение", NotificationManager.IMPORTANCE_DEFAULT);
+					"Воспроизведение", NotificationManager.IMPORTANCE_LOW);
 			// Sets whether notifications posted to this channel should display notification lights
 			androidChannel.enableLights(false);
 			// Sets whether notification posted to this channel should vibrate.
@@ -1032,7 +1064,12 @@ public class MediaPlayerService extends Service implements MediaPlayer.OnComplet
 			androidChannel.setLightColor(Color.GREEN);
 			// Sets whether notifications posted to this channel appear on the lockscreen or not
 			androidChannel.setLockscreenVisibility(Notification.VISIBILITY_PUBLIC);
-			
+
+			androidChannel.setSound(null, null);
+
+			androidChannel.setVibrationPattern(new long[]{ 0 });
+
+
 			NotificationManager notificationManager = (NotificationManager) getSystemService(Context.NOTIFICATION_SERVICE);
 			notificationManager.createNotificationChannel(androidChannel);
 			
@@ -1101,7 +1138,9 @@ public class MediaPlayerService extends Service implements MediaPlayer.OnComplet
 				.setContentIntent(pendingIntent)
 				.setContentTitle(trackTitle)
 				.setContentText(trackArtist)
-				.setLargeIcon(art);
+				.setLargeIcon(art)
+				.setVibrate(new long[]{ 0 })
+				.setSound(null);
 
 
 //		if (GetMediaPlayerState() == PlaybackStateCompat.STATE_PLAYING

@@ -393,8 +393,13 @@ public class TrackToCache {
 				downloaderIntent.setAction(ACTION_GETNEXTTRACK);
 				downloaderIntent.putExtra(EXTRA_DEVICEID, deviceId);
 				downloaderIntent.putExtra(EXTRA_COUNT, 3);
-				mContext.getApplicationContext().startService(downloaderIntent);
-				
+
+				if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+					mContext.getApplicationContext().startForegroundService(downloaderIntent);
+				}else {
+					mContext.getApplicationContext().startService(downloaderIntent);
+				}
+
 				Thread.sleep(60000);
 //
 //				final Map<String, String> trackMap = apiCalls.GetNextTrackID(deviceId);

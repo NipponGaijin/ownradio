@@ -35,8 +35,10 @@ public class RdevGetNextTrack extends AsyncTask<String, Void, Map<String, Map<St
     @Override
     protected Map<String, Map<String, String>[]> doInBackground(String... strings) {
         try{
-            NexttrackFields bodyFields = new NexttrackFields("", strings[0]);
+            Integer ratio = sp.getInt("tracksRatio", 100);
+            NexttrackFields bodyFields = new NexttrackFields("", strings[0], ratio);
             NextTrackBody body = new NextTrackBody(bodyFields);
+
             String bodyJson = new Gson().toJson(body);
             Log.d("Body", bodyJson);
             String token = sp.getString("authToken", "");

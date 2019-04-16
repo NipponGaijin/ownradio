@@ -1,7 +1,9 @@
 package ru.netvoxlab.ownradio;
 
 import android.app.IntentService;
+import android.app.Notification;
 import android.content.Intent;
+import android.support.v4.content.ContextCompat;
 import android.util.Log;
 
 import static ru.netvoxlab.ownradio.Constants.ACTION_FILLCACHE;
@@ -21,10 +23,12 @@ public class LongRequestAPIService extends IntentService {
 	
 	public LongRequestAPIService() {
 		super("LongRequestAPIService");
+
 	}
 	
 	public void onCreate() {
 		super.onCreate();
+		this.startForeground(2, new Notification());
 	}
 	
 	@Override
