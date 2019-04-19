@@ -142,7 +142,7 @@ class SettingsViewController: UITableViewController {
 		remoteControls.remoteControlReceived(with: event)
 	}
 	
-	func tapDelAllTracks(sender: UITapGestureRecognizer) {
+	@objc func tapDelAllTracks(sender: UITapGestureRecognizer) {
 		let dellAllTracksAlert = UIAlertController(title: "Удаление всех треков", message: "Вы уверены что хотите удалить все треки из кэша? Приложение не сможет проигрывать треки в офлайне пока не будет наполнен кэш.", preferredStyle: UIAlertControllerStyle.alert)
 		
 		dellAllTracksAlert.addAction(UIAlertAction(title: "ОК", style: .default, handler: { (action: UIAlertAction!) in

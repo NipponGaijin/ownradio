@@ -56,7 +56,7 @@ class StartVideoViewController: UIViewController, UIPageViewControllerDataSource
 		
 		playerLayer = AVPlayerLayer(player: player)
 		playerLayer.frame = self.view.frame
-		playerLayer.videoGravity = AVLayerVideoGravityResizeAspectFill
+		playerLayer.videoGravity = AVLayerVideoGravity.resizeAspectFill
 		self.view.layer.addSublayer(playerLayer)
 		player.seek(to: kCMTimeZero)
 		player.play()
@@ -121,7 +121,7 @@ class StartVideoViewController: UIViewController, UIPageViewControllerDataSource
 		super.didReceiveMemoryWarning()
 	}
 	
-	func playerItemDidReachEnd(_ notification: Notification) {
+	@objc func playerItemDidReachEnd(_ notification: Notification) {
 		player.seek(to: kCMTimeZero)
 		player.play()
 	}

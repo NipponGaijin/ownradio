@@ -40,11 +40,15 @@ class RdevApiService {
 				if statusCode == 200{
 					let json = response.result.value as! NSDictionary
 					self.userDefault.set(json["token"] as! String, forKey: "authToken")
-					print(json["token"] as! String)
+					//print(json["token"] as! String)
 					return completion(json["token"] as! String)
 				}
 				else if statusCode > 300{
 					NotificationCenter.default.post(name: NSNotification.Name(rawValue: "updateSysInfo"), object: nil, userInfo: ["message":"GetToken FAIL:\(statusCode.description)"])
+					return completion(statusCode.description)
+				}
+				else{
+					print("Token \(statusCode.description)")
 					return completion(statusCode.description)
 				}
 			}
@@ -85,13 +89,18 @@ class RdevApiService {
 				}
 				else if statusCode == 401{
 					self.GetAuthToken(completion: { (_) in
+						print("register \(statusCode)")
 						NotificationCenter.default.post(name: NSNotification.Name(rawValue: "updateSysInfo"), object: nil, userInfo: ["message":"Register request unauth: \(statusCode.description)"])
+						sleep(5)
 						self.RegisterDevice(){comp in
 							if comp{
 								return completion(true)
+							}else{
+								return completion(false)
 							}
 						}
 					})
+					//return completion(false)
 				}else{
 					NotificationCenter.default.post(name: NSNotification.Name(rawValue: "updateSysInfo"), object: nil, userInfo: ["message":"Register request fail: \(statusCode.description)"])
 					return completion(false)
@@ -116,6 +125,8 @@ class RdevApiService {
 			"Content-Type":"application/json",
 			"Authorization":"Bearer \(token)"
 		]
+		
+		print(json)
 		
 		Alamofire.request(apiUrl!, method: .post, parameters: json, encoding: JSONEncoding.default, headers: headers).responseJSON { response in
 			if let statusCode = response.response?.statusCode{

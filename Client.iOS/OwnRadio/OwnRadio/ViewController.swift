@@ -63,7 +63,7 @@ class RadioViewController: UIViewController, UITableViewDataSource, UITableViewD
 	var visibleInfoView: Bool!
     var isStartListening: Bool! = false
 	
-	var timer = Timer()
+	var timer: DispatchSourceTimer?
 	var timeObserverToken:AnyObject? = nil
 	var interruptedManually = false
 	//let progressView = CircularView(frame: CGRect.zero)
@@ -88,6 +88,13 @@ class RadioViewController: UIViewController, UITableViewDataSource, UITableViewD
 					nextViewController.player = self.player;
 				}
 			}
+		}else if segue.identifier == "timerSegue"{
+			if let nextViewController = segue.destination as? TimerViewController{
+				nextViewController.remoteAudioControls = self
+				if timer != nil && UserDefaults.standard.bool(forKey: "timerState"){
+					nextViewController.timer = timer
+				}
+			}
 		}
 	}
 	
@@ -97,16 +104,20 @@ class RadioViewController: UIViewController, UITableViewDataSource, UITableViewD
 	//выполняется при загрузке окна
 	override func viewDidLoad() {
 		super.viewDidLoad()
+		
+
+		
 		view.isUserInteractionEnabled = true
 		//включаем отображение навигационной панели
 		self.navigationController?.isNavigationBarHidden = false
+		
 		
 		//задаем цвет навигационного бара
 //		self.navigationController?.navigationBar.barTintColor = UIColor(red: 3.0/255.0, green: 169.0/255.0, blue: 244.0/255.0, alpha: 1.0)
 		//цвет кнопки и иконки
 		self.navigationController?.navigationBar.tintColor = UIColor.darkGray
 		//цвет заголовка
-		self.navigationController?.navigationBar.titleTextAttributes = [NSForegroundColorAttributeName : UIColor.darkGray]
+		self.navigationController?.navigationBar.titleTextAttributes = [NSAttributedStringKey.foregroundColor : UIColor.darkGray]
 		
 //        if isStartListening == false {
 //            self.authorNameLbl.text = "ownRadio"
@@ -165,6 +176,9 @@ class RadioViewController: UIViewController, UITableViewDataSource, UITableViewD
 		
 		NotificationCenter.default.addObserver(self, selector:  #selector(RadioViewController.audioRouteChangeListener(notification:)), name: NSNotification.Name.AVAudioSessionRouteChange, object: nil)
 		callObserver.setDelegate(self, queue: nil)
+		
+		checkTrackContinue()
+		
 	}
 
 	
@@ -236,7 +250,7 @@ class RadioViewController: UIViewController, UITableViewDataSource, UITableViewD
 //		NotificationCenter.default.removeObserver(self, name: NSNotification.Name(rawValue: "updateSysInfo"), object: nil)
 	}
 	
-	
+
 	
 	//управление проигрыванием со шторки / экрана блокировки
 	override func remoteControlReceived(with event: UIEvent?) {
@@ -291,7 +305,7 @@ class RadioViewController: UIViewController, UITableViewDataSource, UITableViewD
 			return
 		}
 		DispatchQueue.global(qos: .background).async {
-			Downloader.sharedInstance.load(isSelfFlag: false){ [unowned self] in
+			Downloader.sharedInstance.runLoad(isSelf: false){ [unowned self] in
 				DispatchQueue.main.async {
 					self.updateUI()
 				}
@@ -300,7 +314,7 @@ class RadioViewController: UIViewController, UITableViewDataSource, UITableViewD
 	}
 	
 	// MARK: Notification Selectors
-	func songDidPlay() {
+	@objc func songDidPlay() {
 		self.player.nextTrack { [unowned self] in
 			//Вызывается при каждой загрузке трека
 		}
@@ -318,7 +332,7 @@ class RadioViewController: UIViewController, UITableViewDataSource, UITableViewD
 	}
 	
 	//функция обновления поля Info системной информации
-	func updateSysInfo(_ notification: Notification){
+	@objc func updateSysInfo(_ notification: Notification){
 		DispatchQueue.main.async {
 			let creatinDate = Date()
 			let dateFormatter = DateFormatter()
@@ -356,7 +370,7 @@ class RadioViewController: UIViewController, UITableViewDataSource, UITableViewD
 		}
 	}
 	
-	func crashNetwork(_ notification: Notification) {
+	@objc func crashNetwork(_ notification: Notification) {
 		DispatchQueue.main.async {
 			self.playPauseBtn.setImage(UIImage(named: "playImage"), for: UIControlState.normal)
 			self.leftPlayBtnConstraint.constant = self.pauseBtnConstraintConstant
@@ -374,7 +388,7 @@ class RadioViewController: UIViewController, UITableViewDataSource, UITableViewD
 		}
 	}
 	
-	func audioRouteChangeListener(notification:NSNotification) {
+	@objc func audioRouteChangeListener(notification:NSNotification) {
 		let audioRouteChangeReason = notification.userInfo![AVAudioSessionRouteChangeReasonKey] as! UInt
 		//		 AVAudioSessionPortHeadphones
 		switch audioRouteChangeReason {
@@ -513,7 +527,7 @@ class RadioViewController: UIViewController, UITableViewDataSource, UITableViewD
 					if self.player.isPlaying == true {
 						if self.player.playingSong.trackLength != nil{
 							self.progressView.setProgress(Float(CGFloat(time.seconds) / CGFloat((self.player.playingSong.trackLength)!)), animated: false)
-							UserDefaults.standard.set(time.seconds.description, forKey:"lastTrackPosition")
+							UserDefaults.standard.set(time.seconds.description, forKey:"trackPosition")
 							UserDefaults.standard.set(self.player.playingSong.trackID as String, forKey:"lastTrack")
 							UserDefaults.standard.synchronize()
 							
@@ -652,6 +666,49 @@ class RadioViewController: UIViewController, UITableViewDataSource, UITableViewD
 	@IBAction func skipTrackToEnd(_ sender: UIButton) {
 		self.player.fwdTrackToEnd()
 	}
+	
+	
+	/// Проверка был ли трек перван при прошлом проигрывании
+	func checkTrackContinue(){
+		let trackIsPlaying = UserDefaults.standard.bool(forKey: "isPlaying")
+		if trackIsPlaying{
+			if let songObjectEncoded = UserDefaults.standard.data(forKey: "playingSongObject"){
+				do{
+					let songObject = try PropertyListDecoder().decode(SongObject.self, from: songObjectEncoded)
+					if let path = songObject.path{
+						let trackpath = NSURL(fileURLWithPath: self.tracksUrlString + path) as URL
+						print(trackpath.absoluteString)
+						if FileManager.default.fileExists(atPath: self.tracksUrlString + path){
+							let playFromTime = UserDefaults.standard.double(forKey: "trackPosition")
+							self.playTrackByUrl(trackUrl: trackpath, song: songObject, seekTo: playFromTime, needUpdateUi: true)
+						}
+					}
+					
+				}catch{
+					NotificationCenter.default.post(name: NSNotification.Name(rawValue: "updateSysInfo"), object: nil, userInfo: ["message":"Объект трека получен из UD"])
+				}
+			}
+		}
+	}
+	
+	
+	/// Подготовка и проигрывание трека по URL
+	///
+	/// - Parameters:
+	///   - trackUrl: Путь к треку
+	///   - song: Объект содержащий инфу о треке
+	///   - seekTo: Начать проигрывание трека с момента
+	///   - needUpdateUi: Если true, то обновляется ui
+	func playTrackByUrl(trackUrl: URL, song: SongObject, seekTo: Float64, needUpdateUi: Bool){
+		if !activeCall{
+			self.player.playOuterTrack(url: trackUrl, song: song, seekTo: seekTo)
+			self.isStartListening = true
+			if needUpdateUi{
+				self.updateUI()
+			}
+		}
+	}
+	
 }
 
 @available(iOS 10.0, *)

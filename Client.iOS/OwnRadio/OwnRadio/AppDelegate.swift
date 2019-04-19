@@ -7,9 +7,9 @@
 //
 
 import UIKit
-import Fabric
-import Crashlytics
-
+import AppCenter
+import AppCenterAnalytics
+import AppCenterCrashes
 
 @UIApplicationMain
 class AppDelegate: UIResponder, UIApplicationDelegate {
@@ -24,8 +24,7 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
 		// Override point for customization after application launch.
 		URLCache.shared.removeAllCachedResponses()
 		let userDefaults = UserDefaults.standard
-		//для получения отчетов об ошибках на фабрик
-		Fabric.with([Crashlytics.self, Answers.self])
+
 		userDefaults.set(false, forKey: "budState")
 		userDefaults.set([Date](), forKey: "budSchedule")
 		//если устройству не назначен deviceId - генерируем новый
@@ -46,6 +45,12 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
 		try? userDefaults.register(defaults: ["playingSongObject" : PropertyListEncoder().encode(SongObject())])
 		userDefaults.register(defaults: ["trackPosition" : 0])
 		userDefaults.register(defaults: ["getTracksRatio" : 100])
+		userDefaults.register(defaults: ["closeManually" : false])
+		userDefaults.register(defaults: ["isPlaying" : false])
+		userDefaults.register(defaults: ["timerState" : false])
+		userDefaults.register(defaults: ["setTimerDate" : 0])
+		userDefaults.register(defaults: ["updateTimerDate" : 0])
+		userDefaults.register(defaults: ["timerDurationSeconds" : 0])
 		
 		//Регистрация при отсутствии токена аутентификации
 		if userDefaults.string(forKey: "authToken") == "" || userDefaults.string(forKey: "deviceIdentifier") == ""{
@@ -98,9 +103,13 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
 			}
 		}
 		
+		MSAppCenter.start(userDefaults.string(forKey: "deviceIdentifier"), withServices:[MSAnalytics.self, MSCrashes.self])
 
 		return true
 	}
+	
+
+
 	
 	func removeFilesFromDirectory (tracksContents:[String]) {
 		//если в папке больше 4 файлов (3 файла Sqlite и папка Tracks) то пытаемся удалить треки
@@ -163,6 +172,7 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
 		// Called when the application is about to terminate. Save data if appropriate. See also applicationDidEnterBackground:.
 		UserDefaults.standard.set(false, forKey: "timerState")
 		UserDefaults.standard.set(0, forKey: "timerDurationSeconds")
+		UserDefaults.standard.set(true, forKey: "closeManually")
 	}
 
 }

@@ -31,6 +31,17 @@ class Downloader: NSObject {
 	var maxTryes = 0
 	var completionHandler:(()->Void)? = nil
 
+	func runLoad(isSelf: Bool, complition: @escaping(() -> Void)){
+		if requestCount == 0{
+			self.load(isSelfFlag: isSelf) {
+				return
+			}
+		}else{
+			return
+		}
+		
+	}
+	
 	func load(isSelfFlag: Bool, complition: @escaping (() -> Void)) {
 		print("call load")
 		
@@ -183,8 +194,13 @@ class Downloader: NSObject {
 		}
 		guard FileManager.default.fileExists(atPath: mp3Path.path ) == false else {
 			self.createPostNotificationSysInfo(message: "MP3 file exist")
+			load(isSelfFlag: true) {
+				return
+			}
 			return
 		}
+		
+		
 		download(rdevApiUrl!, method: .post, parameters: json, encoding: JSONEncoding.default, headers: headers, to: destination).response { (response) in
 			if let statusCode = response.response?.statusCode{
 				if statusCode == 200{
@@ -315,6 +331,9 @@ class Downloader: NSObject {
 						let mp3Path = destinationUrl.appendingPathExtension("mp3")
 						guard FileManager.default.fileExists(atPath: mp3Path.path ) == false else {
 							self.createPostNotificationSysInfo(message: "MP3 file exist")
+							self.load(isSelfFlag: true) {
+								return
+							}
 							return
 						}
 						
@@ -343,6 +362,9 @@ class Downloader: NSObject {
 						
 						guard FileManager.default.fileExists(atPath: mp3Path.absoluteString ) == false else {
 							self.createPostNotificationSysInfo(message: "MP3 file exist")
+							self.load(isSelfFlag: true) {
+								return
+							}
 							return
 						}
 						
@@ -476,8 +498,7 @@ class Downloader: NSObject {
 		maxMemory = UInt64(Double(memoryAvailable) * percentage)
 		let folderSize = DiskStatus.folderSize(folderPath: tracksUrlString)
 		if folderSize < maxMemory  {
-			self.load (isSelfFlag: true){
-				
+			self.runLoad (isSelf: true){
 				self.fillCache()
 			}
 		}
