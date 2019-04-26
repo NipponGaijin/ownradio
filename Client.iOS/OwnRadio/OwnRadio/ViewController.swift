@@ -12,6 +12,7 @@ import MediaPlayer
 import Alamofire
 import CloudKit
 import CallKit
+import Crashlytics
 
 
 @available(iOS 10.0, *)
@@ -59,11 +60,11 @@ class RadioViewController: UIViewController, UITableViewDataSource, UITableViewD
 	var dataTask: URLSessionDataTask?
 	var player: AudioPlayerManager!
 	
-	var isPlaying: Bool!
+	var isPlaying: Bool = false
 	var visibleInfoView: Bool!
     var isStartListening: Bool! = false
 	
-	var timer = Timer()
+	var timer: DispatchSourceTimer?
 	var timeObserverToken:AnyObject? = nil
 	var interruptedManually = false
 	//let progressView = CircularView(frame: CGRect.zero)
@@ -73,7 +74,8 @@ class RadioViewController: UIViewController, UITableViewDataSource, UITableViewD
 	
 	var cachingView = CachingView.instanceFromNib()
 	var playedTracks: NSArray = CoreDataManager.instance.getGroupedTracks()
-	var reachability = NetworkReachabilityManager(host: "http://api.ownradio.ru/v5")
+//	var reachability = NetworkReachabilityManager(host: "http://api.ownradio.ru/v5")
+	var reachability = NetworkReachabilityManager(host: "http://rdev.ownradio.ru/api/executejs")
 	
 	var activeCall = false
 	let tracksUrlString =  FileManager.applicationSupportDir().appending("/Tracks/")
@@ -84,25 +86,40 @@ class RadioViewController: UIViewController, UITableViewDataSource, UITableViewD
 		if segue.identifier == "SettingsByButton" || segue.identifier == "SettingsBySwipe"{
 			if let nextViewController = segue.destination as? SettingsViewController {
 				nextViewController.remoteAudioControls = self
+				if player != nil{
+					nextViewController.player = self.player;
+				}
+			}
+		}else if segue.identifier == "timerSegue"{
+			if let nextViewController = segue.destination as? TimerViewController{
+				nextViewController.remoteAudioControls = self
+				if timer != nil && UserDefaults.standard.bool(forKey: "timerState"){
+					nextViewController.timer = timer
+				}
 			}
 		}
 	}
 	
+	//a3644efe-b4fd-4cfc-98b1-e8558014532e
 	
 	// MARK: Override
 	//выполняется при загрузке окна
 	override func viewDidLoad() {
 		super.viewDidLoad()
+		
+
+		
 		view.isUserInteractionEnabled = true
 		//включаем отображение навигационной панели
 		self.navigationController?.isNavigationBarHidden = false
+		
 		
 		//задаем цвет навигационного бара
 //		self.navigationController?.navigationBar.barTintColor = UIColor(red: 3.0/255.0, green: 169.0/255.0, blue: 244.0/255.0, alpha: 1.0)
 		//цвет кнопки и иконки
 		self.navigationController?.navigationBar.tintColor = UIColor.darkGray
 		//цвет заголовка
-		self.navigationController?.navigationBar.titleTextAttributes = [NSForegroundColorAttributeName : UIColor.darkGray]
+		self.navigationController?.navigationBar.titleTextAttributes = [NSAttributedStringKey.foregroundColor : UIColor.darkGray]
 		
 //        if isStartListening == false {
 //            self.authorNameLbl.text = "ownRadio"
@@ -111,6 +128,8 @@ class RadioViewController: UIViewController, UITableViewDataSource, UITableViewD
         self.authorNameLbl.text = ""
 		self.currentTimeLbl.text = ""
 		self.elapsedTimeLbl.text = ""
+		self.currentTimeLbl.font = UIFont.monospacedDigitSystemFont(ofSize: self.currentTimeLbl.font.pointSize, weight: UIFont.Weight.regular)
+		self.elapsedTimeLbl.font = UIFont.monospacedDigitSystemFont(ofSize: self.elapsedTimeLbl.font.pointSize, weight: UIFont.Weight.regular)
 		
 		self.checkMemoryWarning()
 		
@@ -131,10 +150,11 @@ class RadioViewController: UIViewController, UITableViewDataSource, UITableViewD
 		self.player = AudioPlayerManager.sharedInstance
 		self.detectedHeadphones()
 		
-		self.deviceIdLbl.text = UIDevice.current.identifierForVendor?.uuidString.lowercased() //  NSUUID().uuidString.lowercased()
+//		self.deviceIdLbl.text = UIDevice.current.identifierForVendor?.uuidString.lowercased() //  NSUUID().uuidString.lowercased()
+		self.deviceIdLbl.text = UserDefaults.standard.string(forKey: "deviceIdentifier") ?? "errorId"
 		self.visibleInfoView = false
 		
-		getCountFilesInCache()
+//		getCountFilesInCache()
 	
 		//подписываемся на уведомлени
 		reachability?.listener = { [unowned self] status in
@@ -161,6 +181,9 @@ class RadioViewController: UIViewController, UITableViewDataSource, UITableViewD
 		
 		NotificationCenter.default.addObserver(self, selector:  #selector(RadioViewController.audioRouteChangeListener(notification:)), name: NSNotification.Name.AVAudioSessionRouteChange, object: nil)
 		callObserver.setDelegate(self, queue: nil)
+		
+		checkTrackContinue()
+		
 	}
 
 	
@@ -205,6 +228,21 @@ class RadioViewController: UIViewController, UITableViewDataSource, UITableViewD
 		DispatchQueue.main.async {
 			self.updateUI()
 		}
+		
+		if CoreDataManager.instance.getCountOfTracks() < 1{
+			DispatchQueue.main.async {
+				self.progressView.setProgress(0.0, animated: false)
+				self.currentTimeLbl.text = ""
+				self.elapsedTimeLbl.text = ""
+				self.authorNameLbl.text = ""
+				self.trackNameLbl.text = ""
+			}
+			self.isStartListening = false
+			self.playPauseBtn.isEnabled = false
+			updateUI()
+			downloadTracks()
+			cachingView.awakeFromNib()
+		}
 	}
 	
 	//когда приложение скрыто - отписываемся от уведомлений
@@ -217,7 +255,7 @@ class RadioViewController: UIViewController, UITableViewDataSource, UITableViewD
 //		NotificationCenter.default.removeObserver(self, name: NSNotification.Name(rawValue: "updateSysInfo"), object: nil)
 	}
 	
-	
+
 	
 	//управление проигрыванием со шторки / экрана блокировки
 	override func remoteControlReceived(with event: UIEvent?) {
@@ -272,7 +310,7 @@ class RadioViewController: UIViewController, UITableViewDataSource, UITableViewD
 			return
 		}
 		DispatchQueue.global(qos: .background).async {
-			Downloader.sharedInstance.load(isSelfFlag: false){ [unowned self] in
+			Downloader.sharedInstance.runLoad(isSelf: false){ [unowned self] in
 				DispatchQueue.main.async {
 					self.updateUI()
 				}
@@ -281,7 +319,7 @@ class RadioViewController: UIViewController, UITableViewDataSource, UITableViewD
 	}
 	
 	// MARK: Notification Selectors
-	func songDidPlay() {
+	@objc func songDidPlay() {
 		self.player.nextTrack { [unowned self] in
 			//Вызывается при каждой загрузке трека
 		}
@@ -299,7 +337,7 @@ class RadioViewController: UIViewController, UITableViewDataSource, UITableViewD
 	}
 	
 	//функция обновления поля Info системной информации
-	func updateSysInfo(_ notification: Notification){
+	@objc func updateSysInfo(_ notification: Notification){
 		DispatchQueue.main.async {
 			let creatinDate = Date()
 			let dateFormatter = DateFormatter()
@@ -337,7 +375,7 @@ class RadioViewController: UIViewController, UITableViewDataSource, UITableViewD
 		}
 	}
 	
-	func crashNetwork(_ notification: Notification) {
+	@objc func crashNetwork(_ notification: Notification) {
 		DispatchQueue.main.async {
 			self.playPauseBtn.setImage(UIImage(named: "playImage"), for: UIControlState.normal)
 			self.leftPlayBtnConstraint.constant = self.pauseBtnConstraintConstant
@@ -355,62 +393,74 @@ class RadioViewController: UIViewController, UITableViewDataSource, UITableViewD
 		}
 	}
 	
-	func audioRouteChangeListener(notification:NSNotification) {
-		let audioRouteChangeReason = notification.userInfo![AVAudioSessionRouteChangeReasonKey] as! UInt
-		//		 AVAudioSessionPortHeadphones
-		switch audioRouteChangeReason {
-		case AVAudioSessionRouteChangeReason.newDeviceAvailable.rawValue:
-			print("headphone plugged in")
-			let currentRoute = AVAudioSession.sharedInstance().currentRoute
-			for description in currentRoute.outputs {
-				
-				if description.portType == AVAudioSessionPortHeadphones {
-					print(description.portType)
-					print(self.player.isPlaying)
-				}else {
-					print(description.portType)
-				}
-			}
-		case AVAudioSessionRouteChangeReason.oldDeviceUnavailable.rawValue:
-			print("headphone pulled out")
-			print(self.player.isPlaying)
-			//self.player.isPlaying = false
-			print(self.player.isPlaying)
-			DispatchQueue.main.async {
-				self.interruptedManually = false
-				
-				if self.player.isPlaying{
-					self.player.pauseSong {
-						self.updateUI()
+	@objc func audioRouteChangeListener(notification:NSNotification) {
+		DispatchQueue.main.async {
+			let audioRouteChangeReason = notification.userInfo![AVAudioSessionRouteChangeReasonKey] as! UInt
+			//		 AVAudioSessionPortHeadphones
+			switch audioRouteChangeReason {
+			case AVAudioSessionRouteChangeReason.newDeviceAvailable.rawValue:
+				print("headphone plugged in")
+				let currentRoute = AVAudioSession.sharedInstance().currentRoute
+				for description in currentRoute.outputs {
+					
+					if description.portType == AVAudioSessionPortHeadphones {
+						print(description.portType)
+						print(self.player.isPlaying)
+					}else {
+						print(description.portType)
 					}
 				}
-			}
-			
-		case AVAudioSessionRouteChangeReason.categoryChange.rawValue:
-			
-			for description in AVAudioSession.sharedInstance().currentRoute.outputs {
-				
-				switch description.portType {
-				case AVAudioSessionPortBluetoothA2DP:
-					if self.player.isPlaying == true {
-						self.interruptedManually = false
+			case AVAudioSessionRouteChangeReason.oldDeviceUnavailable.rawValue:
+				print("headphone pulled out")
+				print(self.player.isPlaying)
+				//self.player.isPlaying = false
+				print(self.player.isPlaying)
+				DispatchQueue.main.async {
+					self.interruptedManually = false
+					
+					if self.player.isPlaying{
 						self.player.pauseSong {
-							updateUI()
+							self.updateUI()
 						}
 					}
-				case AVAudioSessionPortBluetoothLE:
-					if self.player.isPlaying == true {
-						self.interruptedManually = false
-						self.player.pauseSong {
-							updateUI()
-						}
-					}
-				default: break
 				}
+				
+			case AVAudioSessionRouteChangeReason.categoryChange.rawValue:
+				
+				for description in AVAudioSession.sharedInstance().currentRoute.outputs {
+					
+					switch description.portType {
+					case AVAudioSessionPortBluetoothA2DP:
+						if self.player.isPlaying == true || (self.isPlaying == true && self.activeCall == false && self.isPlaying != nil) {
+							self.interruptedManually = false
+							self.player.resumeSong {
+								self.updateUI()
+							}
+						}else{
+							self.player.pauseSong {
+								self.updateUI()
+							}
+						}
+						
+					case AVAudioSessionPortBluetoothLE:
+						if self.player.isPlaying == true || (self.isPlaying && !self.activeCall) {
+							self.interruptedManually = false
+							self.player.resumeSong {
+								self.updateUI()
+							}
+						}else{
+							self.player.pauseSong {
+								self.updateUI()
+							}
+						}
+					default: break
+					}
+				}
+			default:
+				break
 			}
-		default:
-			break
 		}
+		
 	}
 	
 	//меняет состояние проигрывания и кнопку playPause
@@ -424,6 +474,7 @@ class RadioViewController: UIViewController, UITableViewDataSource, UITableViewD
 				DispatchQueue.main.async {
 					self.updateUI()
 				}
+				self.isPlaying = false
 				})
 		}else {
 			//иначе - возобновляем проигрывание если возможно или начинаем проигрывать новый трек
@@ -437,6 +488,7 @@ class RadioViewController: UIViewController, UITableViewDataSource, UITableViewD
 							self.updateUI()
 						}
 					}
+					self.isPlaying = true
 				})
 			}else{
 				self.updateUI()
@@ -446,14 +498,18 @@ class RadioViewController: UIViewController, UITableViewDataSource, UITableViewD
 	
 	//функция отображения количества файлов в кеше
 	func getCountFilesInCache () {
-		do {
-//			let appSupportUrl = URL(string: FileManager.applicationSupportDir().appending("/"))
-			let docUrl = FileManager.default.urls(for: .applicationSupportDirectory, in: .userDomainMask).first?.appendingPathComponent("Tracks")
-			let directoryContents = try FileManager.default.contentsOfDirectory(at: docUrl!, includingPropertiesForKeys: nil, options: [])
-			let mp3Files = directoryContents.filter{ $0.pathExtension == "mp3" }
-			self.numberOfFiles.text = String(CoreDataManager.instance.chekCountOfEntitiesFor(entityName: "TrackEntity"))
-		} catch let error as NSError {
-			print(error.localizedDescription)
+		DispatchQueue.global(qos: .utility).async{
+			do {
+				//			let appSupportUrl = URL(string: FileManager.applicationSupportDir().appending("/"))
+				let docUrl = FileManager.default.urls(for: .applicationSupportDirectory, in: .userDomainMask).first?.appendingPathComponent("Tracks")
+				let directoryContents = try FileManager.default.contentsOfDirectory(at: docUrl!, includingPropertiesForKeys: nil, options: [])
+				let mp3Files = directoryContents.filter{ $0.pathExtension == "mp3" }
+				DispatchQueue.main.async {
+					self.numberOfFiles.text = String(CoreDataManager.instance.chekCountOfEntitiesFor(entityName: "TrackEntity"))
+				}
+			} catch let error as NSError {
+				print(error.localizedDescription)
+			}
 		}
 	}
 	
@@ -494,11 +550,12 @@ class RadioViewController: UIViewController, UITableViewDataSource, UITableViewD
 					if self.player.isPlaying == true {
 						if self.player.playingSong.trackLength != nil{
 							self.progressView.setProgress(Float(CGFloat(time.seconds) / CGFloat((self.player.playingSong.trackLength)!)), animated: false)
-							UserDefaults.standard.set(time.seconds.description, forKey:"lastTrackPosition")
+							UserDefaults.standard.set(time.seconds.description, forKey:"trackPosition")
 							UserDefaults.standard.set(self.player.playingSong.trackID as String, forKey:"lastTrack")
 							UserDefaults.standard.synchronize()
 							
 							let dateFormatter = DateComponentsFormatter()
+							dateFormatter.zeroFormattingBehavior = .pad
 							dateFormatter.allowedUnits = [.minute, .second]
 							let currentTime = dateFormatter.string(from: TimeInterval(time.seconds))
 							let elapsedTime = dateFormatter.string(from: TimeInterval(self.player.playingSong.trackLength! - time.seconds))
@@ -521,13 +578,35 @@ class RadioViewController: UIViewController, UITableViewDataSource, UITableViewD
 			
 			self.getCountFilesInCache()
 			// обновление количевства записей в базе данных
-			self.numberOfFilesInDB.text = String(CoreDataManager.instance.chekCountOfEntitiesFor(entityName: "TrackEntity"))
+//			self.numberOfFilesInDB.text = String(CoreDataManager.instance.chekCountOfEntitiesFor(entityName: "TrackEntity"))
+			DispatchQueue.global(qos: .utility).async {
+				let numberfilesInDB = String(CoreDataManager.instance.chekCountOfEntitiesFor(entityName: "TrackEntity"))
+				DispatchQueue.main.async {
+					self.numberOfFilesInDB.text = numberfilesInDB
+				}
+			}
 			// update table
-			self.playedTracks = CoreDataManager.instance.getGroupedTracks()
+//			self.playedTracks = CoreDataManager.instance.getGroupedTracks()
+			DispatchQueue.global(qos: .utility).async {
+				let playedTracksCount = CoreDataManager.instance.getGroupedTracks()
+				DispatchQueue.main.async {
+					self.playedTracks = playedTracksCount
+				}
+			}
 			self.tableView.reloadData()
 			
-			self.freeSpaceLbl.text = DiskStatus.GBFormatter(Int64(DiskStatus.freeDiskSpaceInBytes)) + " Gb"
-			self.folderSpaceLbl.text = DiskStatus.GBFormatter(Int64(DiskStatus.folderSize(folderPath: self.tracksUrlString))) + " Gb"
+			DispatchQueue.global(qos: .utility).async{
+				let freeDeviceSpace = DiskStatus.GBFormatter(Int64(DiskStatus.freeDiskSpaceInBytes)) + " Gb"
+				let folderSpace = DiskStatus.GBFormatter(Int64(DiskStatus.folderSize(folderPath: self.tracksUrlString))) + " Gb"
+				
+				DispatchQueue.main.async {
+					self.freeSpaceLbl.text = freeDeviceSpace
+					self.folderSpaceLbl.text = folderSpace
+				}
+			}
+			
+//			self.freeSpaceLbl.text = DiskStatus.GBFormatter(Int64(DiskStatus.freeDiskSpaceInBytes)) + " Gb"
+//			self.folderSpaceLbl.text = DiskStatus.GBFormatter(Int64(DiskStatus.folderSize(folderPath: self.tracksUrlString))) + " Gb"
 		}
 	}
 	
@@ -575,6 +654,8 @@ class RadioViewController: UIViewController, UITableViewDataSource, UITableViewD
 //		self.progressView.isHidden = true
 		DispatchQueue.main.async {
 			self.progressView.setProgress(0.0, animated: false)
+			self.currentTimeLbl.text = ""
+			self.elapsedTimeLbl.text = ""
 		}
 		DispatchQueue.main.async {
 			self.player.skipSong {
@@ -597,6 +678,13 @@ class RadioViewController: UIViewController, UITableViewDataSource, UITableViewD
 	
 	//обработчик нажатий на кнопку play/pause
 	@IBAction func playBtnPressed() {
+		
+		if CoreDataManager.instance.getCountOfTracks() < 1 && !player.isPlaying{
+			self.downloadTracks()
+			updateUI()
+			return
+		}
+		
         isStartListening = true
 		if player.isPlaying{
 			self.interruptedManually = true
@@ -623,6 +711,52 @@ class RadioViewController: UIViewController, UITableViewDataSource, UITableViewD
 	@IBAction func skipTrackToEnd(_ sender: UIButton) {
 		self.player.fwdTrackToEnd()
 	}
+	
+    @IBAction func crash(_ sender: Any) {
+		Crashlytics.sharedInstance().throwException()
+    }
+    
+	/// Проверка был ли трек перван при прошлом проигрывании
+	func checkTrackContinue(){
+		let trackIsPlaying = UserDefaults.standard.bool(forKey: "isPlaying")
+		if trackIsPlaying{
+			if let songObjectEncoded = UserDefaults.standard.data(forKey: "playingSongObject"){
+				do{
+					let songObject = try PropertyListDecoder().decode(SongObject.self, from: songObjectEncoded)
+					if let path = songObject.path{
+						let trackpath = NSURL(fileURLWithPath: self.tracksUrlString + path) as URL
+						print(trackpath.absoluteString)
+						if FileManager.default.fileExists(atPath: self.tracksUrlString + path){
+							let playFromTime = UserDefaults.standard.double(forKey: "trackPosition")
+							self.playTrackByUrl(trackUrl: trackpath, song: songObject, seekTo: playFromTime, needUpdateUi: true)
+						}
+					}
+					
+				}catch{
+					NotificationCenter.default.post(name: NSNotification.Name(rawValue: "updateSysInfo"), object: nil, userInfo: ["message":"Объект трека получен из UD"])
+				}
+			}
+		}
+	}
+	
+	
+	/// Подготовка и проигрывание трека по URL
+	///
+	/// - Parameters:
+	///   - trackUrl: Путь к треку
+	///   - song: Объект содержащий инфу о треке
+	///   - seekTo: Начать проигрывание трека с момента
+	///   - needUpdateUi: Если true, то обновляется ui
+	func playTrackByUrl(trackUrl: URL, song: SongObject, seekTo: Float64, needUpdateUi: Bool){
+		if !activeCall{
+			self.player.playOuterTrack(url: trackUrl, song: song, seekTo: seekTo)
+			self.isStartListening = true
+			if needUpdateUi{
+				self.updateUI()
+			}
+		}
+	}
+	
 }
 
 @available(iOS 10.0, *)

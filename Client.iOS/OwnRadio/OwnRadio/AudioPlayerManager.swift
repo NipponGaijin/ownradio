@@ -15,7 +15,7 @@ import MediaPlayer
 class AudioPlayerManager: NSObject, AVAssetResourceLoaderDelegate, NSURLConnectionDataDelegate {
 	
 	var player: AVPlayer = AVPlayer()
-	var playerItem: AVPlayerItem!
+	@objc var playerItem: AVPlayerItem!
 	var asset: AVURLAsset?
 	static let sharedInstance = AudioPlayerManager()
 	
@@ -144,7 +144,30 @@ class AudioPlayerManager: NSObject, AVAssetResourceLoaderDelegate, NSURLConnecti
 							})
 						}
 					}
+					
+					let path = self.tracksUrlString.appending((self.playingSong.path!))
+					print(path)
+					if FileManager.default.fileExists(atPath: path) {
+						do{
+							// ApiService.shared.setTrackIsCorrect(trackId: self.playingSong.trackID, isCorrect: 0)
+							RdevApiService().SetIsCorrect(trackId: self.playingSong.trackID, isCorrect: false)
+							// удаляем обьект по пути
+							try FileManager.default.removeItem(atPath: path)
+							NotificationCenter.default.post(name: NSNotification.Name(rawValue: "updateSysInfo"), object: nil, userInfo: ["message":"Поврежденный файл удален"])
+							print("Поврежденный файл был удален")
+						}
+						catch {
+							print("Ошибка при удалении файла: файл не существует")
+						}
+					}
+					// удаляем трек с базы
+					CoreDataManager.instance.deleteTrackFor(trackID: self.playingSong.trackID)
+					CoreDataManager.instance.saveContext()
+					
+					print("Поврежденный файл был найден и удален")
+					NotificationCenter.default.post(name: NSNotification.Name(rawValue: "updateSysInfo"), object: nil, userInfo: ["message":"Поврежденный файл был удален"])
 				}
+				
 				break
 			case .unknown:
 				break
@@ -154,7 +177,7 @@ class AudioPlayerManager: NSObject, AVAssetResourceLoaderDelegate, NSURLConnecti
 	
 	// MARK: Notification selectors
 	// трек дослушан до конца
-	func playerItemDidReachEnd(_ notification: Notification) {
+	@objc func playerItemDidReachEnd(_ notification: Notification) {
 
 		if notification.object as? AVPlayerItem  == player.currentItem {
             let dateLastTrackPlay = CoreDataManager.instance.getDateForTrackBy(trackId: self.playingSong.trackID)
@@ -167,9 +190,11 @@ class AudioPlayerManager: NSObject, AVAssetResourceLoaderDelegate, NSURLConnecti
                     print(path)
                     if FileManager.default.fileExists(atPath: path) {
                         do{
-                            ApiService.shared.setTrackIsCorrect(trackId: self.playingSong.trackID, isCorrect: 0)
+                           // ApiService.shared.setTrackIsCorrect(trackId: self.playingSong.trackID, isCorrect: 0)
+							RdevApiService().SetIsCorrect(trackId: self.playingSong.trackID, isCorrect: false)
                             // удаляем обьект по пути
                             try FileManager.default.removeItem(atPath: path)
+							NotificationCenter.default.post(name: NSNotification.Name(rawValue: "updateSysInfo"), object: nil, userInfo: ["message":"Поврежденный файл удален"])
                             print("Поврежденный файл был удален")
                         }
                         catch {
@@ -194,7 +219,7 @@ class AudioPlayerManager: NSObject, AVAssetResourceLoaderDelegate, NSURLConnecti
 	}
 	
 	//обработка прерывания аудиосессии
-	func onAudioSessionEvent(_ notification: Notification) {
+	@objc func onAudioSessionEvent(_ notification: Notification) {
 		
 		guard notification.name == Notification.Name.AVAudioSessionInterruption else {
 			return
@@ -232,6 +257,18 @@ class AudioPlayerManager: NSObject, AVAssetResourceLoaderDelegate, NSURLConnecti
 		case .began: //interruption started
 			if self.isPlaying == true {
 				print("Began Playing - TRUE")
+				self.pauseSong {
+					if let rootController = UIApplication.shared.keyWindow?.rootViewController {
+						let navigationController = rootController as! UINavigationController
+						
+						if let radioViewContr = navigationController.topViewController  as? RadioViewController {
+							DispatchQueue.main.asyncAfter(deadline: .now() + 1.0, execute: {
+								radioViewContr.updateUI()
+							})
+							
+						}
+					}
+				}
 			} else {
 				print("Began Playing - FALSE")
 				wasInterreption = true
@@ -239,7 +276,7 @@ class AudioPlayerManager: NSObject, AVAssetResourceLoaderDelegate, NSURLConnecti
 		}
 	}
 	
-	func crashNetwork(_ notification: Notification) {
+	@objc func crashNetwork(_ notification: Notification) {
 		//		self.playerItem = nil
 		print("crashNetwork")
 		self.player.pause()
@@ -271,6 +308,7 @@ class AudioPlayerManager: NSObject, AVAssetResourceLoaderDelegate, NSURLConnecti
 	//возобновление воспроизведения
 	func resumeSong(complition: @escaping (() -> Void)) {
 		isPlaying = true
+		UserDefaults.standard.set(true, forKey: "isPlaying")
 		if self.playerItem != nil {
 			self.player.play()
 			complition()
@@ -282,6 +320,7 @@ class AudioPlayerManager: NSObject, AVAssetResourceLoaderDelegate, NSURLConnecti
 	//пауза
 	func pauseSong(complition: (() -> Void)) {
 		isPlaying = false
+		UserDefaults.standard.set(false, forKey: "isPlaying")
 		self.player.pause()
 		complition()
 	}
@@ -362,7 +401,7 @@ class AudioPlayerManager: NSObject, AVAssetResourceLoaderDelegate, NSURLConnecti
 //			return
 //		}
 		DispatchQueue.global(qos: .background).async {
-			Downloader.sharedInstance.load(isSelfFlag: false, complition: complition)
+			Downloader.sharedInstance.runLoad(isSelf: false, complition: complition)
 		}
 	}
 	
@@ -440,11 +479,6 @@ class AudioPlayerManager: NSObject, AVAssetResourceLoaderDelegate, NSURLConnecti
 		playingTrackUrlString = playingTrackUrlString?.replacingOccurrences(of: "%20", with: " ")
 		//сохранение пути и объекта трека в userDefaults для использования с будильником
 //		UserDefaults.standard.set(playingSong.path, forKey:"PlayingSongPath")
-		if !UserDefaults.standard.bool(forKey: "budState"){
-			try? UserDefaults.standard.set(PropertyListEncoder().encode(self.playingSong), forKey:"PlayingSongObject")
-			UserDefaults.standard.synchronize()
-		}
-		
 		guard let url = resUrl else {
 			return
 		}
@@ -452,6 +486,13 @@ class AudioPlayerManager: NSObject, AVAssetResourceLoaderDelegate, NSURLConnecti
 		self.playAudioWith(trackURL: url as URL)
 		self.playingSongID = self.playingSong.trackID
 		self.configurePlayingSong(song: self.playingSong)
+		//Сохранение обЪекта трека
+		do{
+			try UserDefaults.standard.set(PropertyListEncoder().encode(self.playingSong), forKey: "playingSongObject")
+		}catch{
+			NotificationCenter.default.post(name: NSNotification.Name(rawValue: "updateSysInfo"), object: nil, userInfo: ["message":"Объект трека не сохранен в UD"])
+		}
+		
 		if complition != nil {
 			complition!()
 		}
@@ -483,6 +524,37 @@ class AudioPlayerManager: NSObject, AVAssetResourceLoaderDelegate, NSURLConnecti
 	
 	func fwdTrackToEnd(){
 		isSkipped = true
-		player.seek(to: (player.currentItem?.duration)!-CMTimeMake(3, 1))
+		if let item = player.currentItem{
+				player.seek(to: (item.duration) - CMTimeMake(3, 1))
+		}
+		
+	}
+	
+	
+	/// Воспроизводит трек по URL
+	///
+	/// - Parameters:
+	///   - url: путь к треку
+	///   - song: объект с инфой о треке
+	///   - seekTo: время с которого начать играть трек
+	func playOuterTrack(url: URL, song: SongObject, seekTo: Float64){
+		self.pauseSong{}
+		
+		playingSong = song
+		
+		playAudioWith(trackURL: url)
+		
+		playerItem.seek(to: CMTimeMakeWithSeconds(seekTo, 1000000000))
+		
+		do{
+			try UserDefaults.standard.set(PropertyListEncoder().encode(self.playingSong), forKey: "playingSongObject")
+		}catch{
+			NotificationCenter.default.post(name: NSNotification.Name(rawValue: "updateSysInfo"), object: nil, userInfo: ["message":"Объект трека не сохранен в UD"])
+		}
+		
+		self.playingSongID = song.trackID
+		
+		self.configurePlayingSong(song: song)
+		self.pauseSong {}
 	}
 }
