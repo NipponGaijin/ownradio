@@ -153,7 +153,7 @@ class RdevApiService {
 					return complition(["NotAuthorized":statusCode.description])
 				}else if statusCode == 500{
 					print(self.userDefault.string(forKey: "deviceIdentifier"))
-					sleep(2)
+					return complition(["ServerError":statusCode.description])
 //					self.RegisterDevice(){result in
 //						print(self.userDefault.string(forKey: "deviceIdentifier"))
 //						NotificationCenter.default.post(name: NSNotification.Name(rawValue: "updateSysInfo"), object: nil, userInfo: ["message":"GetTrack deviceNotRegistered"])

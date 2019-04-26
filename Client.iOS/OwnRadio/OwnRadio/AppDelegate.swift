@@ -7,9 +7,10 @@
 //
 
 import UIKit
-import AppCenter
-import AppCenterAnalytics
-import AppCenterCrashes
+import HockeySDK
+//import AppCenter
+//import AppCenterCrashes
+//import AppCenterAnalytics
 
 @UIApplicationMain
 class AppDelegate: UIResponder, UIApplicationDelegate {
@@ -103,8 +104,21 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
 			}
 		}
 		
-		MSAppCenter.start(userDefaults.string(forKey: "deviceIdentifier"), withServices:[MSAnalytics.self, MSCrashes.self])
+		let hockeyManager = BITHockeyManager.shared()
 
+		hockeyManager.configure(withIdentifier: "d84512a73d904546bd54d650b88411ed")
+//		 Do some additional configuration if needed here
+		hockeyManager.crashManager.crashManagerStatus = BITCrashManagerStatus.alwaysAsk
+
+//		hockeyManager.userName = "testUser"
+		hockeyManager.userID = userDefaults.string(forKey: "deviceIdentifier") ?? "errorId"
+//		hockeyManager.userEmail = "test@test.com"
+		hockeyManager.start()
+		hockeyManager.authenticator.authenticateInstallation()
+
+//		let appCenter = MSAppCenter.self
+//		appCenter.setUserId(userDefaults.string(forKey: "deviceIdentifier") ?? "" + " 1")
+//		appCenter.start("d84512a7-3d90-4546-bd54-d650b88411ed", withServices: [MSAnalytics.self, MSCrashes.self])
 		return true
 	}
 	

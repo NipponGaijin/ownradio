@@ -19,4 +19,5 @@ target 'OwnRadio' do
 
 end
 
-pod 'AppCenter'
+pod 'HockeySDK', '~> 5.1.4'
+#pod 'AppCenter'

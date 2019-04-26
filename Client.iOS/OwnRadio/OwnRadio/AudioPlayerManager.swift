@@ -257,6 +257,18 @@ class AudioPlayerManager: NSObject, AVAssetResourceLoaderDelegate, NSURLConnecti
 		case .began: //interruption started
 			if self.isPlaying == true {
 				print("Began Playing - TRUE")
+				self.pauseSong {
+					if let rootController = UIApplication.shared.keyWindow?.rootViewController {
+						let navigationController = rootController as! UINavigationController
+						
+						if let radioViewContr = navigationController.topViewController  as? RadioViewController {
+							DispatchQueue.main.asyncAfter(deadline: .now() + 1.0, execute: {
+								radioViewContr.updateUI()
+							})
+							
+						}
+					}
+				}
 			} else {
 				print("Began Playing - FALSE")
 				wasInterreption = true
@@ -512,8 +524,8 @@ class AudioPlayerManager: NSObject, AVAssetResourceLoaderDelegate, NSURLConnecti
 	
 	func fwdTrackToEnd(){
 		isSkipped = true
-		if player.currentItem != nil{
-			player.seek(to: (player.currentItem?.duration)!-CMTimeMake(3, 1))
+		if let item = player.currentItem{
+				player.seek(to: (item.duration) - CMTimeMake(3, 1))
 		}
 		
 	}
@@ -543,6 +555,6 @@ class AudioPlayerManager: NSObject, AVAssetResourceLoaderDelegate, NSURLConnecti
 		self.playingSongID = song.trackID
 		
 		self.configurePlayingSong(song: song)
-		self.resumeSong {}
+		self.pauseSong {}
 	}
 }

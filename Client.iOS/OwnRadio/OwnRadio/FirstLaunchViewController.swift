@@ -169,7 +169,10 @@ class FirstLaunchViewController: UIPageViewController, UIPageViewControllerDeleg
 			return
 		}
 		DispatchQueue.global(qos: .utility).async {
-			Downloader.sharedInstance.load(isSelfFlag: false) {print("First download run")}
+			Downloader.sharedInstance.runLoad(isSelf: false, complition: {
+				print("First download run")
+				
+			})
 		}
 	}
 
