@@ -98,8 +98,8 @@
 		<item>@string/optimize_off</item>
 	</string-array>
 	<string-array name="pref_internet_connection_values">
-		<item>0</item>
 		<item>1</item>
+		<item>0</item>
 	</string-array>
 
 	<string name="optimize_on">Включено</string>

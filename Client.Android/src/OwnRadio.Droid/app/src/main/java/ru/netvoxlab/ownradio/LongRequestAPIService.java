@@ -59,13 +59,13 @@ public class LongRequestAPIService extends IntentService {
 				String optimizeStatus = prefManager.getPrefItem(OPTIMIZE_STATUS, OPTIMIZE_ENABLED);
 
 				int cachedTrackCount = trackInfo.GetExistTracksCount();
-				if(optimizeStatus.equals(OPTIMIZE_ENABLED) && cachedTrackCount <= 10){
+				if(optimizeStatus.equals(OPTIMIZE_ENABLED) && cachedTrackCount <= 10 && CheckConnection.isConnectedMobile(getApplicationContext()) ){
 					countTracks = 2;
 				}
-				else if(optimizeStatus.equals(OPTIMIZE_ENABLED) && cachedTrackCount <= 50){
+				else if(optimizeStatus.equals(OPTIMIZE_ENABLED) && cachedTrackCount <= 50 && CheckConnection.isConnectedMobile(getApplicationContext())){
 					countTracks = 1;
 				}
-				else if(optimizeStatus.equals(OPTIMIZE_ENABLED) && cachedTrackCount > 50){
+				else if(optimizeStatus.equals(OPTIMIZE_ENABLED) && cachedTrackCount > 50 && CheckConnection.isConnectedMobile(getApplicationContext())){
 					countTracks = 0;
 				}
 

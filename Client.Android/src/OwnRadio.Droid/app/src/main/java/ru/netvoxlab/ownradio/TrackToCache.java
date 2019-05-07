@@ -64,7 +64,7 @@ public class TrackToCache {
 		TrackDataAccess trackInfo = new TrackDataAccess(mContext);
 		//int numAttempts = 0;
 		int numTryes = 0;
-		String optimizeStatus = prefManager.getPrefItem(OPTIMIZE_STATUS, OPTIMIZE_ENABLED);
+
 		Boolean res = false;
 
 		if (!new CheckConnection().CheckInetConnection(mContext))
@@ -123,11 +123,16 @@ public class TrackToCache {
 
 
 						int cachedTrackCount = trackInfo.GetExistTracksCount();
-						if(optimizeStatus.equals(OPTIMIZE_ENABLED) && cachedTrackCount <= 10){
+						Boolean conn = CheckConnection.isConnectedMobile(mContext);
+						String optimizeStatus = prefManager.getPrefItem(OPTIMIZE_STATUS, OPTIMIZE_ENABLED);
+						if(optimizeStatus.equals(OPTIMIZE_ENABLED) && cachedTrackCount <= 10 && CheckConnection.isConnectedMobile(mContext)){
 							numTryes = 2;
 						}
-						else if(optimizeStatus.equals(OPTIMIZE_ENABLED) && cachedTrackCount <= 50){
+						else if(optimizeStatus.equals(OPTIMIZE_ENABLED) && cachedTrackCount <= 50 && CheckConnection.isConnectedMobile(mContext)){
 							numTryes = 1;
+						}
+						else if(optimizeStatus.equals(OPTIMIZE_ENABLED) && cachedTrackCount > 50 && CheckConnection.isConnectedMobile(mContext)){
+							numTryes = 0;
 						}
 						else{
 							numTryes = 10;
