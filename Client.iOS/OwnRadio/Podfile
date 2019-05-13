@@ -19,5 +19,6 @@ target 'OwnRadio' do
 
 end
 
+pod 'GoogleSignIn'
 pod 'HockeySDK', '~> 5.1.4'
 #pod 'AppCenter'

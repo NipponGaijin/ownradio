@@ -8,6 +8,7 @@
 
 import UIKit
 import Foundation
+import GoogleSignIn
 
 class StartupViewController: UIViewController {
 
@@ -56,11 +57,18 @@ class StartupViewController: UIViewController {
 			}
 		}
 		else{
-			sleep(1)
 			print("not first launch")
-			DispatchQueue.main.async {
-				let viewController = storyboard.instantiateViewController(withIdentifier: "RadioViewController")
-				self.navigationController?.pushViewController(viewController, animated: false)
+			if UserDefaults.standard.string(forKey: "googleToken") != nil{
+				DispatchQueue.main.async {
+					let viewController = storyboard.instantiateViewController(withIdentifier: "RadioViewController")
+					self.navigationController?.pushViewController(viewController, animated: false)
+				}
+			}
+			else{
+				DispatchQueue.main.async {
+					let viewController = storyboard.instantiateViewController(withIdentifier: "LoginViewController")
+					self.navigationController?.pushViewController(viewController, animated: false)
+				}
 			}
 		}
     }

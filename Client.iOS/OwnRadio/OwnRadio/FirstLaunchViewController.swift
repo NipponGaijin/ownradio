@@ -59,14 +59,14 @@ class FirstLaunchViewController: UIPageViewController, UIPageViewControllerDeleg
 	}
 	
 	
-	func runPlayerView() {
+	func runLoginView() {
 		let queue = DispatchQueue(label: "AutoSkipTimer", attributes: .concurrent)
 		timerRunPlayer = DispatchSource.makeTimerSource(queue: queue)
 		timerRunPlayer.scheduleOneshot(deadline: .now() + 1)
 		timerRunPlayer.setEventHandler(handler: {
 			DispatchQueue.main.async {
 				let storyboard: UIStoryboard = UIStoryboard(name: "Main", bundle: nil)
-				let viewController = storyboard.instantiateViewController(withIdentifier: "RadioViewController")
+				let viewController = storyboard.instantiateViewController(withIdentifier: "LoginViewController")
 				self.navigationController?.pushViewController(viewController, animated: false)
 			}
 		})
@@ -95,7 +95,7 @@ class FirstLaunchViewController: UIPageViewController, UIPageViewControllerDeleg
 		}
 		
 		if self.pageControl.currentPage == slides.count - 1 {
-			self.runPlayerView()
+			self.runLoginView()
 		}
 		if timerAutoSkip != nil {
 			timerAutoSkip.cancel()
@@ -112,7 +112,7 @@ class FirstLaunchViewController: UIPageViewController, UIPageViewControllerDeleg
 				self.goToNextPage(animated: true)
 				if self.pageControl.currentPage == self.slides.count - 1{
 					self.pageControl.currentPage = 0
-					self.runPlayerView()
+					self.runLoginView()
 				}else{
 					self.pageControl.currentPage = self.pageControl.currentPage + 1
 				}

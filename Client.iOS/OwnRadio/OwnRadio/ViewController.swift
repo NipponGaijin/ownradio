@@ -48,12 +48,9 @@ class RadioViewController: UIViewController, UITableViewDataSource, UITableViewD
 	
 	@IBOutlet weak var playPauseBtn: UIButton!
 	@IBOutlet weak var nextButton: UIButton!
-	@IBOutlet var tapRecogniser: UITapGestureRecognizer!
 
     @IBOutlet weak var currentTimeLbl: UILabel!
     @IBOutlet weak var elapsedTimeLbl: UILabel!
-	
-	@IBOutlet weak var leftPlayBtnConstraint: NSLayoutConstraint!
 	
 	// MARK: Variables
 	let defaultSession = URLSession(configuration: URLSessionConfiguration.default)
@@ -81,6 +78,8 @@ class RadioViewController: UIViewController, UITableViewDataSource, UITableViewD
 	let tracksUrlString =  FileManager.applicationSupportDir().appending("/Tracks/")
 	
 	let callObserver = CXCallObserver()
+	
+	let currentRemainingTimeFormatter = DateComponentsFormatter()
 	
 	override func prepare(for segue: UIStoryboardSegue, sender: Any?) {
 		if segue.identifier == "SettingsByButton" || segue.identifier == "SettingsBySwipe"{
@@ -147,7 +146,7 @@ class RadioViewController: UIViewController, UITableViewDataSource, UITableViewD
 		//self.progressView.frame = self.circleViewConteiner.bounds
 		//self.circleViewConteiner.autoresizingMask = [.flexibleWidth,.flexibleHeight]
 		
-		self.player = AudioPlayerManager.sharedInstance
+		
 		self.detectedHeadphones()
 		
 //		self.deviceIdLbl.text = UIDevice.current.identifierForVendor?.uuidString.lowercased() //  NSUUID().uuidString.lowercased()
@@ -172,18 +171,13 @@ class RadioViewController: UIViewController, UITableViewDataSource, UITableViewD
 		DispatchQueue.main.async {
 			self.updateUI()
 		}
-		//обрыв воспроизведения трека
-		NotificationCenter.default.addObserver(self, selector: #selector(crashNetwork(_:)), name: NSNotification.Name.AVPlayerItemFailedToPlayToEndTime, object: self.player.playerItem)
-		//трек доигран до конца
-		NotificationCenter.default.addObserver(self, selector: #selector(songDidPlay), name: NSNotification.Name.AVPlayerItemDidPlayToEndTime, object: nil)
-		//обновление системной информации
-		NotificationCenter.default.addObserver(self, selector: #selector(updateSysInfo(_:)), name: NSNotification.Name(rawValue:"updateSysInfo"), object: nil)
 		
-		NotificationCenter.default.addObserver(self, selector:  #selector(RadioViewController.audioRouteChangeListener(notification:)), name: NSNotification.Name.AVAudioSessionRouteChange, object: nil)
-		callObserver.setDelegate(self, queue: nil)
+		callObserver.setDelegate(self, queue: DispatchQueue.global(qos: .background))
 		
 		checkTrackContinue()
 		
+		currentRemainingTimeFormatter.zeroFormattingBehavior = .pad
+		currentRemainingTimeFormatter.allowedUnits = [.minute, .second]
 	}
 
 	
@@ -223,7 +217,7 @@ class RadioViewController: UIViewController, UITableViewDataSource, UITableViewD
 		//обновление системной информации
 //		NotificationCenter.default.addObserver(self, selector: #selector(updateSysInfo(_:)), name: NSNotification.Name(rawValue:"updateSysInfo"), object: nil)
 		
-		self.player = AudioPlayerManager.sharedInstance
+//		self.player = AudioPlayerManager.sharedInstance
 		
 		DispatchQueue.main.async {
 			self.updateUI()
@@ -320,12 +314,12 @@ class RadioViewController: UIViewController, UITableViewDataSource, UITableViewD
 	
 	// MARK: Notification Selectors
 	@objc func songDidPlay() {
-		self.player.nextTrack { [unowned self] in
+		self.player.nextTrack {
 			//Вызывается при каждой загрузке трека
 		}
 		DispatchQueue.main.async {
 			if !self.activeCall{
-				self.player.resumeSong {
+				self.player.resumeSong { [unowned self] in
 					self.updateUI()
 				}
 			}else{
@@ -378,7 +372,6 @@ class RadioViewController: UIViewController, UITableViewDataSource, UITableViewD
 	@objc func crashNetwork(_ notification: Notification) {
 		DispatchQueue.main.async {
 			self.playPauseBtn.setImage(UIImage(named: "playImage"), for: UIControlState.normal)
-			self.leftPlayBtnConstraint.constant = self.pauseBtnConstraintConstant
 			self.trackIDLbl.text = ""
 			self.infoLabel10.text = self.infoLabel9.text
 			self.infoLabel9.text = self.infoLabel8.text
@@ -419,7 +412,7 @@ class RadioViewController: UIViewController, UITableViewDataSource, UITableViewD
 					self.interruptedManually = false
 					
 					if self.player.isPlaying{
-						self.player.pauseSong {
+						self.player.pauseSong { [unowned self] in
 							self.updateUI()
 						}
 					}
@@ -433,11 +426,11 @@ class RadioViewController: UIViewController, UITableViewDataSource, UITableViewD
 					case AVAudioSessionPortBluetoothA2DP:
 						if self.player.isPlaying == true || (self.isPlaying == true && self.activeCall == false && self.isPlaying != nil) {
 							self.interruptedManually = false
-							self.player.resumeSong {
+							self.player.resumeSong { [unowned self] in
 								self.updateUI()
 							}
 						}else{
-							self.player.pauseSong {
+							self.player.pauseSong { [unowned self] in
 								self.updateUI()
 							}
 						}
@@ -445,11 +438,11 @@ class RadioViewController: UIViewController, UITableViewDataSource, UITableViewD
 					case AVAudioSessionPortBluetoothLE:
 						if self.player.isPlaying == true || (self.isPlaying && !self.activeCall) {
 							self.interruptedManually = false
-							self.player.resumeSong {
+							self.player.resumeSong { [unowned self] in
 								self.updateUI()
 							}
 						}else{
-							self.player.pauseSong {
+							self.player.pauseSong { [unowned self] in
 								self.updateUI()
 							}
 						}
@@ -466,8 +459,23 @@ class RadioViewController: UIViewController, UITableViewDataSource, UITableViewD
 	//меняет состояние проигрывания и кнопку playPause
 	func changePlayBtnState() {
 		//если трек проигрывается - ставим на паузу
+		
+		if self.player == nil{
+			self.player = AudioPlayerManager.sharedInstance
+			
+			//обрыв воспроизведения трека
+			NotificationCenter.default.addObserver(self, selector: #selector(crashNetwork(_:)), name: NSNotification.Name.AVPlayerItemFailedToPlayToEndTime, object: self.player.playerItem)
+			//трек доигран до конца
+			NotificationCenter.default.addObserver(self, selector: #selector(songDidPlay), name: NSNotification.Name.AVPlayerItemDidPlayToEndTime, object: nil)
+			//обновление системной информации
+			NotificationCenter.default.addObserver(self, selector: #selector(updateSysInfo(_:)), name: NSNotification.Name(rawValue:"updateSysInfo"), object: nil)
+			
+			NotificationCenter.default.addObserver(self, selector:  #selector(RadioViewController.audioRouteChangeListener(notification:)), name: NSNotification.Name.AVAudioSessionRouteChange, object: nil)
+			NotificationCenter.default.addObserver(self, selector: #selector(onPauseRemoteCommand(_:)), name: Notification.Name.AVAudioSessionInterruption, object: self.player.player.currentItem)
+		}
+		
 		if player.isPlaying == true {
-			player.pauseSong(complition: { [unowned self] in
+			player.pauseSong{ [unowned self] in
 				
 				MPNowPlayingInfoCenter.default().nowPlayingInfo![MPNowPlayingInfoPropertyElapsedPlaybackTime] = CMTimeGetSeconds(self.player.player.currentTime())
 				MPNowPlayingInfoCenter.default().nowPlayingInfo![MPNowPlayingInfoPropertyPlaybackRate] = 0
@@ -475,13 +483,12 @@ class RadioViewController: UIViewController, UITableViewDataSource, UITableViewD
 					self.updateUI()
 				}
 				self.isPlaying = false
-				})
+				}
 		}else {
 			//иначе - возобновляем проигрывание если возможно или начинаем проигрывать новый трек
 			if !self.activeCall{
-				self.player.resumeSong(complition: { [unowned self] in
+				self.player.resumeSong{ [unowned self] in
 					if CoreDataManager.instance.getCountOfTracks() > 0 {
-						//Вылетает, если ничего не проигрывалось и играет трек из будильника и нажата кнопка PLAY
 						MPNowPlayingInfoCenter.default().nowPlayingInfo![MPNowPlayingInfoPropertyElapsedPlaybackTime] = CMTimeGetSeconds(self.player.player.currentTime())
 						MPNowPlayingInfoCenter.default().nowPlayingInfo![MPNowPlayingInfoPropertyPlaybackRate] = 1
 						DispatchQueue.main.async {
@@ -489,7 +496,7 @@ class RadioViewController: UIViewController, UITableViewDataSource, UITableViewD
 						}
 					}
 					self.isPlaying = true
-				})
+				}
 			}else{
 				self.updateUI()
 			}
@@ -498,19 +505,20 @@ class RadioViewController: UIViewController, UITableViewDataSource, UITableViewD
 	
 	//функция отображения количества файлов в кеше
 	func getCountFilesInCache () {
-		DispatchQueue.global(qos: .utility).async{
+//		DispatchQueue.main.async{
 			do {
 				//			let appSupportUrl = URL(string: FileManager.applicationSupportDir().appending("/"))
 				let docUrl = FileManager.default.urls(for: .applicationSupportDirectory, in: .userDomainMask).first?.appendingPathComponent("Tracks")
 				let directoryContents = try FileManager.default.contentsOfDirectory(at: docUrl!, includingPropertiesForKeys: nil, options: [])
 				let mp3Files = directoryContents.filter{ $0.pathExtension == "mp3" }
 				DispatchQueue.main.async {
-					self.numberOfFiles.text = String(CoreDataManager.instance.chekCountOfEntitiesFor(entityName: "TrackEntity"))
+//					self.numberOfFiles.text = String(CoreDataManager.instance.chekCountOfEntitiesFor(entityName: "TrackEntity"))
+					self.numberOfFiles.text = mp3Files.count.description
 				}
 			} catch let error as NSError {
 				print(error.localizedDescription)
 			}
-		}
+//		}
 	}
 	
 	func playingAlarmTrack(){
@@ -519,6 +527,20 @@ class RadioViewController: UIViewController, UITableViewDataSource, UITableViewD
 	
 	//обновление UI
 	func updateUI() {
+		
+		if self.player == nil{
+			self.player = AudioPlayerManager.sharedInstance
+			
+			//обрыв воспроизведения трека
+			NotificationCenter.default.addObserver(self, selector: #selector(crashNetwork(_:)), name: NSNotification.Name.AVPlayerItemFailedToPlayToEndTime, object: self.player.playerItem)
+			//трек доигран до конца
+			NotificationCenter.default.addObserver(self, selector: #selector(songDidPlay), name: NSNotification.Name.AVPlayerItemDidPlayToEndTime, object: nil)
+			//обновление системной информации
+			NotificationCenter.default.addObserver(self, selector: #selector(updateSysInfo(_:)), name: NSNotification.Name(rawValue:"updateSysInfo"), object: nil)
+			
+			NotificationCenter.default.addObserver(self, selector:  #selector(RadioViewController.audioRouteChangeListener(notification:)), name: NSNotification.Name.AVAudioSessionRouteChange, object: nil)
+			NotificationCenter.default.addObserver(self, selector: #selector(onPauseRemoteCommand(_:)), name: Notification.Name.AVAudioSessionInterruption, object: self.player.player.currentItem)
+		}
 		
 		DispatchQueue.main.async {
 			if self.isStartListening == true {
@@ -552,13 +574,10 @@ class RadioViewController: UIViewController, UITableViewDataSource, UITableViewD
 							self.progressView.setProgress(Float(CGFloat(time.seconds) / CGFloat((self.player.playingSong.trackLength)!)), animated: false)
 							UserDefaults.standard.set(time.seconds.description, forKey:"trackPosition")
 							UserDefaults.standard.set(self.player.playingSong.trackID as String, forKey:"lastTrack")
-							UserDefaults.standard.synchronize()
 							
-							let dateFormatter = DateComponentsFormatter()
-							dateFormatter.zeroFormattingBehavior = .pad
-							dateFormatter.allowedUnits = [.minute, .second]
-							let currentTime = dateFormatter.string(from: TimeInterval(time.seconds))
-							let elapsedTime = dateFormatter.string(from: TimeInterval(self.player.playingSong.trackLength! - time.seconds))
+							
+							let currentTime = self.currentRemainingTimeFormatter.string(from: TimeInterval(time.seconds))
+							let elapsedTime = self.currentRemainingTimeFormatter.string(from: TimeInterval(self.player.playingSong.trackLength! - time.seconds))
 							
 							self.currentTimeLbl.text = currentTime
 							self.elapsedTimeLbl.text = "-\(elapsedTime ?? "")"
@@ -579,15 +598,11 @@ class RadioViewController: UIViewController, UITableViewDataSource, UITableViewD
 			self.getCountFilesInCache()
 			// обновление количевства записей в базе данных
 //			self.numberOfFilesInDB.text = String(CoreDataManager.instance.chekCountOfEntitiesFor(entityName: "TrackEntity"))
-			DispatchQueue.global(qos: .utility).async {
-				let numberfilesInDB = String(CoreDataManager.instance.chekCountOfEntitiesFor(entityName: "TrackEntity"))
-				DispatchQueue.main.async {
-					self.numberOfFilesInDB.text = numberfilesInDB
-				}
-			}
+			
+			self.numberOfFilesInDB.text = String(CoreDataManager.instance.chekCountOfEntitiesFor(entityName: "TrackEntity"))
 			// update table
 //			self.playedTracks = CoreDataManager.instance.getGroupedTracks()
-			DispatchQueue.global(qos: .utility).async {
+			DispatchQueue.main.async {
 				let playedTracksCount = CoreDataManager.instance.getGroupedTracks()
 				DispatchQueue.main.async {
 					self.playedTracks = playedTracksCount
@@ -619,17 +634,45 @@ class RadioViewController: UIViewController, UITableViewDataSource, UITableViewD
 		return self.playedTracks.count
 	}
 
-	func tableView(_ tableView: UITableView, cellForRowAt indexPath: IndexPath) -> UITableViewCell {
-		let cell = tableView.dequeueReusableCell(withIdentifier: "Cell", for: indexPath)
+	@objc func onPauseRemoteCommand(_ notification: Notification){
 		
-		let dict = playedTracks[indexPath.row] as! [String: Any]
-		let countOfPlay = dict["countPlay"] as? Int
-		let countOfTracks = dict["count"] as? Int
-		if countOfPlay != nil && countOfTracks != nil {
-			let str = NSString(format: "Count play: %d - Count tracks: %d", countOfPlay! , countOfTracks! )
-			cell.textLabel?.text = str as String
+		guard let userInfo = notification.userInfo as? [String: AnyObject] else { return }
+		guard let rawInterruptionType = userInfo[AVAudioSessionInterruptionTypeKey] as? NSNumber else { return }
+		//получаем информацию о прерывании
+		guard let interruptionType = AVAudioSessionInterruptionType.init(rawValue: rawInterruptionType.uintValue) else {
+			return
 		}
-		return cell
+		
+		switch interruptionType {
+		case .began:
+			print("began")
+			self.player.pauseSong {
+				print("paused")
+			}
+		case .ended:
+			if self.activeCall && !self.interruptedManually{
+				self.activeCall = false
+				self.player.resumeSong {
+					print("call not taken song resume")
+				}
+			}
+		}
+		self.updateUI()
+	}
+	
+	func tableView(_ tableView: UITableView, cellForRowAt indexPath: IndexPath) -> UITableViewCell {
+		if let cell = tableView.dequeueReusableCell(withIdentifier: "Cell"){
+			let dict = playedTracks[indexPath.row] as! [String: Any]
+			let countOfPlay = dict["countPlay"] as? Int
+			let countOfTracks = dict["count"] as? Int
+			if countOfPlay != nil && countOfTracks != nil {
+				let str = NSString(format: "Count play: %d - Count tracks: %d", countOfPlay! , countOfTracks! )
+				cell.textLabel?.text = str as String
+			}
+			return cell
+		}
+		return UITableViewCell()
+		
 	}
 	
 
@@ -662,7 +705,7 @@ class RadioViewController: UIViewController, UITableViewDataSource, UITableViewD
 				//Вызывается каждый раз когда скачивается трек
 			}
 			if !self.activeCall{
-				self.player.resumeSong {
+				self.player.resumeSong { [unowned self] in
 					self.updateUI()
 				}
 			}
@@ -749,6 +792,20 @@ class RadioViewController: UIViewController, UITableViewDataSource, UITableViewD
 	///   - needUpdateUi: Если true, то обновляется ui
 	func playTrackByUrl(trackUrl: URL, song: SongObject, seekTo: Float64, needUpdateUi: Bool){
 		if !activeCall{
+			if self.player == nil{
+				self.player = AudioPlayerManager.sharedInstance
+				
+				//обрыв воспроизведения трека
+				NotificationCenter.default.addObserver(self, selector: #selector(crashNetwork(_:)), name: NSNotification.Name.AVPlayerItemFailedToPlayToEndTime, object: self.player.playerItem)
+				//трек доигран до конца
+				NotificationCenter.default.addObserver(self, selector: #selector(songDidPlay), name: NSNotification.Name.AVPlayerItemDidPlayToEndTime, object: nil)
+				//обновление системной информации
+				NotificationCenter.default.addObserver(self, selector: #selector(updateSysInfo(_:)), name: NSNotification.Name(rawValue:"updateSysInfo"), object: nil)
+				
+				NotificationCenter.default.addObserver(self, selector:  #selector(RadioViewController.audioRouteChangeListener(notification:)), name: NSNotification.Name.AVAudioSessionRouteChange, object: nil)
+				NotificationCenter.default.addObserver(self, selector: #selector(onPauseRemoteCommand(_:)), name: Notification.Name.AVAudioSessionInterruption, object: self.player.player.currentItem)
+			}
+			
 			self.player.playOuterTrack(url: trackUrl, song: song, seekTo: seekTo)
 			self.isStartListening = true
 			if needUpdateUi{
@@ -764,13 +821,13 @@ extension RadioViewController: CXCallObserverDelegate {
 	func callObserver(_ callObserver: CXCallObserver, callChanged call: CXCall) {
 		if call.isOutgoing == true{
 			if player.isPlaying {
-				self.interruptedManually = true
+				self.interruptedManually = false
 			}
 			print("Звонок начался")
 			self.createPostNotificationSysInfo(message: "Call started")
 			self.activeCall = true
 			if self.player != nil {
-				player.pauseSong {
+				player.pauseSong { [unowned self] in
 					print("call start, song paused")
 					if player.isPlaying {
 						self.updateUI()
@@ -786,7 +843,7 @@ extension RadioViewController: CXCallObserverDelegate {
 			self.createPostNotificationSysInfo(message: "Call started")
 			self.activeCall = true
 			if self.player != nil {
-				player.pauseSong {
+				player.pauseSong { [unowned self] in
 					print("call start, song paused")
 					if player.isPlaying {
 						self.updateUI()

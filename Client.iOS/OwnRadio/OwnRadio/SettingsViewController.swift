@@ -14,20 +14,14 @@ class SettingsViewController: UITableViewController {
 	@IBOutlet weak var maxMemoryLbl: UILabel!
 	@IBOutlet weak var stepper: UIStepper!
 	@IBOutlet weak var onlyWiFiSwitch: UISwitch!
-	@IBOutlet weak var freeSpaceLbl: UILabel!
-	@IBOutlet weak var cacheFolderSize: UILabel!
-	@IBOutlet weak var listenTracksSize: UILabel!
+	
 	@IBOutlet weak var delAllTracksLbl: UILabel!
-	@IBOutlet weak var versionLbl: UILabel!
-	@IBOutlet weak var deviceIdLbl: UILabel!
     @IBOutlet weak var tracksRatio: UISlider!
     @IBOutlet weak var ratioLabel: UILabel!
     
 	@IBOutlet weak var fromFreeSpace: UILabel!
 
 	@IBOutlet weak var delAllTracksCell: UITableViewCell!
-	@IBOutlet weak var countPlayingTracksTable: UILabel!
-    @IBOutlet weak var tracksCountLbl: UILabel!
 	
 	var player: AudioPlayerManager?
 	var remoteAudioControls: RemoteAudioControls?
@@ -46,49 +40,19 @@ class SettingsViewController: UITableViewController {
 		stepper.wraps = true
 		stepper.autorepeat = true
 		stepper.value = (userDefaults.object(forKey: "maxMemorySize") as? Double)!
-		
+		maxMemoryLbl.text = Int(stepper.value).description + "%"
 		stepper.minimumValue = 10.0
 		stepper.maximumValue = 50.0
 		stepper.stepValue = 10.0
-		let listenTracks = CoreDataManager.instance.getListenTracks()
-		DispatchQueue.global(qos: .utility).async {
-			let maxMemorySizePercent = self.userDefaults.integer(forKey: "maxMemorySize")
-			let freeSpace = UInt64(DiskStatus.folderSize(folderPath: self.tracksUrlString)) + UInt64(DiskStatus.freeDiskSpaceInBytes)
-			let maxMemorySizeGB = Int64(Float(Float(maxMemorySizePercent) / 100) * Float(freeSpace))
-			
-			
-			let freeDiskSpace = DiskStatus.freeDiskSpaceInBytes
-			let tracksFolderSize = DiskStatus.folderSize(folderPath: self.tracksUrlString)
-			
-			let listenedTracksSize = DiskStatus.listenTracksSize(folderPath:self.tracksUrlString, tracks: listenTracks)
-			
-			
-			DispatchQueue.main.async {
-				self.maxMemoryLbl.text = (self.userDefaults.object(forKey: "maxMemorySize") as? Int)!.description  + "%"
-				self.fromFreeSpace.text = "*от свободной памяти " + DiskStatus.GBFormatter(Int64(freeDiskSpace) + Int64(tracksFolderSize)) + " Gb"
-				self.freeSpaceLbl.text = "Свободно " + DiskStatus.GBFormatter(Int64(freeDiskSpace)) + " Gb"
-				
-				self.cacheFolderSize.text = "Занято " + DiskStatus.GBFormatter(Int64(tracksFolderSize)) + "Gb (из " + DiskStatus.GBFormatter(maxMemorySizeGB ) + " Gb)"
-				self.tracksCountLbl.text = CoreDataManager.instance.chekCountOfEntitiesFor(entityName: "TrackEntity").description + " треков"
-				
-				
-				self.listenTracksSize.text = "Из них уже прослушанных " + DiskStatus.GBFormatter(Int64(listenedTracksSize)) + " Gb (" + listenTracks.count.description + " треков)"
-			}
-		}
-		
-		
+
+		let freeSpace = Int64(DiskStatus.folderSize(folderPath: self.tracksUrlString)) + Int64(DiskStatus.freeDiskSpaceInBytes)
+
+		self.fromFreeSpace.text = "*от свободной памяти " + DiskStatus.GBFormatter(freeSpace) + " Gb"
 		
 		
 		let tapDelAllTracks = UITapGestureRecognizer(target: self, action: #selector(self.tapDelAllTracks(sender:)))
 		delAllTracksCell.isUserInteractionEnabled = true
 		delAllTracksCell.addGestureRecognizer(tapDelAllTracks)
-		
-		if let version = Bundle.main.infoDictionary?["CFBundleShortVersionString"] as? String {
-			if (Bundle.main.infoDictionary?["CFBundleVersion"] as? String) != nil {
-				versionLbl.text =  "Version: v" + version
-			}
-		}
-		deviceIdLbl.text = "DeviceID: " + (UIDevice.current.identifierForVendor?.uuidString.lowercased())!
 		
 		
 		var str = "" as NSString
@@ -104,9 +68,7 @@ class SettingsViewController: UITableViewController {
 			}
 			}
 		}
-		
-		countPlayingTracksTable.numberOfLines = playedTracks.count
-		countPlayingTracksTable.text = str as String
+	
 		
 		//Инициализация регулятора выдачи треков
 		let thumbImage = UIImage(named: "trackThumb")
@@ -132,11 +94,6 @@ class SettingsViewController: UITableViewController {
 		maxMemoryLbl.text = Int(stepper.value).description + "%"
 		UserDefaults.standard.set(stepper.value, forKey: "maxMemorySize")
 		UserDefaults.standard.synchronize()
-		
-		let freeSpace = UInt64(DiskStatus.folderSize(folderPath: self.tracksUrlString)) + UInt64(DiskStatus.freeDiskSpaceInBytes)
-		let maxMemorySizePercent = UserDefaults.standard.integer(forKey: "maxMemorySize")
-		let maxMemorySizeGB = Int64(Float(Float(maxMemorySizePercent) / 100) * Float(freeSpace))
-		cacheFolderSize.text = "Занято " + DiskStatus.GBFormatter(Int64(DiskStatus.folderSize(folderPath: self.tracksUrlString))) + "Gb (из " + DiskStatus.GBFormatter(maxMemorySizeGB) + " Gb)"
 	}
 	
 	
@@ -156,6 +113,14 @@ class SettingsViewController: UITableViewController {
 			return
 		}
 		remoteControls.remoteControlReceived(with: event)
+	}
+	
+	override func viewDidAppear(_ animated: Bool) {
+		self.navigationController?.interactivePopGestureRecognizer?.isEnabled = false
+	}
+	
+	override func viewDidDisappear(_ animated: Bool) {
+		self.navigationController?.interactivePopGestureRecognizer?.isEnabled = true
 	}
 	
 	@objc func tapDelAllTracks(sender: UITapGestureRecognizer) {

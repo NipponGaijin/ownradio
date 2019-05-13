@@ -39,6 +39,13 @@ class AudioPlayerManager: NSObject, AVAssetResourceLoaderDelegate, NSURLConnecti
     let tracksUrlString =  FileManager.applicationSupportDir().appending("/Tracks/")
 	let budTracksUrlString = FileManager.applicationSupportDir().appending("/AlarmTracks/")
 	var isSkipped = false
+	let commandCenter = MPRemoteCommandCenter.shared()
+	let handler: (String) -> ((MPRemoteCommandEvent) -> (MPRemoteCommandHandlerStatus)) = { (name) in
+		return { (event) -> MPRemoteCommandHandlerStatus in
+			dump("\(name) \(event.timestamp) \(event.command)")
+			return .success
+		}
+	}
 	
 	// MARK: Overrides
 	override init() {
@@ -49,48 +56,68 @@ class AudioPlayerManager: NSObject, AVAssetResourceLoaderDelegate, NSURLConnecti
 		NotificationCenter.default.addObserver(self, selector: #selector(playerItemDidReachEnd(_:)), name: NSNotification.Name.AVPlayerItemDidPlayToEndTime, object: self.player.currentItem)
 		//проигрывание было прервано
 		NotificationCenter.default.addObserver(self, selector: #selector(crashNetwork(_:)), name: NSNotification.Name.AVPlayerItemFailedToPlayToEndTime, object: self.player.currentItem)
+		
+		
+		
 		setup()
 	}
 	
 	deinit {
-		
 		self.removeObserver(self, forKeyPath: #keyPath(AudioPlayerManager.playerItem.status))
 		
 		NotificationCenter.default.removeObserver(self, name:  NSNotification.Name.AVPlayerItemDidPlayToEndTime, object: self.player.currentItem)
 		NotificationCenter.default.removeObserver(self, name:  NSNotification.Name.AVPlayerItemFailedToPlayToEndTime, object: self.player.currentItem)
 		NotificationCenter.default.removeObserver(self, name: Notification.Name.AVAudioSessionInterruption, object: AVAudioSession.sharedInstance())
-	}
-	
-	func setup() {
-		let audioSession = AVAudioSession.sharedInstance()
 		
-		try! audioSession.setCategory(AVAudioSessionCategoryPlayback)
-		try! audioSession.setMode(AVAudioSessionModeDefault)
-		try! audioSession.setActive(true)
-		
-		UIApplication.shared.beginReceivingRemoteControlEvents()
-		
-		//Для того, чтобы убрать кнопку "назад" на заблокированном экране
-		//явно задаем отображаемые кнопки и функции, вызываемые по их нажатию
-		let commandCenter = MPRemoteCommandCenter.shared()
-		
-		let handler: (String) -> ((MPRemoteCommandEvent) -> (MPRemoteCommandHandlerStatus)) = { (name) in
-			return { (event) -> MPRemoteCommandHandlerStatus in
-				dump("\(name) \(event.timestamp) \(event.command)")
-				return .success
-			}
-		}
-		
-		commandCenter.nextTrackCommand.isEnabled = true
-		commandCenter.nextTrackCommand.addTarget(handler: handler("skipSong"))
+		commandCenter.nextTrackCommand.isEnabled = false
+		commandCenter.nextTrackCommand.removeTarget(handler("skipSong"))
 		
 		commandCenter.playCommand.isEnabled = true
-		commandCenter.playCommand.addTarget(handler: handler("resumeSong"))
+		commandCenter.playCommand.removeTarget(handler("resumeSong"))
 		
 		commandCenter.pauseCommand.isEnabled = true
-		commandCenter.pauseCommand.addTarget(handler: handler("pauseSong"))
+		commandCenter.pauseCommand.removeTarget(handler("pauseSong"))
 		
-		NotificationCenter.default.addObserver(self, selector: #selector(onAudioSessionEvent(_:)), name: Notification.Name.AVAudioSessionInterruption, object: AVAudioSession.sharedInstance())
+//		NotificationCenter.default.removeObserver(self, name: Notification.Name.AVAudioSessionInterruption, object: AVAudioSession.sharedInstance())
+	}
+	
+	
+	
+	func setup() {
+		do{
+			let audioSession = AVAudioSession.sharedInstance()
+			
+			try audioSession.setCategory(AVAudioSessionCategoryPlayback)
+			try audioSession.setMode(AVAudioSessionModeDefault)
+			try audioSession.setActive(true)
+			
+			UIApplication.shared.beginReceivingRemoteControlEvents()
+			
+			//Для того, чтобы убрать кнопку "назад" на заблокированном экране
+			//явно задаем отображаемые кнопки и функции, вызываемые по их нажатию
+			//let commandCenter = MPRemoteCommandCenter.shared()
+			
+//			let handler: (String) -> ((MPRemoteCommandEvent) -> (MPRemoteCommandHandlerStatus)) = { (name) in
+//				return { (event) -> MPRemoteCommandHandlerStatus in
+//					dump("\(name) \(event.timestamp) \(event.command)")
+//					return .success
+//				}
+//			}
+			
+			commandCenter.nextTrackCommand.isEnabled = true
+			commandCenter.nextTrackCommand.addTarget(handler: handler("skipSong"))
+			
+			commandCenter.playCommand.isEnabled = true
+			commandCenter.playCommand.addTarget(handler: handler("resumeSong"))
+			
+			commandCenter.pauseCommand.isEnabled = true
+			commandCenter.pauseCommand.addTarget(handler: handler("pauseSong"))
+			
+//			NotificationCenter.default.addObserver(self, selector: #selector(onAudioSessionEvent(_:)), name: Notification.Name.AVAudioSessionInterruption, object: AVAudioSession.sharedInstance())
+		}catch{
+			print("Audioplayermanager fail: \(error.localizedDescription)")
+			Downloader.sharedInstance.createPostNotificationSysInfo(message: "Audioplayermanager fail")
+		}
 	}
 	
 	// MARK: KVO
@@ -392,7 +419,7 @@ class AudioPlayerManager: NSObject, AVAssetResourceLoaderDelegate, NSURLConnecti
 			self.playingSong = SongObject()
 			self.playingSong.trackID = nil
 			self.player.pause()
-			isPlaying = false
+			self.isPlaying = false
 			self.playerItem = nil
 			configurePlayingSong(song: playingSong)
 		}
