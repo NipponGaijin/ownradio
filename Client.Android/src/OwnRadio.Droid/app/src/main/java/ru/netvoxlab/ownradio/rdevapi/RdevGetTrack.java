@@ -60,7 +60,8 @@ public class RdevGetTrack extends AsyncTask<Map<String, String>, Void, Boolean> 
                     track.put("isexist", "1");
                     track.put("title", trackMap[0].get("recname"));
                     track.put("artist", trackMap[0].get("artist"));
-                    track.put("length", trackMap[0].get("length"));
+                    track.put("length", Double.valueOf(trackMap[0].get("length")));
+                    track.put("methodnumber", trackMap[0].get("method"));
 
                     if (fileLength.equals(Long.valueOf(response.headers().get("Content-Length")))) {
 

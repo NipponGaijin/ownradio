@@ -50,7 +50,7 @@ public class RequestAPIService extends IntentService {
 				//
 				// final Map<String, String> authMap = rdevApiCalls.GetAuthToken();
 				//String token = authMap.get("token");
-				String userid = rdevApiCalls.GetDeviceInfo(deviceId);
+				String userid = rdevApiCalls.GetDeviceInfo(deviceId).get("OK").getResult().get("userid");
 				for (int i = 0; i < 3; i++) {
 //					new APICalls(getApplicationContext()).SendHistory(deviceId);
 					new RdevApiCalls(getApplicationContext()).SendHistoryInfo(userid, deviceId);

@@ -17,11 +17,14 @@ import android.media.RingtoneManager;
 import android.net.Uri;
 import android.os.Build;
 import android.os.Bundle;
+import android.os.Handler;
 import android.os.IBinder;
+import android.os.Looper;
 import android.os.RemoteException;
 import android.os.StatFs;
 import android.preference.ListPreference;
 import android.preference.Preference;
+import android.preference.PreferenceActivity;
 import android.preference.PreferenceFragment;
 import android.preference.PreferenceManager;
 import android.preference.PreferenceScreen;
@@ -47,12 +50,20 @@ import android.widget.SeekBar;
 import android.widget.Toast;
 
 import com.android.vending.billing.IInAppBillingService;
+import com.google.android.gms.auth.api.signin.GoogleSignIn;
+import com.google.android.gms.auth.api.signin.GoogleSignInAccount;
+import com.google.android.gms.auth.api.signin.GoogleSignInClient;
+import com.google.android.gms.auth.api.signin.GoogleSignInOptions;
+import com.google.android.gms.common.api.ApiException;
+import com.google.android.gms.tasks.Task;
 
 import java.io.File;
 import java.math.BigDecimal;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.regex.Pattern;
+
+import ru.netvoxlab.ownradio.rdevapi.RdevApiCalls;
 
 import static ru.netvoxlab.ownradio.Constants.ACTION_UPDATE_FILLCACHE_PROGRESS;
 import static ru.netvoxlab.ownradio.Constants.EXTRA_COUNT;
@@ -84,6 +95,7 @@ public class SettingsActivity extends AppCompatPreferenceActivity {
 	static boolean isCachingStarted = false;
 	static IInAppBillingService mBillingService;
 	static boolean subscribeStatus = false;
+
 	ServiceConnection mBillingServiceConn = new ServiceConnection() {
 		@Override
 		public void onServiceConnected(ComponentName name, IBinder service) {
@@ -290,8 +302,15 @@ public class SettingsActivity extends AppCompatPreferenceActivity {
 	 */
 	@TargetApi(Build.VERSION_CODES.HONEYCOMB)
 	public static class GeneralPreferenceFragment extends PreferenceFragment {
-
+		Thread serverRequestThread;
 		private File pathToCache;
+		private static final int RC_SIGN_IN = 9001;
+		final Handler handler = new Handler(Looper.getMainLooper());
+		GoogleSignInOptions gso = new GoogleSignInOptions.Builder(GoogleSignInOptions.DEFAULT_SIGN_IN)
+				.requestEmail()
+				.requestIdToken("400574862316-678is7tf2gr0v0c1c06lc7lfkt5vpcng.apps.googleusercontent.com")
+				.build();
+		SharedPreferences sp;
 
 		@Override
 		public void onCreate(Bundle savedInstanceState) {
@@ -319,18 +338,18 @@ public class SettingsActivity extends AppCompatPreferenceActivity {
 			if(ownTracksSwitch!=null)
 				ownTracksSwitch.setEnabled(false);
 
-			Preference freeMemorySize = findPreference("free_memory_size");
-			if (freeSpace / bytesInGB > 0.1d)
-				freeMemorySize.setTitle(getResources().getString(R.string.pref_free_memory_size) + " " + BigDecimal.valueOf(freeSpace / bytesInGB).setScale(2, BigDecimal.ROUND_DOWN) + "Gb");
-			else
-				freeMemorySize.setTitle(getResources().getString(R.string.pref_free_memory_size) + " " + BigDecimal.valueOf(freeSpace / bytesInMB).setScale(2, BigDecimal.ROUND_DOWN) + "Mb");
+//			Preference freeMemorySize = findPreference("free_memory_size");
+//			if (freeSpace / bytesInGB > 0.1d)
+//				freeMemorySize.setTitle(getResources().getString(R.string.pref_free_memory_size) + " " + BigDecimal.valueOf(freeSpace / bytesInGB).setScale(2, BigDecimal.ROUND_DOWN) + "Gb");
+//			else
+//				freeMemorySize.setTitle(getResources().getString(R.string.pref_free_memory_size) + " " + BigDecimal.valueOf(freeSpace / bytesInMB).setScale(2, BigDecimal.ROUND_DOWN) + "Mb");
 
 
-			Preference listeningTracksMemorySize = findPreference("listening_tracks_size");
-			if (listeningTracksSpace / bytesInGB > 0.1d)
-				listeningTracksMemorySize.setTitle(getResources().getString(R.string.pref_listening_tracks_size_size) + " " + BigDecimal.valueOf(listeningTracksSpace / bytesInGB).setScale(2, BigDecimal.ROUND_DOWN) + "Gb (" + trackInfo.GetCountPlayTracks() + " " +  getResources().getString(R.string.tracks) + ")");
-			else
-				listeningTracksMemorySize.setTitle(getResources().getString(R.string.pref_listening_tracks_size_size) + " " + BigDecimal.valueOf(listeningTracksSpace / bytesInMB).setScale(2, BigDecimal.ROUND_DOWN) + "Mb (" + trackInfo.GetCountPlayTracks() + " " +  getResources().getString(R.string.tracks) + ")");
+//			Preference listeningTracksMemorySize = findPreference("listening_tracks_size");
+//			if (listeningTracksSpace / bytesInGB > 0.1d)
+//				listeningTracksMemorySize.setTitle(getResources().getString(R.string.pref_listening_tracks_size_size) + " " + BigDecimal.valueOf(listeningTracksSpace / bytesInGB).setScale(2, BigDecimal.ROUND_DOWN) + "Gb (" + trackInfo.GetCountPlayTracks() + " " +  getResources().getString(R.string.tracks) + ")");
+//			else
+//				listeningTracksMemorySize.setTitle(getResources().getString(R.string.pref_listening_tracks_size_size) + " " + BigDecimal.valueOf(listeningTracksSpace / bytesInMB).setScale(2, BigDecimal.ROUND_DOWN) + "Mb (" + trackInfo.GetCountPlayTracks() + " " +  getResources().getString(R.string.tracks) + ")");
 			// Bind the summaries of EditText/List/Dialog/Ringtone preferences
 			// to their values. When their values change, their summaries are
 			// updated to reflect the new value, per the Android Design
@@ -338,14 +357,14 @@ public class SettingsActivity extends AppCompatPreferenceActivity {
 //			bindPreferenceSummaryToValue(findPreference("example_text"));
 			bindPreferenceSummaryToValue(findPreference("internet_connections_list"));
 
-			Preference sendLogs = findPreference("pref_send_logs");
-			sendLogs.setOnPreferenceClickListener(new Preference.OnPreferenceClickListener() {
-				@Override
-				public boolean onPreferenceClick(Preference preference) {
-					new Utilites().SendLogs(context, prefManager.getDeviceId());
-					return true;
-				}
-			});
+//			Preference sendLogs = findPreference("pref_send_logs");
+//			sendLogs.setOnPreferenceClickListener(new Preference.OnPreferenceClickListener() {
+//				@Override
+//				public boolean onPreferenceClick(Preference preference) {
+//					new Utilites().SendLogs(context, prefManager.getDeviceId());
+//					return true;
+//				}
+//			});
 
 			final NumberPickerPreference maxMemorySize = (NumberPickerPreference) findPreference("key_number");
 			maxMemorySize.setTitle(getResources().getString(R.string.pref_max_memory_size) + " " + maxMemorySize.getValue() * 10 + "%");
@@ -367,45 +386,44 @@ public class SettingsActivity extends AppCompatPreferenceActivity {
 //							index >= 0
 //									? getResources().getString(R.string.pref_max_memory_size) + " " + maxMemorySize.getEntries()[index]
 //									: getResources().getString(R.string.pref_max_memory_size));
-					Preference allTracksMemorySize = findPreference("all_tracks_size");
-					//TODO менять окончания в зависимости от числа. Выводить в Мб/Гб если число небольшое
-					if (tracksSpace / bytesInGB > 0.1d) {
-						if ((freeSpace * (((float) maxMemorySize.getValue()) / 10)) / bytesInGB > 0.1d) {
-//					allTracksMemorySize.setTitle(getResources().getString(R.string.pref_all_tracks_size) + " " + BigDecimal.valueOf(tracksSpace / bytesInGB).setScale(2, BigDecimal.ROUND_DOWN) + "Gb (" + trackInfo.GetExistTracksCount() + " " + getResources().getString(R.string.tracks) + ")");
-							allTracksMemorySize.setTitle(getResources().getString(R.string.pref_all_tracks_size) + " " + BigDecimal.valueOf(tracksSpace / bytesInGB).setScale(2, BigDecimal.ROUND_DOWN) + "Gb (из " + BigDecimal.valueOf((freeSpace * (((float) maxMemorySize.getValue()) / 10)) / bytesInGB).setScale(2, BigDecimal.ROUND_DOWN) + "Gb)");
-						} else {
-							allTracksMemorySize.setTitle(getResources().getString(R.string.pref_all_tracks_size) + " " + BigDecimal.valueOf(tracksSpace / bytesInGB).setScale(2, BigDecimal.ROUND_DOWN) + "Gb (из " +  BigDecimal.valueOf((freeSpace * (((float) maxMemorySize.getValue()) / 10)) / bytesInMB).setScale(2, BigDecimal.ROUND_DOWN) + "Mb)");
-						}
-					}
-					else{
-						if ((freeSpace * (((float) maxMemorySize.getValue()) / 10)) / bytesInMB > 0.1d) {
-							allTracksMemorySize.setTitle(getResources().getString(R.string.pref_all_tracks_size) + " " + BigDecimal.valueOf(tracksSpace / bytesInMB).setScale(2, BigDecimal.ROUND_DOWN) + "Mb (из " + BigDecimal.valueOf((freeSpace * (((float) maxMemorySize.getValue()) / 10)) / bytesInGB).setScale(2, BigDecimal.ROUND_DOWN) + "Gb)");
-						} else {
-							allTracksMemorySize.setTitle(getResources().getString(R.string.pref_all_tracks_size) + " " + BigDecimal.valueOf(tracksSpace / bytesInMB).setScale(2, BigDecimal.ROUND_DOWN) + "Mb (из " +  BigDecimal.valueOf((freeSpace * (((float) maxMemorySize.getValue()) / 10)) / bytesInMB).setScale(2, BigDecimal.ROUND_DOWN) + "Mb)");
-						}
-					}
-					allTracksMemorySize.setSummary(trackInfo.GetExistTracksCount() + " треков");
+//					Preference allTracksMemorySize = findPreference("all_tracks_size");
+//					if (tracksSpace / bytesInGB > 0.1d) {
+//						if ((freeSpace * (((float) maxMemorySize.getValue()) / 10)) / bytesInGB > 0.1d) {
+////					allTracksMemorySize.setTitle(getResources().getString(R.string.pref_all_tracks_size) + " " + BigDecimal.valueOf(tracksSpace / bytesInGB).setScale(2, BigDecimal.ROUND_DOWN) + "Gb (" + trackInfo.GetExistTracksCount() + " " + getResources().getString(R.string.tracks) + ")");
+//							allTracksMemorySize.setTitle(getResources().getString(R.string.pref_all_tracks_size) + " " + BigDecimal.valueOf(tracksSpace / bytesInGB).setScale(2, BigDecimal.ROUND_DOWN) + "Gb (из " + BigDecimal.valueOf((freeSpace * (((float) maxMemorySize.getValue()) / 10)) / bytesInGB).setScale(2, BigDecimal.ROUND_DOWN) + "Gb)");
+//						} else {
+//							allTracksMemorySize.setTitle(getResources().getString(R.string.pref_all_tracks_size) + " " + BigDecimal.valueOf(tracksSpace / bytesInGB).setScale(2, BigDecimal.ROUND_DOWN) + "Gb (из " +  BigDecimal.valueOf((freeSpace * (((float) maxMemorySize.getValue()) / 10)) / bytesInMB).setScale(2, BigDecimal.ROUND_DOWN) + "Mb)");
+//						}
+//					}
+//					else{
+//						if ((freeSpace * (((float) maxMemorySize.getValue()) / 10)) / bytesInMB > 0.1d) {
+//							allTracksMemorySize.setTitle(getResources().getString(R.string.pref_all_tracks_size) + " " + BigDecimal.valueOf(tracksSpace / bytesInMB).setScale(2, BigDecimal.ROUND_DOWN) + "Mb (из " + BigDecimal.valueOf((freeSpace * (((float) maxMemorySize.getValue()) / 10)) / bytesInGB).setScale(2, BigDecimal.ROUND_DOWN) + "Gb)");
+//						} else {
+//							allTracksMemorySize.setTitle(getResources().getString(R.string.pref_all_tracks_size) + " " + BigDecimal.valueOf(tracksSpace / bytesInMB).setScale(2, BigDecimal.ROUND_DOWN) + "Mb (из " +  BigDecimal.valueOf((freeSpace * (((float) maxMemorySize.getValue()) / 10)) / bytesInMB).setScale(2, BigDecimal.ROUND_DOWN) + "Mb)");
+//						}
+//					}
+//					allTracksMemorySize.setSummary(trackInfo.GetExistTracksCount() + " треков");
 					return true;
 				}
 			});
 
-			Preference allTracksMemorySize = findPreference("all_tracks_size");
-			//TODO менять окончания в зависимости от числа. Выводить в Мб/Гб если число небольшое
-			if (tracksSpace / bytesInGB > 0.1d) {
-				if ((freeSpace * (((float) maxMemorySize.getValue()) / 10)) / bytesInGB > 0.1d) {
-					allTracksMemorySize.setTitle(getResources().getString(R.string.pref_all_tracks_size) + " " + BigDecimal.valueOf(tracksSpace / bytesInGB).setScale(2, BigDecimal.ROUND_DOWN) + "Gb (из " + BigDecimal.valueOf((freeSpace * (((float) maxMemorySize.getValue()) / 10)) / bytesInGB).setScale(2, BigDecimal.ROUND_DOWN) + "Gb)");
-				} else {
-					allTracksMemorySize.setTitle(getResources().getString(R.string.pref_all_tracks_size) + " " + BigDecimal.valueOf(tracksSpace / bytesInGB).setScale(2, BigDecimal.ROUND_DOWN) + "Gb (из " +  BigDecimal.valueOf((freeSpace * (((float) maxMemorySize.getValue()) / 10)) / bytesInMB).setScale(2, BigDecimal.ROUND_DOWN) + "Mb)");
-				}
-			}
-			else{
-				if ((freeSpace * (((float) maxMemorySize.getValue()) / 10)) / bytesInMB > 0.1d) {
-					allTracksMemorySize.setTitle(getResources().getString(R.string.pref_all_tracks_size) + " " + BigDecimal.valueOf(tracksSpace / bytesInMB).setScale(2, BigDecimal.ROUND_DOWN) + "Mb (из " + BigDecimal.valueOf((freeSpace * (((float) maxMemorySize.getValue()) / 10)) / bytesInGB).setScale(2, BigDecimal.ROUND_DOWN) + "Gb)");
-				} else {
-					allTracksMemorySize.setTitle(getResources().getString(R.string.pref_all_tracks_size) + " " + BigDecimal.valueOf(tracksSpace / bytesInMB).setScale(2, BigDecimal.ROUND_DOWN) + "Mb (из " +  BigDecimal.valueOf((freeSpace * (((float) maxMemorySize.getValue()) / 10)) / bytesInMB).setScale(2, BigDecimal.ROUND_DOWN) + "Mb)");
-				}
-			}
-			allTracksMemorySize.setSummary(trackInfo.GetExistTracksCount() + " треков");
+//			Preference allTracksMemorySize = findPreference("all_tracks_size");
+//			//TODO менять окончания в зависимости от числа. Выводить в Мб/Гб если число небольшое
+//			if (tracksSpace / bytesInGB > 0.1d) {
+//				if ((freeSpace * (((float) maxMemorySize.getValue()) / 10)) / bytesInGB > 0.1d) {
+//					allTracksMemorySize.setTitle(getResources().getString(R.string.pref_all_tracks_size) + " " + BigDecimal.valueOf(tracksSpace / bytesInGB).setScale(2, BigDecimal.ROUND_DOWN) + "Gb (из " + BigDecimal.valueOf((freeSpace * (((float) maxMemorySize.getValue()) / 10)) / bytesInGB).setScale(2, BigDecimal.ROUND_DOWN) + "Gb)");
+//				} else {
+//					allTracksMemorySize.setTitle(getResources().getString(R.string.pref_all_tracks_size) + " " + BigDecimal.valueOf(tracksSpace / bytesInGB).setScale(2, BigDecimal.ROUND_DOWN) + "Gb (из " +  BigDecimal.valueOf((freeSpace * (((float) maxMemorySize.getValue()) / 10)) / bytesInMB).setScale(2, BigDecimal.ROUND_DOWN) + "Mb)");
+//				}
+//			}
+//			else{
+//				if ((freeSpace * (((float) maxMemorySize.getValue()) / 10)) / bytesInMB > 0.1d) {
+//					allTracksMemorySize.setTitle(getResources().getString(R.string.pref_all_tracks_size) + " " + BigDecimal.valueOf(tracksSpace / bytesInMB).setScale(2, BigDecimal.ROUND_DOWN) + "Mb (из " + BigDecimal.valueOf((freeSpace * (((float) maxMemorySize.getValue()) / 10)) / bytesInGB).setScale(2, BigDecimal.ROUND_DOWN) + "Gb)");
+//				} else {
+//					allTracksMemorySize.setTitle(getResources().getString(R.string.pref_all_tracks_size) + " " + BigDecimal.valueOf(tracksSpace / bytesInMB).setScale(2, BigDecimal.ROUND_DOWN) + "Mb (из " +  BigDecimal.valueOf((freeSpace * (((float) maxMemorySize.getValue()) / 10)) / bytesInMB).setScale(2, BigDecimal.ROUND_DOWN) + "Mb)");
+//				}
+//			}
+//			allTracksMemorySize.setSummary(trackInfo.GetExistTracksCount() + " треков");
 
 			Preference storageSettings = findPreference("key_number");
 			if(prefManager.getPrefItemBool("is_subscribed", false) || subscribeStatus  || (android.os.Build.VERSION.SDK_INT < 24 && android.os.Build.VERSION.SDK_INT >= 19)){
@@ -417,11 +435,11 @@ public class SettingsActivity extends AppCompatPreferenceActivity {
 				Toast.makeText(context, "Подписка не оплачена, максимальный объем кэша 1Gb, заполнение кэша недоступно", Toast.LENGTH_LONG).show();
 			}
 
-			Preference sysInfo = findPreference("sys_info");
-			sysInfo.setTitle("Version: " + prefManager.getPrefItem(version) + "\nDeviceID: " + prefManager.getDeviceId());// + "\nTrackID:" + MediaPlayerService.player.get);
+//			Preference sysInfo = findPreference("sys_info");
+//			sysInfo.setTitle("Version: " + prefManager.getPrefItem(version) + "\nDeviceID: " + prefManager.getDeviceId());// + "\nTrackID:" + MediaPlayerService.player.get);
 
-			Preference countTracksTable = findPreference("pref_count_tracks_table");
-			countTracksTable.setTitle(trackInfo.GetCountPlayTracksTable());
+//			Preference countTracksTable = findPreference("pref_count_tracks_table");
+//			countTracksTable.setTitle(trackInfo.GetCountPlayTracksTable());
 
 			Preference aboutApp = findPreference("about_app");
 			aboutApp.setOnPreferenceClickListener(new Preference.OnPreferenceClickListener() {
@@ -433,25 +451,25 @@ public class SettingsActivity extends AppCompatPreferenceActivity {
 				}
 			});
 
-			Preference lastLogs = findPreference("pref_last_log_recs");
-			lastLogs.setOnPreferenceClickListener(new Preference.OnPreferenceClickListener() {
-				@Override
-				public boolean onPreferenceClick(Preference preference) {
-					Intent lastLogsActivity = new Intent(context, LastLogsActivity.class);
-					startActivity(lastLogsActivity);
-					return true;
-				}
-			});
+//			Preference lastLogs = findPreference("pref_last_log_recs");
+//			lastLogs.setOnPreferenceClickListener(new Preference.OnPreferenceClickListener() {
+//				@Override
+//				public boolean onPreferenceClick(Preference preference) {
+//					Intent lastLogsActivity = new Intent(context, LastLogsActivity.class);
+//					startActivity(lastLogsActivity);
+//					return true;
+//				}
+//			});
 
 			//Пункт меню "свободная память" открывает системную информацию
-			Preference freeMemory = findPreference("free_memory_size");
-			freeMemory.setOnPreferenceClickListener(new Preference.OnPreferenceClickListener() {
-				@Override
-				public boolean onPreferenceClick(Preference preference) {
-					startActivityForResult(new Intent(Settings.ACTION_INTERNAL_STORAGE_SETTINGS), 0);
-					return true;
-				}
-			});
+//			Preference freeMemory = findPreference("free_memory_size");
+//			freeMemory.setOnPreferenceClickListener(new Preference.OnPreferenceClickListener() {
+//				@Override
+//				public boolean onPreferenceClick(Preference preference) {
+//					startActivityForResult(new Intent(Settings.ACTION_INTERNAL_STORAGE_SETTINGS), 0);
+//					return true;
+//				}
+//			});
 
 			//Пункт меню "удалить прослушанные треки"
 			Preference deleteListenedTracks = findPreference("delete_listening_tracks");
@@ -572,7 +590,8 @@ public class SettingsActivity extends AppCompatPreferenceActivity {
 //                }
 //            });
             SeekBarPreference ratio = (SeekBarPreference) findPreference("tracks_listen_ratio");
-            SharedPreferences sp = PreferenceManager.getDefaultSharedPreferences(context);
+
+			this.sp = PreferenceManager.getDefaultSharedPreferences(context);
             Integer currentRatio = sp.getInt("tracksRatio", 100);
             ratio.setValue(currentRatio);
 
@@ -635,6 +654,88 @@ public class SettingsActivity extends AppCompatPreferenceActivity {
 				fillCache.setEnabled(false);
 			}
 
+			//Пункт меню "Перейти к отладочной информации"
+			Preference goToDebugInfo = findPreference("go_to_debug_info");
+			goToDebugInfo.setOnPreferenceClickListener(new Preference.OnPreferenceClickListener() {
+				@Override
+				public boolean onPreferenceClick(Preference preference) {
+					Intent debugActivity = new Intent(context, DebugInfoView.class);
+					debugActivity.putExtra(PreferenceActivity.EXTRA_SHOW_FRAGMENT, DebugInfoView.DebugInfoPreferenceFragment.class.getName());
+					debugActivity.putExtra(PreferenceActivity.EXTRA_NO_HEADERS, true);
+					startActivity(debugActivity);
+					return true;
+				}
+			});
+			final Preference loginWithGoogle = findPreference("login_with_google");
+			if(sp.getBoolean("wasLogged", false)){
+				loginWithGoogle.setTitle("Выйти из аккаунта Google");
+				loginWithGoogle.setSummary(sp.getString("googleUserFullName", ""));
+			}
+			loginWithGoogle.setOnPreferenceClickListener(new Preference.OnPreferenceClickListener() {
+				@Override
+				public boolean onPreferenceClick(Preference preference) {
+					GoogleSignInClient mGoogleSignInClient = GoogleSignIn.getClient(getActivity(), gso);
+					if(!sp.getBoolean("wasLogged", false)){
+						signIn(mGoogleSignInClient);
+						//Todo Сдлеать отправку attach запроса в рдев
+					}else {
+						serverRequestThread = new Thread(new Runnable() {
+							@Override
+							public void run() {
+								handler.post(new Runnable() {
+									@Override
+									public void run() {
+										loginWithGoogle.setTitle("Выйти из аккаунта Google");
+										loginWithGoogle.setSummary("Выход...");
+									}
+								});
+								Boolean result = signOut();
+
+								if(result){
+									handler.post(new Runnable() {
+										@Override
+										public void run() {
+											loginWithGoogle.setTitle("Авторизоваться через google");
+											loginWithGoogle.setSummary("Авторизация через google поможет идентифицировать ваши устройства");
+										}
+									});
+								}else {
+									handler.post(new Runnable() {
+										@Override
+										public void run() {
+											loginWithGoogle.setTitle("Выйти из аккаунта Google");
+											loginWithGoogle.setSummary(sp.getString("googleUserFullName", ""));
+										}
+									});
+								}
+							}
+						});
+						serverRequestThread.start();
+					}
+
+					return true;
+				}
+			});
+		}
+
+		@Override
+		public void onDestroyView() {
+			super.onDestroyView();
+			if(serverRequestThread != null){
+				if(serverRequestThread.isAlive()){
+					serverRequestThread.interrupt();
+				}
+			}
+		}
+
+		@Override
+		public void onDestroy() {
+			super.onDestroy();
+			if(serverRequestThread != null){
+				if(serverRequestThread.isAlive()){
+					serverRequestThread.interrupt();
+				}
+			}
 		}
 
 		@Override
@@ -645,6 +746,123 @@ public class SettingsActivity extends AppCompatPreferenceActivity {
 				return true;
 			}
 			return super.onOptionsItemSelected(item);
+		}
+
+
+		private void signIn(GoogleSignInClient client) {
+			Intent signInIntent = client.getSignInIntent();
+			startActivityForResult(signInIntent, RC_SIGN_IN);
+		}
+
+		/**
+		 * Функция выхода
+		 * @return true если выход успешен
+		 */
+
+		Boolean signOut(){
+			SharedPreferences.Editor spEdit = sp.edit();
+			RdevApiCalls rdevApiCalls = new RdevApiCalls(getActivity());
+			String deviceId = sp.getString("DeviceID", "");
+			if(!deviceId.isEmpty()){
+				Boolean detachResult = rdevApiCalls.rdevDetachDeviceFromUser(deviceId);
+				if(detachResult){
+					spEdit.putBoolean("wasLogged", false);
+					spEdit.commit();
+					return true;
+				}else {
+					return false;
+				}
+			}else {
+				return false;
+			}
+
+		}
+
+		@Override
+		public void onActivityResult(int requestCode, int resultCode, Intent data) {
+			super.onActivityResult(requestCode, resultCode, data);
+			if (requestCode == RC_SIGN_IN) {
+				// The Task returned from this call is always completed, no need to attach
+				// a listener.
+				Task<GoogleSignInAccount> task = GoogleSignIn.getSignedInAccountFromIntent(data);
+				handleSignInResult(task);
+			}
+		}
+
+		/**
+		 * Обработка результатов логина через гугл
+		 * @param completedTask
+		 */
+		private void handleSignInResult(final Task<GoogleSignInAccount> completedTask) {
+			final RdevApiCalls rdevApiCalls = new RdevApiCalls(getActivity());
+			final Preference loginWithGoogle = findPreference("login_with_google");
+			//Поток для отправки запроса на привязку устройства к пользоваетелю в RDEV
+			serverRequestThread = new Thread(new Runnable() {
+				@Override
+				public void run() {
+					handler.post(new Runnable() {
+						@Override
+						public void run() {
+							loginWithGoogle.setTitle("Авторизоваться через google");
+							loginWithGoogle.setSummary("Авторизация....");
+						}
+					});
+					try {
+						GoogleSignInAccount account = completedTask.getResult(ApiException.class);
+						String email = account.getEmail();
+						String tokenId = account.getIdToken();
+						String userFullName = account.getDisplayName();
+
+						SharedPreferences.Editor spEdit = sp.edit();
+
+						spEdit.putString("googleEmail", email);
+						spEdit.putString("googleTokenId", tokenId);
+						spEdit.putString("googleUserFullName", userFullName);
+
+						String deviceId = sp.getString("DeviceID", "");
+						Boolean rdevUpdateResult = false;
+						if(!deviceId.isEmpty()){
+							rdevUpdateResult = rdevApiCalls.rdevAttachDeviceToUser(deviceId, email, tokenId);
+							if(rdevUpdateResult){
+								spEdit.putBoolean("wasLogged", true);
+							}
+							else {
+								spEdit.putBoolean("wasLogged", false);
+							}
+						}else {
+							spEdit.putBoolean("wasLogged", false);
+						}
+						spEdit.commit();
+						if(rdevUpdateResult){
+							handler.post(new Runnable() {
+								@Override
+								public void run() {
+									loginWithGoogle.setTitle("Выйти из аккаунта Google");
+									loginWithGoogle.setSummary(sp.getString("googleUserFullName", ""));
+								}
+							});
+						}else {
+							handler.post(new Runnable() {
+								@Override
+								public void run() {
+									loginWithGoogle.setTitle("Авторизоваться через google");
+									loginWithGoogle.setSummary("Авторизация через google поможет идентифицировать ваши устройства");
+								}
+							});
+						}
+
+						//startActivity(new Intent(GoogleLoginActivity.this, MainActivity.class));
+						// Signed in successfully, show authenticated UI
+					} catch (ApiException e) {
+						// The ApiException status code indicates the detailed failure reason.
+						// Please refer to the GoogleSignInStatusCodes class reference for more information.
+						Log.d("login fail", "signInResult:failed code=" + e.getStatusCode());
+						loginWithGoogle.setTitle("Авторизоваться через google");
+						loginWithGoogle.setSummary("Авторизация через google поможет идентифицировать ваши устройства");
+					}
+				}
+			});
+			serverRequestThread.start();
 		}
 	}
 

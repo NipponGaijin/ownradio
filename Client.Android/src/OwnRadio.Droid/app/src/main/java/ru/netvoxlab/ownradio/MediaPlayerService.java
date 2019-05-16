@@ -59,6 +59,7 @@ import static ru.netvoxlab.ownradio.MainActivity.ActionNotFoundTrack;
 import static ru.netvoxlab.ownradio.MainActivity.ActionProgressBarFirstTracksLoad;
 import static ru.netvoxlab.ownradio.MainActivity.ActionProgressBarUpdate;
 import static ru.netvoxlab.ownradio.MainActivity.ActionTrackInfoUpdate;
+import static ru.netvoxlab.ownradio.MainActivity.ActionTrackInfoUpdate;
 import static ru.netvoxlab.ownradio.MainActivity.ActionCheckListensCount;
 import static ru.netvoxlab.ownradio.RequestAPIService.ACTION_GETNEXTTRACK;
 import static ru.netvoxlab.ownradio.RequestAPIService.ACTION_SENDHISTORY;
@@ -104,7 +105,8 @@ public class MediaPlayerService extends Service implements MediaPlayer.OnComplet
 	String TrackID = "";
 	Boolean FlagDownloadTrack = true;
 	final String TAG = "ownRadio";
-	
+
+	SharedPreferences sp;
 	ContentValues track;
 	int startPosition = 0;
 	String startTrackID = "";
@@ -125,6 +127,7 @@ public class MediaPlayerService extends Service implements MediaPlayer.OnComplet
 	@Override
 	public void onCreate() {
 		super.onCreate();
+		this.sp = PreferenceManager.getDefaultSharedPreferences(this);
 		startForeground(3, new Notification());
 		prefManager = new PrefManager(this);
 		trackDataAccess = new TrackDataAccess(getApplicationContext());
@@ -426,7 +429,8 @@ public class MediaPlayerService extends Service implements MediaPlayer.OnComplet
 
 		Log.d(TAG, "Play(): ");
 		playbackWithHSisInterrupted = false;
-		
+
+
 		
 		//todo:add code
 		
@@ -438,26 +442,31 @@ public class MediaPlayerService extends Service implements MediaPlayer.OnComplet
 			}
 			
 			player.start();
+
 			utilites.SendInformationTxt(getApplicationContext(), "Play(): start");
 
 //			UpdatePlaybackState(PlaybackStateCompat.STATE_PLAYING);
 //			StartNotification();
 //			UpdateButtonPlayPauseImg();
 			UpdateMediaMetadataCompat();
+			sp.edit().putString("current_playing_track_id", TrackID).commit();
 		}
 		
 		if (player == null) {
 			InitializePlayer();
 			player.setVolume(0.1f, 0.1f);
+			sp.edit().putString("current_playing_track_id", TrackID).commit();
 		}
 		if (mediaSessionCompat == null)
 			InitMediaSession();
+			sp.edit().putString("current_playing_track_id", TrackID).commit();
 		
 		if (player.isPlaying()) {
 			UpdatePlaybackState(PlaybackStateCompat.STATE_PLAYING);
+			sp.edit().putString("current_playing_track_id", TrackID).commit();
 			return;
 		}
-		
+
 		
 		try {
 
@@ -466,12 +475,16 @@ public class MediaPlayerService extends Service implements MediaPlayer.OnComplet
 //			SharedPreferences settings = PreferenceManager.getDefaultSharedPreferences(this);
 //			startPosition = settings.getInt("LastPosition", 0);
 //			startTrackID = settings.getString("LastTrackID", "");
-			
 			if (getTrackForPlayFromDB()) {
 //				player.setDataSource(getApplicationContext(), Uri.parse(trackURL));
 				player.setDataSource(trackURL);
-				Intent i = new Intent(ActionTrackInfoUpdate);
-				getApplicationContext().sendBroadcast(i);
+				Intent updateInfoIntent = new Intent(ActionTrackInfoUpdate);
+				Intent updateProgressIntent = new Intent(ActionProgressBarUpdate);
+
+
+				getApplicationContext().sendBroadcast(updateInfoIntent);
+				getApplicationContext().sendBroadcast(updateProgressIntent);
+				sp.edit().putString("current_playing_track_id", TrackID).commit();
 			} else {
 				AssetFileDescriptor afd = getApplicationContext().getResources().openRawResourceFd(R.raw.zero_track);
 				player.setDataSource(afd.getFileDescriptor(), afd.getStartOffset(), afd.getDeclaredLength());
@@ -581,6 +594,8 @@ public class MediaPlayerService extends Service implements MediaPlayer.OnComplet
 		
 		if (player.isPlaying()) {
 			player.pause();
+			sp.edit().putString("current_playing_track_id", "").commit();
+
 		}
 		UpdatePlaybackState(PlaybackStateCompat.STATE_PAUSED);
 	}
@@ -594,6 +609,7 @@ public class MediaPlayerService extends Service implements MediaPlayer.OnComplet
 		SaveLastPosition();
 		
 		if (player.isPlaying()) {
+			sp.edit().putString("current_playing_track_id", "").commit();
 			player.stop();
 			
 		}
@@ -1213,6 +1229,7 @@ public class MediaPlayerService extends Service implements MediaPlayer.OnComplet
 		}
 		track = null;
 		UpdatePlaybackState(PlaybackStateCompat.STATE_SKIPPING_TO_NEXT);
+
 		Play();
 	}
 	
@@ -1377,7 +1394,7 @@ public class MediaPlayerService extends Service implements MediaPlayer.OnComplet
 		String tid = prefManager.getPrefItem("LastTrackID", "");
 		utilites.SendInformationTxt(getApplicationContext(), "PreloadTrack: Получен сохраненный id трека: " + tid);
 		if (tid != "") {
-			int currentPosition = prefManager.getPrefItemInt("LastPosition", -1) - 5000;
+			int currentPosition = prefManager.getPrefItemInt("LastPosition", -1);
 			if (currentPosition < 0)
 				currentPosition = 0;
 			utilites.SendInformationTxt(getApplicationContext(), "PreloadTrack: Получена сохраненная позиция проигрывания: " + currentPosition);

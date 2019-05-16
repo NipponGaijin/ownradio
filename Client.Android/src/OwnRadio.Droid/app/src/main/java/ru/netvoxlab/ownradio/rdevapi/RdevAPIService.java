@@ -15,17 +15,20 @@ import retrofit2.http.Path;
 import retrofit2.http.Streaming;
 import ru.netvoxlab.ownradio.rdevApiObjects.DeviceInfoBody;
 import ru.netvoxlab.ownradio.rdevApiObjects.DeviceInfoResponse;
+import ru.netvoxlab.ownradio.rdevApiObjects.ExecuteProcedureObject;
 import ru.netvoxlab.ownradio.rdevApiObjects.GetTrackFilestream;
+import ru.netvoxlab.ownradio.rdevApiObjects.LoginResponseBody;
 import ru.netvoxlab.ownradio.rdevApiObjects.NextTrackBody;
 import ru.netvoxlab.ownradio.rdevApiObjects.RegisterUserBody;
 import ru.netvoxlab.ownradio.rdevApiObjects.SendHistoryInfoBody;
 import ru.netvoxlab.ownradio.rdevApiObjects.SetIsCorrectBody;
+import ru.netvoxlab.ownradio.rdevApiObjects.StoredProcedureResponse;
 
 public interface RdevAPIService {
     //Запрос на получение auth-токена
     @POST("auth/login")
     @Headers("Content-Type: application/json")
-    Call<Map<String, String>> getRdevAuthToken (@Body JsonObject body);
+    Call<LoginResponseBody> getRdevAuthToken (@Body JsonObject body);
 
     //Запрос на получение информации о следующем загружаемом треке
     @POST("api/executejs")
@@ -57,5 +60,8 @@ public interface RdevAPIService {
     @PATCH("odata/tracks({trackid})")
     @Headers("Content-Type: application/json")
     Call<Void> setIsCorrect(@Header("Authorization") String token, @Path("trackid")String trackid, @Body SetIsCorrectBody body);
-
+    //Выполнение хранимки на сервере
+    @POST("sqlstoredprocedure/execute")
+    @Headers("Content-Type: application/json")
+    Call<StoredProcedureResponse> executeStoredProcedure(@Body ExecuteProcedureObject body);
 }

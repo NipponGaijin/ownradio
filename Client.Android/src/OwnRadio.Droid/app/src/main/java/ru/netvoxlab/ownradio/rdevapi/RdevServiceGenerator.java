@@ -1,5 +1,7 @@
 package ru.netvoxlab.ownradio.rdevapi;
 
+import java.util.concurrent.TimeUnit;
+
 import okhttp3.OkHttpClient;
 import okhttp3.logging.HttpLoggingInterceptor;
 import retrofit2.Retrofit;
@@ -23,6 +25,10 @@ public class RdevServiceGenerator {
         HttpLoggingInterceptor logging = new HttpLoggingInterceptor();
         logging.setLevel(HttpLoggingInterceptor.Level.BODY);
         httpClient.addInterceptor(logging);
+        httpClient.connectTimeout(120, TimeUnit.SECONDS);
+        httpClient.writeTimeout(120, TimeUnit.SECONDS);
+        httpClient.readTimeout(120, TimeUnit.SECONDS);
+
 
         Retrofit retrofit = builder.client(httpClient.build()).build();
         return retrofit.create(serviceClass);//Создаем объект, при помощи которого будем выполнять запросы

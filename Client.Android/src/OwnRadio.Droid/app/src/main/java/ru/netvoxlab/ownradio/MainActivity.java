@@ -383,13 +383,15 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
 //         полная очистка настроек
 //         sp.edit().clear().commit();
 		layoutDevelopersInfo = findViewById(R.id.devInfo);//linearLayoutDevelopersInfo
-		
+
+		final SharedPreferences.Editor editor = sp.edit();
 		btnPlayPause = findViewById(R.id.btnPlayPause);
 		btnPlayPause.setOnClickListener(new View.OnClickListener() {
 			@Override
 			public void onClick(View view) {
 				if (binder.GetMediaPlayerService().player != null && binder.GetMediaPlayerService().GetMediaPlayerState() == PlaybackStateCompat.STATE_PLAYING) {
 					binder.GetMediaPlayerService().Pause();
+
 				} else {
 					binder.GetMediaPlayerService().Play();
 					MediaPlayerService.playbackWithHSisInterrupted = false;
@@ -1099,7 +1101,7 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
 					//UserId = apiCalls.GetUserId(DeviceId);
 
 
-					UserId = rdevApiCalls.GetDeviceInfo(DeviceId);
+					UserId = rdevApiCalls.GetDeviceInfo(DeviceId).get("OK").getResult().get("userid");
 					sp.edit().putString("DeviceID", DeviceId).commit();
 					sp.edit().putString("UserID", UserId);
 					sp.edit().putString("UserName", UserName);
@@ -1110,7 +1112,7 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
 				} else {
 					UserId = sp.getString("UserID", "");
 					if (UserId.isEmpty()) {
-						UserId = rdevApiCalls.GetDeviceInfo(DeviceId);
+						UserId = rdevApiCalls.GetDeviceInfo(DeviceId).get("OK").getResult().get("userid");
 						sp.edit().putString("UserID", UserId).commit();
 
 						downloaderIntent.putExtra(EXTRA_USERID, UserId);
@@ -1419,8 +1421,19 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
 						txtTrackArtist.setText(binder.GetMediaPlayerService().track.getAsString("artist"));
 						if (progressBar == null)
 							progressBar = findViewById(R.id.progressBar);
-						progressBar.setMax(binder.GetMediaPlayerService().track.getAsInteger("length") * 1000);
-						progressBar.setProgress(binder.GetMediaPlayerService().startPosition);
+						int trackLength = binder.GetMediaPlayerService().track.getAsInteger("length") * 1000;
+						progressBar.setMax(trackLength);
+
+						int currentPosition = prefManager.getPrefItemInt("LastPosition", 0);
+
+						progressBar.setProgress(currentPosition);
+						SimpleDateFormat df = new SimpleDateFormat("m:ss");
+						String curTime = df.format(currentPosition);
+						txtProgressLeft.setText(curTime);
+
+						int nextSeconds = (trackLength - currentPosition);
+						String nextTime = df.format(nextSeconds);
+						txtProgressRight.setText("-" + nextTime);
 					}
 				}
 			}

@@ -16,8 +16,9 @@ import retrofit2.Response;
 import ru.netvoxlab.ownradio.APIService;
 import ru.netvoxlab.ownradio.ServiceGenerator;
 import ru.netvoxlab.ownradio.Utilites;
+import ru.netvoxlab.ownradio.rdevApiObjects.LoginResponseBody;
 
-public class RdevGetAuthToken extends AsyncTask<String, Void, Map<String, String>> {
+public class RdevGetAuthToken extends AsyncTask<String, Void, LoginResponseBody> {
     private Object authResponse;
     Context mContext;
     SharedPreferences sp;
@@ -28,7 +29,7 @@ public class RdevGetAuthToken extends AsyncTask<String, Void, Map<String, String
     }
 
     @Override
-    protected Map<String, String> doInBackground(String... strings) {
+    protected LoginResponseBody doInBackground(String... strings) {
         try {
             Log.d("Auth", "Auth");
             //выполняем запрос к серверу getnexttrackid
@@ -38,12 +39,12 @@ public class RdevGetAuthToken extends AsyncTask<String, Void, Map<String, String
             body.addProperty("login", "admin");
             body.addProperty("password", "2128506");
             Log.d("ResponseStart", body.toString());
-            Response<Map<String, String>> response = RdevServiceGenerator.createService(RdevAPIService.class).getRdevAuthToken(body).execute();
+            Response<LoginResponseBody> response = RdevServiceGenerator.createService(RdevAPIService.class).getRdevAuthToken(body).execute();
             Log.d("ResponseStart1", body.toString());
-            if (response.code() == 200 && !response.body().isEmpty()){
+            if (response.code() == 200 && !response.body().getToken().isEmpty()){
                 Log.d("ResponseSuccess", String.valueOf(response.code()));
-                sp.edit().putString("authToken", response.body().get("token")).commit();
-                Log.d("ResponseSuccess", response.body().get("token"));
+                sp.edit().putString("authToken", response.body().getToken()).commit();
+                Log.d("ResponseSuccess", response.body().getToken());
                 return response.body();
 
             }else {
@@ -66,7 +67,7 @@ public class RdevGetAuthToken extends AsyncTask<String, Void, Map<String, String
         }
     }
 
-    protected void onPostExecute(Map<String, String> result) {
+    protected void onPostExecute(LoginResponseBody result) {
         super.onPostExecute(result);
         this.authResponse = result;
     }

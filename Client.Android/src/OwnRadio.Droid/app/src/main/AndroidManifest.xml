@@ -64,6 +64,9 @@
 			<!-- &lt;!&ndash; <data android:scheme="file" /> &ndash;&gt; -->
 			<!-- </intent-filter> -->
 		</activity>
+		<activity android:name=".GoogleLoginActivity"
+			android:label="Войти через Google"
+			android:screenOrientation="portrait" />
 		<service
 			android:name=".MediaPlayerService" android:permission="" 
 			android:enabled="true"
@@ -135,6 +138,11 @@
 				<action android:name="android.intent.action.MAIN" />
 				<category android:name="android.intent.category.LAUNCHER" />
 			</intent-filter>
+		</activity>
+		<activity
+			android:name=".DebugInfoView"
+			android:label="Debug info"
+			android:screenOrientation="portrait">
 		</activity>
 		<activity
 			android:name=".AppInfoActivity"

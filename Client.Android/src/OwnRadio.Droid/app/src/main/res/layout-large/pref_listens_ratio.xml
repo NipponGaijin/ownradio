@@ -15,7 +15,7 @@
         android:layout_marginTop="-4dp"
         android:layout_marginRight="12dp"
         android:layout_marginBottom="8dp"
-        android:max="100"
+        android:max="10"
         android:maxHeight="7dp"
         android:minHeight="3dp"
         android:progress="10"
@@ -26,7 +26,8 @@
         app:layout_constraintHorizontal_bias="0.703"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toBottomOf="@+id/listenRatio"
-        app:layout_constraintVertical_bias="0.004" />
+        app:layout_constraintVertical_bias="0.004"
+        android:theme="@style/SeekBarWithoutSteps"/>
     <!--style="@style/Widget.AppCompat.SeekBar.Discrete"-->
     <!--android:tickMark="@drawable/track_ratio_tickmark"-->
     <TextView

@@ -61,12 +61,14 @@ public class RdevGetNextTrack extends AsyncTask<String, Void, Map<String, Map<St
             }
             else {
                 new Utilites().SendInformationTxt(mContext, "RdevGetNextTrack: Error with response code: " + response.code());
+                int code = response.code();
                 Log.d("GetTrackFail", String.valueOf(response.code()));
                 Log.d("GetTrackFail", response.message());
                 return null;
             }
         }catch (Exception ex){
             Log.d("RdevGetNextTrack", ex.getLocalizedMessage());
+            new Utilites().SendInformationTxt(mContext, "RdevGetNextTrack: " + ex.getLocalizedMessage());
             return null;
         }
     }

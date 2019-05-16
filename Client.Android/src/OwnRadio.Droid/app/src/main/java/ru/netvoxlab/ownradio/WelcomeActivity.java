@@ -3,12 +3,14 @@ package ru.netvoxlab.ownradio;
 import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
+import android.content.SharedPreferences;
 import android.content.pm.PackageManager;
 import android.graphics.Color;
 import android.net.Uri;
 import android.os.Build;
 import android.os.Bundle;
 import android.os.Handler;
+import android.preference.PreferenceManager;
 import android.support.v4.view.PagerAdapter;
 import android.support.v4.view.ViewPager;
 import android.support.v7.app.AppCompatActivity;
@@ -53,13 +55,14 @@ public class WelcomeActivity extends AppCompatActivity implements NetworkStateRe
 	private String UserId;
 	final Handler loadHandler = new Handler();
 	private NetworkStateReceiver networkStateReceiver;
-	
+	SharedPreferences sp;
+
 	@Override
 	protected void onCreate(Bundle savedInstanceState) {
 		//Меняем тему, используемую при запуске приложения, на основную
 		setTheme(R.style.AppTheme);
 		super.onCreate(savedInstanceState);
-		
+		this.sp = PreferenceManager.getDefaultSharedPreferences(this);
 		// Checking for first time launch - before calling setContentView()
 		prefManager = new PrefManager(this);
 		if (!prefManager.isFirstTimeLaunch()) {
@@ -86,7 +89,7 @@ public class WelcomeActivity extends AppCompatActivity implements NetworkStateRe
 				//String token = authMap.get("token");
 				rdevApiCalls.RegisterDevice(deviceId, DeviceName + " " + getApplicationContext().getPackageManager().getPackageInfo(getApplicationContext().getPackageName(), PackageManager.GET_META_DATA).versionName);
 
-				UserId = rdevApiCalls.GetDeviceInfo(deviceId);
+				UserId = rdevApiCalls.GetDeviceInfo(deviceId).get("OK").getResult().get("userid");
 				//String UserId = new APICalls(this).GetUserId(deviceId);
 				prefManager.setPrefItem("UserID", UserId);
 				prefManager.setPrefItem("UserName", UserName);

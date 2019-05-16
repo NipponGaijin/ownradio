@@ -7,6 +7,7 @@ import android.util.ArrayMap;
 
 import com.google.gson.JsonObject;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.UUID;
@@ -14,6 +15,12 @@ import java.util.UUID;
 import ru.netvoxlab.ownradio.CheckConnection;
 
 import ru.netvoxlab.ownradio.Utilites;
+import ru.netvoxlab.ownradio.rdevApiObjects.AttachDeviceStoredProcData;
+import ru.netvoxlab.ownradio.rdevApiObjects.DeviceInfoResponse;
+import ru.netvoxlab.ownradio.rdevApiObjects.ExecuteProcedureObject;
+import ru.netvoxlab.ownradio.rdevApiObjects.LoginResponseBody;
+import ru.netvoxlab.ownradio.rdevApiObjects.StoredProcParameter;
+import ru.netvoxlab.ownradio.rdevApiObjects.StoredProcedureResponse;
 
 public class RdevApiCalls {
 
@@ -24,13 +31,13 @@ public class RdevApiCalls {
         this.sp = PreferenceManager.getDefaultSharedPreferences(context);
     }
 
-    public Map<String, String> GetAuthToken(){
+    public LoginResponseBody GetAuthToken(){
         CheckConnection checkConnection = new CheckConnection();
         boolean internetConnect = checkConnection.CheckInetConnection(mContext);
         if (!internetConnect)
             return null;
         try {
-            Map<String, String> result = new RdevGetAuthToken(mContext).execute().get();
+            LoginResponseBody result = new RdevGetAuthToken(mContext).execute().get();
             if (result == null)
                 return null;
             return result;
@@ -78,7 +85,7 @@ public class RdevApiCalls {
 
     }
 
-    public String GetDeviceInfo(String recid){
+    public Map<String, DeviceInfoResponse> GetDeviceInfo(String recid){
         String result;
         CheckConnection checkConnection = new CheckConnection();
         if (!checkConnection.CheckInetConnection(mContext)) {
@@ -87,15 +94,15 @@ public class RdevApiCalls {
 
         try {
 
-            result = new RdevGetDeviceInfo(mContext).execute(recid).get();
-            if (result == null) {
+            Map<String, DeviceInfoResponse> responseMap = new RdevGetDeviceInfo(mContext).execute(recid).get();
+            if (responseMap == null) {
                 return null;
-            }else if(result == "Unauthorized"){
+            }else if(responseMap.get("401") != null){
                 GetAuthToken();
-                result = GetDeviceInfo(recid);
+                responseMap = GetDeviceInfo(recid);
 
             }
-            return result;
+            return responseMap;
         } catch (Exception ex) {
             new Utilites().SendInformationTxt(mContext, "Error by GetDeviceInfo " + ex.getLocalizedMessage());
             return null;
@@ -142,6 +149,59 @@ public class RdevApiCalls {
         }catch (Exception ex) {
             new Utilites().SendInformationTxt(mContext, "Error by SetIsCorrect " + ex.getLocalizedMessage());
                 return;
+        }
+    }
+    //Запрос на привязку устройства к пользователю
+    public Boolean rdevAttachDeviceToUser(String deviceId, String email, String googletoken){
+        ArrayList<StoredProcParameter> parameters = new ArrayList<>();
+        parameters.add(new StoredProcParameter("device_id", deviceId, "SysString"));
+        parameters.add(new StoredProcParameter("googleemail", email, "SysString"));
+        parameters.add(new StoredProcParameter("googleidtoken", googletoken, "SysString"));
+
+        ExecuteProcedureObject procedureObject = new ExecuteProcedureObject("attachdevicetouser", parameters);
+
+        try {
+            StoredProcedureResponse response = new RdevAttachUserToDevice().execute(procedureObject).get();
+            if(response.getSuccess() && response != null) {
+                ArrayList<AttachDeviceStoredProcData> responseData = response.getData();
+                if(responseData.size() == 1 && responseData.get(0).getSuccess()){
+                    return true;
+                }
+                else {
+                    return false;
+                }
+            }else {
+                return false;
+            }
+        }catch (Exception e){
+            new Utilites().SendInformationTxt(mContext, "Error by rdevAttachDeviceToUser " + e.getLocalizedMessage());
+            return false;
+        }
+    }
+    //Запрос на отвязку устройства от пользователя
+    public Boolean rdevDetachDeviceFromUser(String deviceId){
+        ArrayList<StoredProcParameter> parameters = new ArrayList<>();
+        parameters.add(new StoredProcParameter("device_id", deviceId, "SysString"));
+
+        ExecuteProcedureObject procedureObject = new ExecuteProcedureObject("detachdevicefromuser", parameters);
+
+        try {
+            StoredProcedureResponse response = new RdevAttachUserToDevice().execute(procedureObject).get();
+            if(response.getSuccess() && response != null){
+                ArrayList<AttachDeviceStoredProcData> responseData = response.getData();
+                if(responseData.size() == 1 && responseData.get(0).getSuccess()){
+                    return true;
+                }
+                else {
+                    return false;
+                }
+            }
+            else {
+                return false;
+            }
+        }catch (Exception e){
+            new Utilites().SendInformationTxt(mContext, "Error by rdevAttachDeviceToUser " + e.getLocalizedMessage());
+            return false;
         }
     }
 

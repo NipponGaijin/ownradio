@@ -10,6 +10,7 @@ import android.preference.Preference;
 import android.preference.PreferenceManager;
 import android.support.v7.widget.AppCompatSeekBar;
 import android.util.AttributeSet;
+import android.util.Log;
 import android.view.View;
 import android.widget.SeekBar;
 import android.widget.SeekBar.OnSeekBarChangeListener;
@@ -38,7 +39,7 @@ public class SeekBarPreference extends Preference implements OnSeekBarChangeList
     protected void onBindView(View view) {
         super.onBindView(view);
         mSeekBar = (SeekBar) view.findViewById(R.id.listenSeekBar);
-        mSeekBar.setProgress(mProgress);
+        mSeekBar.setProgress(mProgress / 10);
         mSeekBar.setOnSeekBarChangeListener(this);
     }
 
@@ -46,7 +47,9 @@ public class SeekBarPreference extends Preference implements OnSeekBarChangeList
     public void onProgressChanged(SeekBar seekBar, int progress, boolean fromUser) {
         if (!fromUser)
             return;
-        sp.edit().putInt("tracksRatio",progress).commit();
+        sp.edit().putInt("tracksRatio",progress * 10).commit();
+
+        Log.d("seekbarvalue", String.valueOf((progress * 2)));
         //setValue(progress);
     }
 
@@ -57,7 +60,9 @@ public class SeekBarPreference extends Preference implements OnSeekBarChangeList
 
     @Override
     public void onStopTrackingTouch(SeekBar seekBar) {
-        setValue(seekBar.getProgress());
+        Integer seekBarProgress = seekBar.getProgress();
+        setValue(seekBarProgress * 10);
+
     }
 
     @Override

@@ -94,7 +94,7 @@ public class TrackToCache {
 //						final Map<String, String> authMap = rdevApiCalls.GetAuthToken();
 //						String token = authMap.get("token");
 
-						String directorId = "11111111-0000-0888-0000-000000000000"; //Тестовый id (директорский)
+//						String directorId = "11111111-0000-0888-0000-000000000000"; //Тестовый id (директорский)
 
 						final Map<String, Map<String, String>[]> rdevTrackMap = rdevApiCalls.GetNextTrack(deviceId); //Сменить на deviceid
 						Map<String, String> trackMap = rdevTrackMap.get("result")[0];

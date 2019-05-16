@@ -11,8 +11,8 @@ android {
         applicationId "ru.netvoxlab.ownradio"
         minSdkVersion 19
         targetSdkVersion 26
-        versionCode 119
-        versionName 'v2019.05.07'
+        versionCode 121
+        versionName 'v2019.05.16'
         testInstrumentationRunner "android.support.test.runner.AndroidJUnitRunner"
 
 
@@ -43,6 +43,7 @@ dependencies {
         exclude group: 'com.android.support', module: 'support-annotations'
         exclude group: 'com.google.code.findbugs', module: 'jsr305'
     })
+    implementation 'com.google.android.gms:play-services-auth:16.0.1'
     // Retrofit & OkHttp
     // https://mvnrepository.com/artifact/commons-io/commons-io
     implementation 'commons-io:commons-io:2.5'
