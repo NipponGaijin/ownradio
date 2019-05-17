@@ -3,14 +3,9 @@ package ru.netvoxlab.ownradio.rdevapi;
 import android.content.Context;
 import android.content.SharedPreferences;
 import android.preference.PreferenceManager;
-import android.util.ArrayMap;
-
-import com.google.gson.JsonObject;
 
 import java.util.ArrayList;
-import java.util.List;
 import java.util.Map;
-import java.util.UUID;
 
 import ru.netvoxlab.ownradio.CheckConnection;
 
@@ -161,7 +156,7 @@ public class RdevApiCalls {
         ExecuteProcedureObject procedureObject = new ExecuteProcedureObject("attachdevicetouser", parameters);
 
         try {
-            StoredProcedureResponse response = new RdevAttachUserToDevice().execute(procedureObject).get();
+            StoredProcedureResponse response = new RdevExecuteStoredProc().execute(procedureObject).get();
             if(response.getSuccess() && response != null) {
                 ArrayList<AttachDeviceStoredProcData> responseData = response.getData();
                 if(responseData.size() == 1 && responseData.get(0).getSuccess()){
@@ -186,7 +181,7 @@ public class RdevApiCalls {
         ExecuteProcedureObject procedureObject = new ExecuteProcedureObject("detachdevicefromuser", parameters);
 
         try {
-            StoredProcedureResponse response = new RdevAttachUserToDevice().execute(procedureObject).get();
+            StoredProcedureResponse response = new RdevExecuteStoredProc().execute(procedureObject).get();
             if(response.getSuccess() && response != null){
                 ArrayList<AttachDeviceStoredProcData> responseData = response.getData();
                 if(responseData.size() == 1 && responseData.get(0).getSuccess()){

@@ -9,8 +9,8 @@ import ru.netvoxlab.ownradio.rdevApiObjects.DeviceInfoResponse;
 import ru.netvoxlab.ownradio.rdevApiObjects.ExecuteProcedureObject;
 import ru.netvoxlab.ownradio.rdevApiObjects.StoredProcedureResponse;
 
-public class RdevAttachUserToDevice extends AsyncTask<ExecuteProcedureObject, Void, StoredProcedureResponse> {
-    public RdevAttachUserToDevice(){
+public class RdevExecuteStoredProc extends AsyncTask<ExecuteProcedureObject, Void, StoredProcedureResponse> {
+    public RdevExecuteStoredProc(){
 
     }
 
