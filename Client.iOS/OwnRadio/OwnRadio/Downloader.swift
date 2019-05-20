@@ -9,41 +9,56 @@
 
 import Foundation
 import UIKit
+import Alamofire
 
 class Downloader: NSObject {
-
+	
 	static let sharedInstance = Downloader()
 	//	var taskQueue: OperationQueue?
 	let baseURL = URL(string: "http://api.ownradio.ru/v5/tracks/")
+    let rdevApiUrl = URL(string: "http://rdev.ownradio.ru/api/executejs")
 	let applicationSupportPath = FileManager.default.urls(for: .applicationSupportDirectory, in: .userDomainMask).first!
 	let tracksPath = FileManager.default.urls(for: .applicationSupportDirectory, in: .userDomainMask).first!.appendingPathComponent("Tracks/")
 	let tracksUrlString =  FileManager.applicationSupportDir().appending("/Tracks/")
-	var fillStarted = false
+	
 //	let limitMemory =  UInt64(DiskStatus.freeDiskSpaceInBytes / 3)
 	var maxMemory = UInt64(1000000000)
 	var memoryBuffer = UInt()
-
-	var downloadTasks = [String: DownloadObject]()
+	
 	var requestCount = 0
 	var deleteCount = 0
 	var maxRequest = 9
-	var completionHandler:(() -> Void)?
-	let coreInstance = CoreDataManager.instance
+	var maxTryes = 0
+	var completionHandler:(()->Void)? = nil
+	var notLoadTryes = 0
 
-	lazy var urlSession: URLSession = {
-		let config = URLSessionConfiguration.background(withIdentifier: "DownloadSession")
-		config.isDiscretionary = true
-		config.sessionSendsLaunchEvents = true
-		return URLSession(configuration: config, delegate: self, delegateQueue: nil)
-	}()
-
+	func runLoad(isSelf: Bool, complition: @escaping(() -> Void)){
+		if requestCount == 0{
+			self.load(isSelfFlag: isSelf) {
+				self.createPostNotificationSysInfo(message: "Loaded")
+				return
+			}
+		}else if notLoadTryes == 5{
+			self.load(isSelfFlag: isSelf) {
+				self.createPostNotificationSysInfo(message: "Loaded")
+				self.notLoadTryes = 0
+				return
+			}
+		}else{
+			self.createPostNotificationSysInfo(message: "Not load, req. count = \(requestCount.description)")
+			notLoadTryes = notLoadTryes + 1
+			return
+		}
+	}
+	
 	func load(isSelfFlag: Bool, complition: @escaping (() -> Void)) {
 		print("call load")
-
+		
+		
 		let memoryAvailable = UInt64(DiskStatus.folderSize(folderPath: tracksUrlString)) + UInt64(DiskStatus.freeDiskSpaceInBytes)
 		let percentage = Double((UserDefaults.standard.object(forKey: "maxMemorySize") as? Double)! / 100)
-		maxMemory = UInt64(Double(memoryAvailable) * percentage )
-//		maxMemory = 100000000
+		maxMemory = UInt64(Double(memoryAvailable) * percentage)
+		
 //		if limitMemory < 1000000000 * ((UserDefaults.standard.object(forKey: "maxMemorySize") as? UInt64)! / 10) {
 //			maxMemory = limitMemory
 //		} else {
@@ -53,76 +68,115 @@ class Downloader: NSObject {
 //		}
 //		+ DiskStatus.folderSize(folderPath: tracksUrlString)))
 //		* (DiskStatus.freeDiskSpaceInBytes)
-
+		
 		//если треки занимают больше места, чем максимально допустимо -
 		//удаляем "лишние" треки - в первую очередь прослушанные, затем, если необходимо - самые старые из загруженных
-		while (!isSelfFlag && DiskStatus.folderSize(folderPath: tracksUrlString) >= maxMemory) {
+		while (!isSelfFlag && DiskStatus.folderSize(folderPath: tracksUrlString) > maxMemory) {
 			// получаем трек проиграный большее кол-во раз
-			let song = CoreDataManager.instance.getOldTrack(onlyListen: true) as! [SongObject]
+			let song: [SongObject] = CoreDataManager.instance.getOldTrack(onlyListen: false) as! [SongObject]
 			// получаем путь файла
 			guard song != nil && song[0].trackID != nil else {
 				self.createPostNotificationSysInfo(message: "Не найден трек для удаления")
 				return
 			}
 			self.createPostNotificationSysInfo(message: "Память заполнена. Удаляем трек \(self.deleteCount)")
-			let songObjectEncoded = UserDefaults.standard.data(forKey: "interruptedSongObject")
+			
+			let songObjectEncoded = UserDefaults.standard.data(forKey: "playingSongObject")
 			let currentSongObject = try! PropertyListDecoder().decode(SongObject.self, from: songObjectEncoded!)
-			if (song[0].trackID.isEqual(currentSongObject.trackID)) != true {
+			if (song[0].trackID.isEqual(currentSongObject.trackID)) != true{
 				deleteOldTrack(song: song[0])
-			} else {
-				DispatchQueue.main.async {
-					CoreDataManager.instance.setLogRecord(eventDescription: "Удаляемый трек сейчас играет, uuid = \(String(describing: song[0].trackID.description))", isError: true, errorMessage: "")
-					CoreDataManager.instance.saveContext()
-					if song.count > 1{
-						self.deleteOldTrack(song: song[1])
-					}
+			}
+			else{
+				if song.count > 1{
+					deleteOldTrack(song: song[1])
 				}
 			}
-
+			
 		}
-
+		
 		//проверка подключения к интернету
 		guard currentReachabilityStatus != NSObject.ReachabilityStatus.notReachable else {
 			self.requestCount = 0
 			return
 		}
-
+		
 		//делаем 10 попыток скачивания треков, если место свободное место закончилось, но есть прослушанные треки - удаляем их и загружаем новые, иначе перестаем пытаться скачать
-		if DiskStatus.folderSize(folderPath: tracksUrlString) < maxMemory {
+		if DiskStatus.folderSize(folderPath: tracksUrlString) < maxMemory  {
+			if UserDefaults.standard.bool(forKey: "trafficOptimize"){
+				if CoreDataManager.instance.chekCountOfEntitiesFor(entityName: "TrackEntity") <= 10{
+					maxTryes = 1
+				}else if CoreDataManager.instance.chekCountOfEntitiesFor(entityName: "TrackEntity") <= 50{
+					maxTryes = 0
+				}
+				else{
+					return
+				}
+			}else{
+				maxTryes = 9
+			}
+			self.maxRequest = maxTryes
 			self.deleteCount = 0
 			//получаем trackId следующего трека и информацию о нем
 			self.completionHandler = complition
-			ApiService.shared.getTrackIDFromServer(requestCount: self.requestCount) { [unowned self] (dict) in
-				guard dict["id"] != nil else {
-					return
-				}
-				let trackURL = self.baseURL?.appendingPathComponent(dict["id"] as! String).appendingPathComponent((UIDevice.current.identifierForVendor?.uuidString.lowercased())!)
-				if let audioUrl = trackURL {
-					//задаем директорию для сохранения трека
-					let destinationUrl = self.tracksPath.appendingPathComponent(dict["id"] as! String)
-					//если этот трек не еще не загружен - загружаем трек
-					//						let mp3Path = destinationUrl.appendingPathExtension("mp3")
-					guard FileManager.default.fileExists(atPath: destinationUrl.path ) == false else {
-						self.createPostNotificationSysInfo(message: "Трек уже загружен - пропустим")
+			
+			if requestCount <= maxTryes{
+				RdevApiService().GetTrackInfo(requestCount: self.requestCount) {dict in
+					
+					guard dict["NotAuthorized"] == nil else{
+						self.createPostNotificationSysInfo(message: "GettrackNotAuthorized")
+						self.load(isSelfFlag: true){
+							
+						}
+						self.requestCount += 1
 						return
 					}
-					//добавляем трек в очередь загрузки
-					let downloadRequest = self.createDownloadTask(audioUrl: audioUrl, destinationUrl: destinationUrl, dict: dict, trackId: dict["id"] as! String)
-					downloadRequest.resume()
-					//						}
+					guard dict["ServerError"] == nil else{
+						self.createPostNotificationSysInfo(message: "GettrackServerError")
+						self.load(isSelfFlag: true){
+						}
+						self.requestCount += 1
+						return
+					}
+					
+					guard dict["recid"] != nil else {
+						return
+					}
+					print(dict["recid"])
+					let trackURL = self.baseURL?.appendingPathComponent(dict["recid"] as! String).appendingPathComponent((UIDevice.current.identifierForVendor?.uuidString.lowercased())!)
+					if let audioUrl = trackURL {
+						//задаем директорию для сохранения трека
+						let destinationUrl = self.tracksPath.appendingPathComponent(dict["recid"] as! String)
+						//если этот трек не еще не загружен - загружаем трек
+						//						let mp3Path = destinationUrl.appendingPathExtension("mp3")
+						guard FileManager.default.fileExists(atPath: destinationUrl.path ) == false else {
+							self.createPostNotificationSysInfo(message: "Трек уже загружен - пропустим")
+							return
+						}
+						//добавляем трек в очередь загрузки
+						//self.createDownloadTask(destinationUrl: destinationUrl, dict: dict)
+						self.downloadFile(destinationUrl: destinationUrl, dict: dict)
+						
+						//						}
+					}
 				}
+			}else{
+				self.createPostNotificationSysInfo(message: "\(maxTryes + 1) попыток исчерпано")
+				self.requestCount = -1
+				return
 			}
-
+			
+			
 		} else {
 			// если память заполнена удаляем трек
-			if self.deleteCount < 9 {
+			if self.deleteCount < maxTryes {
 				if self.completionHandler != nil {
 					self.completionHandler!()
 				}
 				self.deleteCount += 1
-
+				
+				
 				// получаем трек проиграный большее кол-во раз
-				let song = CoreDataManager.instance.getOldTrack(onlyListen: false) as! [SongObject]
+				let song: [SongObject] = CoreDataManager.instance.getOldTrack(onlyListen: true) as! [SongObject]
 				// получаем путь файла
 				guard song != nil && song[0].trackID != nil else {
 					self.createPostNotificationSysInfo(message: "Память заполнена, нет прослуш треков")
@@ -130,357 +184,355 @@ class Downloader: NSObject {
 					return
 				}
 				self.createPostNotificationSysInfo(message: "Память заполнена. Удаляем трек \(self.deleteCount)")
-
-				let songObjectEncoded = UserDefaults.standard.data(forKey: "interruptedSongObject")
+				
+				let songObjectEncoded = UserDefaults.standard.data(forKey: "playingSongObject")
 				let currentSongObject = try! PropertyListDecoder().decode(SongObject.self, from: songObjectEncoded!)
-				if (song[0].trackID.isEqual(currentSongObject.trackID)) != true {
+				
+				if	(song[0].trackID.isEqual(currentSongObject.trackID)) != true{
 					deleteOldTrack(song: song[0])
-				} else {
-//					DispatchQueue.main.async {
-//						CoreDataManager.instance.setLogRecord(eventDescription: "Удаляемый трек сейчас играет, uuid = \(String(describing: song?.trackID.description))", isError: false, errorMessage: "")
-//						CoreDataManager.instance.saveContext()
-//					}
+				}else{
 					if song.count > 1{
 						deleteOldTrack(song: song[1])
 					}
 				}
-
-//				self.load (isSelfFlag: true){
-//
-//				}
-
-			} else {
+				
+				self.load (isSelfFlag: true){
+					
+				}
+				
+			}else {
 				self.deleteCount = 0
 			}
-
+			
 		}
 	}
-
-	func createDownloadTask(audioUrl: URL, destinationUrl: URL, dict: [String: AnyObject], trackId: String) -> URLSessionDownloadTask {
+	func downloadFile(destinationUrl:URL, dict:[String:Any]){
 		print("call createDownloadTask")
-		let downloadItem = DownloadObject(audioPath: audioUrl, destinationPath: destinationUrl, infoDict: dict)
-		DispatchQueue.main.sync {
-			downloadTasks[trackId] = (downloadItem)
+		
+		let json: Parameters = ["fields":["recid":dict["recid"] as! String], "method":"gettrack", "resulttype":"filestream"]
+		let token = UserDefaults.standard.string(forKey: "authToken") as! String
+		let headers: HTTPHeaders = [
+			"Content-Type":"application/json",
+			"Authorization":"Bearer \(token)"
+		]
+		let mp3Path = destinationUrl.appendingPathExtension("mp3")
+		let destination: DownloadRequest.DownloadFileDestination = {_, _ in
+			return (mp3Path, [.removePreviousFile])
 		}
-
-		return urlSession.downloadTask(with: audioUrl)
-//		print(audioUrl)
-//		return URLSession.shared.downloadTask(with: audioUrl, completionHandler: { (location, response, error) -> Void in
-//			guard error == nil else {
-//
-//				self.createPostNotificationSysInfo(message: error.debugDescription)
-//				CoreDataManager.instance.setLogRecord(eventDescription: "Download failed, url: \(audioUrl.absoluteString)", isError: true, errorMessage: error.debugDescription)
-//				CoreDataManager.instance.saveContext()
-//				return
-//			}
-//			guard let newLocation = location, error == nil else {return }
-//
-//			if let httpResponse = response as? HTTPURLResponse {
-//				if httpResponse.statusCode == 200 {
-//					do {
-//						let file = NSData(contentsOf: newLocation)
-//						let mp3Path = destinationUrl.appendingPathExtension("mp3")
-//						guard FileManager.default.fileExists(atPath: mp3Path.path ) == false else {
-//							self.createPostNotificationSysInfo(message: "MP3 file exist")
-//							CoreDataManager.instance.setLogRecord(eventDescription: "MP3 file exist", isError: true, errorMessage: mp3Path.path.description)
-//							CoreDataManager.instance.saveContext()
-//							return
-//						}
-//
-//						//сохраняем трек
-//						//задаем конечных путь хранения файла (добавляем расширение)
-//						let endPath = destinationUrl.appendingPathExtension("mp3")
-//						try file?.write(to: endPath, options:.noFileProtection)
-//
-//						//Проверяем, полностью ли скачан трек
-//						if let contentLength = Int(httpResponse.allHeaderFields["Content-Length"] as! String) {
-//							if file!.length != contentLength || file!.length == 0 {
-//								if FileManager.default.fileExists(atPath: mp3Path.path) {
-//									do{
-//										// удаляем обьект по пути
-//										try FileManager.default.removeItem(atPath: mp3Path.path)
-//										self.createPostNotificationSysInfo(message: "Файл с длиной = \(file!.length), ContentLength = \(contentLength) удален")
-//									}
-//									catch {
-//										CoreDataManager.instance.setLogRecord(eventDescription: "Ошибка при удалении недокачанного трека", isError: true, errorMessage: error.localizedDescription)
-//										CoreDataManager.instance.saveContext()
-//										print("Ошибка при удалении недокачанного трека")
-//									}
-//								}
-//								return
-//							}
-//						}
-//						//сохраняем информацию о файле в базу данных
-//
-//						guard FileManager.default.fileExists(atPath: mp3Path.absoluteString ) == false else {
-//							self.createPostNotificationSysInfo(message: "MP3 file exist")
-//							return
-//						}
-//
-//						let trackEntity = TrackEntity()
-//
-//						trackEntity.path = String(describing: endPath.lastPathComponent)
-//						trackEntity.countPlay = 0
-//						trackEntity.artistName = dict["artist"] as? String
-//						trackEntity.trackName = dict["name"] as? String
-//						trackEntity.trackLength = NSString(string: dict["length"] as! String).doubleValue
-//						trackEntity.recId = dict["id"] as! String?
-//						trackEntity.playingDate = NSDate.init(timeIntervalSinceNow: -315360000.0042889)
-//
-//						CoreDataManager.instance.saveContext()
-//
-//
-//						self.createPostNotificationSysInfo(message: "Трек (\(self.requestCount+1)) загружен \(trackEntity.recId ?? "")")
-//						if self.requestCount < self.maxRequest {
-//							if self.completionHandler != nil {
-//								self.completionHandler!()
-//							}
-//							self.requestCount += 1
-//							self.load(isSelfFlag: true, complition: self.completionHandler!)
-//
-//						} else {
-//							if self.completionHandler != nil {
-//								self.completionHandler!()
-//							}
-//							self.requestCount = 0
-//							self.maxRequest = 9
-//						}
-//
-//						//				complition()
-//						CoreDataManager.instance.setLogRecord(eventDescription: "Информация о треке сохранена в БД", isError: false, errorMessage: "")
-//						CoreDataManager.instance.saveContext()
-//						print("File moved to documents folder")
-//
-//					} catch {
-//						CoreDataManager.instance.setLogRecord(eventDescription: "Трек не скачан " + error.localizedDescription, isError: true, errorMessage: error.localizedDescription)
-//						CoreDataManager.instance.saveContext()
-//						print(error.localizedDescription)
-//					}
-//				}
-//			}
-//		})
-	}
-
-	func createPostNotificationSysInfo (message: String) {
-		NotificationCenter.default.post(name: NSNotification.Name(rawValue: "updateSysInfo"), object: nil, userInfo: ["message": message])
-	}
-
-	// удаление трека если память заполнена
-	func deleteOldTrack (song: SongObject?) {
-		print("call deleteOldTrack")
-//		DispatchQueue.main.async {
-//			CoreDataManager.instance.setLogRecord(eventDescription: "Удаление старого трека", isError: false, errorMessage: "")
-//			CoreDataManager.instance.saveContext()
-//		}
-
-		let path = self.tracksUrlString.appending((song?.path)!)
-		self.createPostNotificationSysInfo(message: "Удаляем \(song!.trackID.description)")
-		print("Удаляем \(song!.trackID.description)")
-//		DispatchQueue.main.async {
-//			CoreDataManager.instance.setLogRecord(eventDescription: "Удаляем старый трек \(song!.trackID.description)", isError: false, errorMessage: "")
-//			CoreDataManager.instance.saveContext()
-//		}
-		let songObjectEncoded = UserDefaults.standard.data(forKey: "interruptedSongObject")
-		let currentSongObject = try! PropertyListDecoder().decode(SongObject.self, from: songObjectEncoded!)
-		if (song?.trackID.isEqual(currentSongObject.trackID)) == true {
-			print("Не удаляем сейчас играющий трек")
-//			DispatchQueue.main.async {
-//				CoreDataManager.instance.setLogRecord(eventDescription: "Старый удаляемый трек играет сейчас", isError: false, errorMessage: "")
-//				CoreDataManager.instance.saveContext()
-//			}
-		} else {
-			if FileManager.default.fileExists(atPath: path) {
-				do {
-					// удаляем обьект по пути
-					try FileManager.default.removeItem(atPath: path)
-					self.createPostNotificationSysInfo(message: "Файл успешно удален")
-					print("Файл успешно удален")
-//					DispatchQueue.main.async {
-//						CoreDataManager.instance.setLogRecord(eventDescription: "Старый трек удален", isError: false, errorMessage: "")
-//						CoreDataManager.instance.saveContext()
-//					}
-				} catch {
-					self.createPostNotificationSysInfo(message: "Ошибка удаления трека: \(error)")
-					print("Ошибка удаления трека: \(error)")
-					if UserDefaults.standard.bool(forKey: "writeLog"){
-						CoreDataManager.instance.setLogRecord(eventDescription: "Ошибка удаления старого трека: " + error.localizedDescription, isError: true, errorMessage: error.localizedDescription)
-						CoreDataManager.instance.saveContext()
-					}
-				}
-			} else {
-				self.createPostNotificationSysInfo(message: "Трек уже удалён с устройства")
-				print("Трек уже удалён с устройства")
-				CoreDataManager.instance.setLogRecord(eventDescription: "Старый трек уже удален", isError: false, errorMessage: "")
-				CoreDataManager.instance.saveContext()
-			}
-			// удаляем трек с базы
-			//			CoreDataManager.instance.managedObjectContext.performAndWait {
-			CoreDataManager.instance.deleteTrackFor(trackID: (song?.trackID)!)
-			CoreDataManager.instance.setLogRecord(eventDescription: "Трек удален из БД, id: " + (song?.trackID.description)!, isError: false, errorMessage: "")
-			CoreDataManager.instance.saveContext()
-			//			}
-
-			//		}
-		}
-	}
-
-	func fillCache () {
-//		let limitMemory =  UInt64(DiskStatus.freeDiskSpaceInBytes / 2)
-//		let maxMemory = 1000000000 * (UserDefaults.standard.object(forKey: "maxMemorySize") as? UInt64)!
-		let memoryAvailable = UInt64(DiskStatus.folderSize(folderPath: tracksUrlString)) + UInt64(DiskStatus.freeDiskSpaceInBytes)
-		let percentage = Double((UserDefaults.standard.object(forKey: "maxMemorySize") as? Double)! / 100)
-		maxMemory = UInt64(Double(memoryAvailable) * percentage)
-//		maxMemory = 100000000
-		let folderSize = DiskStatus.folderSize(folderPath: tracksUrlString)
-		DispatchQueue.main.async {
-			CoreDataManager.instance.setLogRecord(eventDescription: "Заполнение кеша, объем: " + DiskStatus.GBFormatter(Int64(folderSize)).description + ", свободное место: " + self.maxMemory.description + ", разрешенный процент: " + percentage.description, isError: false, errorMessage: "")
-			CoreDataManager.instance.saveContext()
-		}
-		UserDefaults.standard.set(true, forKey: "runCaching")
-		if DiskStatus.folderSize(folderPath: tracksUrlString) <= maxMemory {
-			self.load (isSelfFlag: false) {
-				//sleep(2)
-				self.fillCache()
-			}
-		} else {
-			if UserDefaults.standard.bool(forKey: "writeLog"){
-				DispatchQueue.main.async {
-					CoreDataManager.instance.setLogRecord(eventDescription: "Недостаточно памяти для заполнения кеша", isError: true, errorMessage: "")
-					CoreDataManager.instance.saveContext()
-				}
-			}
-		}
-	}
-
-}
-extension Downloader: URLSessionDownloadDelegate {
-	func urlSession(_ session: URLSession, downloadTask: URLSessionDownloadTask, didFinishDownloadingTo location: URL) {
-		guard downloadTask.error == nil else {
-			self.createPostNotificationSysInfo(message: downloadTask.error.debugDescription)
-			if UserDefaults.standard.bool(forKey: "writeLog"){
-				DispatchQueue.main.async {
-					CoreDataManager.instance.setLogRecord(eventDescription: "Download failed", isError: true, errorMessage: downloadTask.error.debugDescription)
-					CoreDataManager.instance.saveContext()
-				}
+		guard FileManager.default.fileExists(atPath: mp3Path.path ) == false else {
+			self.createPostNotificationSysInfo(message: "MP3 file exist")
+			load(isSelfFlag: true) {
+				return
 			}
 			return
 		}
-
-//		print(location.absoluteString)
-		if let httpResponse = downloadTask.response as? HTTPURLResponse {
-			if httpResponse.statusCode == 200 {
-				do {
-					let filename = (httpResponse.allHeaderFields["Etag"] as! String)
-					let trackId = filename.replacingOccurrences(of: ".mp3", with: "")
-					if UUID(uuidString: trackId) != nil {
-						let downloadItem = self.downloadTasks[trackId]
-						if downloadItem != nil {
-							let file = NSData(contentsOf: location)
-							let mp3Path = downloadItem!.destinationPath.appendingPathExtension("mp3")
-							guard FileManager.default.fileExists(atPath: mp3Path.path ) == false else {
-								self.createPostNotificationSysInfo(message: "MP3 file exist")
-								DispatchQueue.main.async {
-									CoreDataManager.instance.setLogRecord(eventDescription: "MP3 file exist", isError: true, errorMessage: mp3Path.path.description)
-									CoreDataManager.instance.saveContext()
-								}
-								return
-							}
-							try file?.write(to: mp3Path, options: .noFileProtection)
-
-							if let contentLength = Int(httpResponse.allHeaderFields["Content-Length"] as! String) {
-								if file!.length != contentLength || file!.length == 0 {
+		
+		do{
+			download(rdevApiUrl!, method: .post, parameters: json, encoding: JSONEncoding.default, headers: headers, to: destination).response { (response) in
+				if let statusCode = response.response?.statusCode{
+					if statusCode == 200{
+						let filedata = NSData(contentsOf: mp3Path)
+						if let contentLength = Int(response.response?.allHeaderFields["Content-Length"] as! String) {
+							if let length = filedata?.length{
+								if length != contentLength || length == 0 {
 									if FileManager.default.fileExists(atPath: mp3Path.path) {
-										do {
+										do{
 											// удаляем обьект по пути
 											try FileManager.default.removeItem(atPath: mp3Path.path)
-											self.createPostNotificationSysInfo(message: "Файл с длиной = \(file!.length), ContentLength = \(contentLength) удален")
-										} catch {
-											DispatchQueue.main.async {
-												CoreDataManager.instance.setLogRecord(eventDescription: "Ошибка при удалении недокачанного трека", isError: true, errorMessage: error.localizedDescription)
-												CoreDataManager.instance.saveContext()
-											}
+											self.createPostNotificationSysInfo(message: "Файл с длиной = \(filedata!.length), ContentLength = \(contentLength) удален")
+										}
+										catch {
 											print("Ошибка при удалении недокачанного трека")
 										}
 									}
 									return
 								}
 							}
-							guard FileManager.default.fileExists(atPath: mp3Path.absoluteString ) == false else {
-								self.createPostNotificationSysInfo(message: "MP3 file exist")
+						}
+						//сохраняем информацию о файле в базу данных
+						
+						
+						let trackEntity = TrackEntity()
+						
+						trackEntity.path = String(describing: mp3Path.lastPathComponent)
+						trackEntity.countPlay = 0
+						trackEntity.artistName = dict["artist"] as? String
+						trackEntity.trackName = dict["recname"] as? String
+						trackEntity.trackLength = dict["length"] as! Double
+						trackEntity.recId = dict["recid"] as! String?
+						trackEntity.playingDate = NSDate.init(timeIntervalSinceNow: -315360000.0042889)
+						
+						CoreDataManager.instance.saveContext()
+						
+						self.createPostNotificationSysInfo(message: "Трек (\(self.requestCount+1)) загружен \(trackEntity.recId ?? "")")
+						
+						if self.requestCount < self.maxRequest {
+							if self.completionHandler != nil {
+								self.completionHandler!()
+							}
+							self.requestCount += 1
+							self.load(isSelfFlag: true, complition: self.completionHandler!)
+							
+						} else {
+							if self.completionHandler != nil {
+								self.completionHandler!()
+							}
+							self.requestCount = 0
+							self.maxRequest = self.maxTryes
+						}
+						
+						//				complition()
+						
+						print("File moved to documents folder")
+					}
+					else if statusCode == 401{
+						NotificationCenter.default.post(name: NSNotification.Name(rawValue: "updateSysInfo"), object: nil, userInfo: ["message":"Create downloadTask not auth"])
+						RdevApiService().GetAuthToken(){_ in
+							//self.createDownloadTask(destinationUrl: destinationUrl, dict: dict)
+						}
+						self.createDownloadTask(destinationUrl: destinationUrl, dict: dict)
+					}else if statusCode == 500{
+						NotificationCenter.default.post(name: NSNotification.Name(rawValue: "updateSysInfo"), object: nil, userInfo: ["message":"Create downloadtask ServerError"])
+						if self.requestCount < self.maxRequest {
+							if self.completionHandler != nil {
+								self.completionHandler!()
+							}
+							//self.requestCount += 1
+							if UserDefaults.standard.bool(forKey: "trafficOptimize"){
+								self.requestCount += 1
+							}
+							self.load(isSelfFlag: true, complition: self.completionHandler!)
+							
+						} else {
+							if self.completionHandler != nil {
+								self.completionHandler!()
+							}
+							self.requestCount = 0
+							self.maxRequest = self.maxTryes
+						}
+					}
+					else{
+						NotificationCenter.default.post(name: NSNotification.Name(rawValue: "updateSysInfo"), object: nil, userInfo: ["message":"Create downloadtask error: \(statusCode.description)"])
+						if self.requestCount < self.maxRequest {
+							if self.completionHandler != nil {
+								self.completionHandler!()
+							}
+							self.requestCount += 1
+							self.load(isSelfFlag: true, complition: self.completionHandler!)
+							
+						} else {
+							if self.completionHandler != nil {
+								self.completionHandler!()
+							}
+							self.requestCount = 0
+							self.maxRequest = self.maxTryes
+						}
+					}
+				}
+			}
+		}catch{
+			self.requestCount = 0
+		}
+	}
+	
+	func createDownloadTask(destinationUrl:URL, dict:[String:Any]){
+		print("call createDownloadTask")
+        
+        let json = ["fields":["recid":dict["recid"] as! String], "method":"gettrack", "resulttype":"filestream"] as [String : Any]
+        let jsonBody = try? JSONSerialization.data(withJSONObject: json)
+        let token = UserDefaults.standard.string(forKey: "authToken")
+		
+        var request = URLRequest(url: rdevApiUrl!)
+        request.httpMethod = "POST"
+		request.setValue("application/json", forHTTPHeaderField: "Content-Type")
+		request.setValue("Bearer \(token!)", forHTTPHeaderField: "Authorization")
+        request.httpBody = jsonBody
+        
+        let task =  URLSession.shared.downloadTask(with: request,completionHandler: { (location, response, error) -> Void in
+			guard error == nil else {
+				self.createPostNotificationSysInfo(message: error.debugDescription)
+				return
+			}
+			guard let newLocation = location, error == nil else {return }
+			
+			if let httpResponse = response as? HTTPURLResponse {
+				if httpResponse.statusCode == 200 {
+					do {
+						let file = NSData(contentsOf: newLocation)
+						let mp3Path = destinationUrl.appendingPathExtension("mp3")
+						guard FileManager.default.fileExists(atPath: mp3Path.path ) == false else {
+							self.createPostNotificationSysInfo(message: "MP3 file exist")
+							self.load(isSelfFlag: true) {
 								return
 							}
-							DispatchQueue.main.async {
-								let trackEntity = TrackEntity()
-
-								trackEntity.path = String(describing: mp3Path.lastPathComponent)
-								trackEntity.countPlay = 0
-								trackEntity.artistName = downloadItem!.infoDict["artist"] as? String
-								trackEntity.trackName = downloadItem!.infoDict["name"] as? String
-								trackEntity.trackLength = NSString(string: downloadItem!.infoDict["length"] as! String).doubleValue
-								trackEntity.recId = downloadItem!.infoDict["id"] as! String?
-								trackEntity.playingDate = NSDate.init(timeIntervalSinceNow: -315360000.0042889)
-								CoreDataManager.instance.saveContext()
-								self.createPostNotificationSysInfo(message: "Трек (\(self.requestCount+1)) загружен \(trackEntity.recId ?? "")")
-								self.downloadTasks.removeValue(forKey: trackId)
-							}
-							if self.requestCount < self.maxRequest {
-								if self.completionHandler != nil {
-									self.completionHandler!()
-								}
-								if !UserDefaults.standard.bool(forKey: "runCaching") {
-									self.load(isSelfFlag: false) {
-										DispatchQueue.main.sync {
-											self.requestCount += 1
-										}
-										DispatchQueue.main.async {
-											CoreDataManager.instance.setLogRecord(eventDescription: "Трек доигран до конца, догрузка", isError: false, errorMessage: "")
-											CoreDataManager.instance.saveContext()
-										}
+							return
+						}
+						
+						//сохраняем трек
+						//задаем конечных путь хранения файла (добавляем расширение)
+						let endPath = destinationUrl.appendingPathExtension("mp3")
+						try file?.write(to: endPath, options:.noFileProtection)
+						
+						//Проверяем, полностью ли скачан трек
+						if let contentLength = Int(httpResponse.allHeaderFields["Content-Length"] as! String) {
+							if file!.length != contentLength || file!.length == 0 {
+								if FileManager.default.fileExists(atPath: mp3Path.path) {
+									do{
+										// удаляем обьект по пути
+										try FileManager.default.removeItem(atPath: mp3Path.path)
+										self.createPostNotificationSysInfo(message: "Файл с длиной = \(file!.length), ContentLength = \(contentLength) удален")
+									}
+									catch {
+										print("Ошибка при удалении недокачанного трека")
 									}
 								}
-							} else {
-								if self.completionHandler != nil {
-									self.completionHandler!()
-								}
-								DispatchQueue.main.sync {
-									self.requestCount = 0
-									self.maxRequest = 9
-								}
-
-							}
-
-							//				complition()
-							DispatchQueue.main.async {
-								CoreDataManager.instance.setLogRecord(eventDescription: "Информация о треке сохранена в БД", isError: false, errorMessage: "")
-								CoreDataManager.instance.saveContext()
-							}
-							print("File moved to documents folder")
-							//self.downloadTasks.removeValue(forKey: trackId)
-						} else {
-							DispatchQueue.main.async {
-								CoreDataManager.instance.setLogRecord(eventDescription: "Трек не найден в словаре полученых треков", isError: true, errorMessage: "trackid: \(trackId)")
-								CoreDataManager.instance.saveContext()
+								return
 							}
 						}
-					} else {
-						DispatchQueue.main.async {
-							CoreDataManager.instance.setLogRecord(eventDescription: "Некорректный id трека", isError: true, errorMessage: "trackid: \(filename.replacingOccurrences(of: ".mp3", with: ""))")
-							CoreDataManager.instance.saveContext()
+						//сохраняем информацию о файле в базу данных
+						
+						guard FileManager.default.fileExists(atPath: mp3Path.absoluteString ) == false else {
+							self.createPostNotificationSysInfo(message: "MP3 file exist")
+							self.load(isSelfFlag: true) {
+								return
+							}
+							return
 						}
-					}
-				} catch {
-					DispatchQueue.main.async {
-						CoreDataManager.instance.setLogRecord(eventDescription: "Трек не скачан " + error.localizedDescription, isError: true, errorMessage: error.localizedDescription)
+						
+						let trackEntity = TrackEntity()
+						
+						trackEntity.path = String(describing: endPath.lastPathComponent)
+						trackEntity.countPlay = 0
+						trackEntity.artistName = dict["artist"] as? String
+						trackEntity.trackName = dict["recname"] as? String
+						trackEntity.trackLength = dict["length"] as! Double
+						trackEntity.recId = dict["recid"] as! String?
+						trackEntity.playingDate = NSDate.init(timeIntervalSinceNow: -315360000.0042889)
+						
 						CoreDataManager.instance.saveContext()
+						
+						self.createPostNotificationSysInfo(message: "Трек (\(self.requestCount+1)) загружен \(trackEntity.recId ?? "")")
+						if self.requestCount < self.maxRequest {
+							if self.completionHandler != nil {
+								self.completionHandler!()
+							}
+							self.requestCount += 1
+							self.load(isSelfFlag: true, complition: self.completionHandler!)
+							
+						} else {
+							if self.completionHandler != nil {
+								self.completionHandler!()
+							}
+							self.requestCount = 0
+							self.maxRequest = self.maxTryes
+						}
+						
+						//				complition()
+						
+						print("File moved to documents folder")
+
+					} catch let error as NSError {
+						print(error.localizedDescription)
 					}
-					print(error.localizedDescription)
-				}
-			} else {
-				DispatchQueue.main.async {
-					CoreDataManager.instance.setLogRecord(eventDescription: "Трек не скачан, код ошибки: " + httpResponse.statusCode.description, isError: true, errorMessage: httpResponse.debugDescription + "\n########\n" + downloadTask.error.debugDescription)
-					CoreDataManager.instance.saveContext()
-				}
+                }else if httpResponse.statusCode == 401{
+                    NotificationCenter.default.post(name: NSNotification.Name(rawValue: "updateSysInfo"), object: nil, userInfo: ["message":"Create downloadTask not auth"])
+                    RdevApiService().GetAuthToken(){_ in
+                        //self.createDownloadTask(destinationUrl: destinationUrl, dict: dict)
+                    }
+					self.createDownloadTask(destinationUrl: destinationUrl, dict: dict)
+                }
+                else if httpResponse.statusCode == 500{
+                    NotificationCenter.default.post(name: NSNotification.Name(rawValue: "updateSysInfo"), object: nil, userInfo: ["message":"Create downloadtask ServerError"])
+					if self.requestCount < self.maxRequest {
+						if self.completionHandler != nil {
+							self.completionHandler!()
+						}
+						//self.requestCount += 1
+						if UserDefaults.standard.bool(forKey: "trafficOptimize"){
+							self.requestCount += 1
+						}
+						self.load(isSelfFlag: true, complition: self.completionHandler!)
+						
+					} else {
+						if self.completionHandler != nil {
+							self.completionHandler!()
+						}
+						self.requestCount = 0
+						self.maxRequest = self.maxTryes
+					}
+                }
+                else{
+                    NotificationCenter.default.post(name: NSNotification.Name(rawValue: "updateSysInfo"), object: nil, userInfo: ["message":"Create downloadtask error: \(httpResponse.statusCode.description)"])
+					if self.requestCount < self.maxRequest {
+						if self.completionHandler != nil {
+							self.completionHandler!()
+						}
+						self.requestCount += 1
+						self.load(isSelfFlag: true, complition: self.completionHandler!)
+						
+					} else {
+						if self.completionHandler != nil {
+							self.completionHandler!()
+						}
+						self.requestCount = 0
+						self.maxRequest = self.maxTryes
+					}
+                }
+            }else{
+                NotificationCenter.default.post(name: NSNotification.Name(rawValue: "updateSysInfo"), object: nil, userInfo: ["message":"Create downloadtask error: NOT http"])
+            }
+		})
+        task.resume()
+	}
+
+	func createPostNotificationSysInfo (message:String) {
+		NotificationCenter.default.post(name: NSNotification.Name(rawValue: "updateSysInfo"), object: nil, userInfo: ["message":message])
+	}
+	
+	// удаление трека если память заполнена
+	func deleteOldTrack (song: SongObject?) {
+		print("call deleteOldTrack")
+		
+		let path = self.tracksUrlString.appending((song?.path)!)
+		self.createPostNotificationSysInfo(message: "Удаляем \(song!.trackID.description)")
+		print("Удаляем \(song!.trackID.description)")
+		
+		if FileManager.default.fileExists(atPath: path) {
+			do{
+				// удаляем обьект по пути
+				try FileManager.default.removeItem(atPath: path)
+				self.createPostNotificationSysInfo(message: "Файл успешно удален")
+				print("Файл успешно удален")
+			}
+			catch {
+				self.createPostNotificationSysInfo(message: "Ошибка удаления трека: \(error)")
+				print("Ошибка удаления трека: \(error)")
+			}
+		} else {
+			self.createPostNotificationSysInfo(message: "Трек уже удалён с устройства")
+			print("Трек уже удалён с устройства")
+		}
+			// удаляем трек с базы
+			//			CoreDataManager.instance.managedObjectContext.performAndWait {
+			CoreDataManager.instance.deleteTrackFor(trackID: (song?.trackID)!)
+			CoreDataManager.instance.saveContext()
+			//			}
+			
+//		}
+	}
+	
+	func fillCache () {
+//		let limitMemory =  UInt64(DiskStatus.freeDiskSpaceInBytes / 2)
+//		let maxMemory = 1000000000 * (UserDefaults.standard.object(forKey: "maxMemorySize") as? UInt64)!
+		let memoryAvailable = UInt64(DiskStatus.folderSize(folderPath: tracksUrlString)) + UInt64(DiskStatus.freeDiskSpaceInBytes)
+		let percentage = Double((UserDefaults.standard.object(forKey: "maxMemorySize") as? Double)! / 100)
+		maxMemory = UInt64(Double(memoryAvailable) * percentage)
+		let folderSize = DiskStatus.folderSize(folderPath: tracksUrlString)
+		if folderSize < maxMemory  {
+			self.runLoad (isSelf: true){
+				self.fillCache()
 			}
 		}
 	}
+	
 }

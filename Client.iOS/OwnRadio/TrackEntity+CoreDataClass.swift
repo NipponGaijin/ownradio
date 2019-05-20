@@ -9,6 +9,7 @@
 import Foundation
 import CoreData
 
+
 public class TrackEntity: NSManagedObject {
 	convenience init() {
 		self.init(entity: CoreDataManager.instance.entityForName(entityName: "TrackEntity"), insertInto: CoreDataManager.instance.managedObjectContext)

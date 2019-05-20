@@ -24,7 +24,23 @@
 	<android.support.constraint.ConstraintLayout
 		android:layout_width="match_parent"
 		android:layout_height="match_parent"
-		android:background="@android:color/white">
+		android:background="@android:color/white"
+		android:id="@+id/main_layout"
+		>
+
+		<ImageButton
+			android:id="@+id/rateAppBtn"
+			style="@style/RateButtonTheme"
+			android:layout_width="50dp"
+			android:layout_height="41dp"
+			android:layout_marginStart="8dp"
+			android:layout_marginEnd="24dp"
+			android:layout_marginBottom="12dp"
+			app:layout_constraintBottom_toTopOf="@+id/progressBar"
+			app:layout_constraintEnd_toEndOf="parent"
+			app:layout_constraintHorizontal_bias="1.0"
+			app:layout_constraintStart_toStartOf="parent"
+			app:srcCompat="@drawable/ic_star_popup" />
 
 		<ImageButton
 			android:id="@+id/buttonShareTrack4"
@@ -117,10 +133,11 @@
 			android:contentDescription="TODO"
 			android:elevation="10dp"
 			android:tintMode="src_in"
-			app:layout_constraintBottom_toTopOf="@+id/btnNext"
+			app:layout_constraintBottom_toBottomOf="parent"
 			app:layout_constraintEnd_toEndOf="parent"
 			app:layout_constraintStart_toStartOf="parent"
 			app:layout_constraintTop_toBottomOf="@+id/trackArtist"
+			app:layout_constraintVertical_bias="0.31"
 			app:srcCompat="@drawable/btn_ic_play" />
 
 		<ImageButton
@@ -129,14 +146,15 @@
 			android:layout_height="106dp"
 			android:layout_alignParentEnd="true"
 			android:layout_centerVertical="true"
+			android:layout_marginTop="8dp"
 			android:background="?selectableItemBackgroundBorderless"
 			android:contentDescription="TODO"
 			android:elevation="10dp"
 			android:tintMode="src_in"
 			app:layout_constraintEnd_toEndOf="parent"
 			app:layout_constraintStart_toStartOf="parent"
-			app:srcCompat="@drawable/btn_ic_next"
-			tools:layout_editor_absoluteY="484dp" />
+			app:layout_constraintTop_toBottomOf="@+id/btnPlayPause"
+			app:srcCompat="@drawable/btn_ic_next" />
 
 		<ImageButton
 			android:id="@+id/btnAlarmClock"
@@ -185,7 +203,7 @@
 			app:layout_constraintHorizontal_bias="0.0"
 			app:layout_constraintStart_toStartOf="parent"
 			app:layout_constraintTop_toBottomOf="@+id/btnNext"
-			app:layout_constraintVertical_bias="0.223" />
+			app:layout_constraintVertical_bias="0.52" />
 
 		<TextView
 			android:id="@+id/tProgressLeft"

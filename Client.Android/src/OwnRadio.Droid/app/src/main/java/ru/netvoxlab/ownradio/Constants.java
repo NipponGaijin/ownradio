@@ -13,10 +13,10 @@ public class Constants {
 	public static final String IS_FIRST_TIME_LAUNCH = "IsFirstTimeLaunch";
 	public static final String DEVICE_ID = "DeviceID";
 	
-	public static final String ONLY_WIFI = "0";
-	public static final String ALL_CONNECTION_TYPES = "1";
+	public static final String OPTIMIZE_DISABLED = "0";
+	public static final String OPTIMIZE_ENABLED = "1";
 	
-	public static final String INTERNET_CONNECTION_TYPE = "internet_connections_list";
+	public static final String OPTIMIZE_STATUS = "internet_connections_list";
 	
 	public static final String ACTION_UPDATE_TRYING_COUNT = "ru.netvoxlab.ownradio.action.ACTION_UPDATE_TRYING_COUNT";
 	public static final String ACTION_START_PLAY = "ru.netvoxlab.ownradio.action.ACTION_START_PLAY";
