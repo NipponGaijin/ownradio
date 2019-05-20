@@ -26,6 +26,8 @@ namespace AudioWebApi
         /// <param name="end">По секунду</param>
         private byte[] TrimMp3(Stream fileStream, TimeSpan? begin, TimeSpan? end)
         {
+            
+
             using (var reader = new Mp3FileReader(fileStream))
             {
                 if (reader.TotalTime < TimeSpan.FromSeconds(10))
@@ -69,7 +71,13 @@ namespace AudioWebApi
             ResponseACRCloud result = null;
             InfoResponse response = new InfoResponse();
 
-            var data = TrimMp3(fileStream, TimeSpan.FromSeconds(10), TimeSpan.FromSeconds(20));
+           // var data = TrimMp3(fileStream, TimeSpan.FromSeconds(10), TimeSpan.FromSeconds(20)); //этот метод в линуксе не работает
+
+            ///////////////вместо закоментированной строки//////////////
+            int length = Convert.ToInt32(fileStream.Length);
+            byte[] data = new byte[length / 30];
+            fileStream.Read(data, 0, length / 30);
+            ///////////////вместо закоментированной строки//////////////
 
             if (data == null)  // file less 10 seconds
             {

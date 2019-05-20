@@ -20,7 +20,12 @@ namespace AudioWebApi.Controllers
 		[HttpPost]
 		public IActionResult Post(IFormFile file)
 		{
-			if (file == null)
+            if (file == null && HttpContext.Request.Form.Files.Count > 0)
+            {
+                file = HttpContext.Request.Form.Files[0];
+            }
+
+            if (file == null)
 			{
 				Log.Error("File is missing");
 				return StatusCode(StatusCodes.Status400BadRequest, "Load file, please...");
