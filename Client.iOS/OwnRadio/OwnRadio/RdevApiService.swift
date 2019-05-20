@@ -128,7 +128,7 @@ class RdevApiService {
 		
 		print(json)
 		
-		Alamofire.request(apiUrl!, method: .post, parameters: json, encoding: JSONEncoding.default, headers: headers).responseJSON { response in
+		Alamofire.request(apiUrl!, method: .post, parameters: json, encoding: JSONEncoding.default, headers: headers).responseJSON {response in
 			if let statusCode = response.response?.statusCode{
 				if statusCode == 200{
 					let jsonResult = response.result.value as! NSDictionary
@@ -139,20 +139,20 @@ class RdevApiService {
 					if trackInfo[0]["recname"] is NSNull{
 						trackInfo[0]["recname"] = "Artist"
 					}
+					DispatchQueue.main.async {
+						NotificationCenter.default.post(name: NSNotification.Name(rawValue: "updateSysInfo"), object: nil, userInfo: ["message":"(\(requestCount+1))Получ. инфа о загруж. треке (\(trackInfo[0]["recid"]))"])
+						print("Получена информация о следующем треке \(trackInfo[0]["recid"] ?? "")")
+					}
 					
-					NotificationCenter.default.post(name: NSNotification.Name(rawValue: "updateSysInfo"), object: nil, userInfo: ["message":"(\(requestCount+1))Получ. инфа о загруж. треке (\(trackInfo[0]["recid"]))"])
-					print("Получена информация о следующем треке \(trackInfo[0]["recid"])")
 					
 					return complition(trackInfo[0])
 				}else if statusCode == 401{
 					self.GetAuthToken(){_ in
 					}
-					self.GetTrackInfo(requestCount: requestCount, complition: { (_) in
-					})
+					self.GetTrackInfo(requestCount: requestCount){_ in }
 					NotificationCenter.default.post(name: NSNotification.Name(rawValue: "updateSysInfo"), object: nil, userInfo: ["message":"GetTrackNotAuthorized"])
 					return complition(["NotAuthorized":statusCode.description])
 				}else if statusCode == 500{
-					print(self.userDefault.string(forKey: "deviceIdentifier"))
 					return complition(["ServerError":statusCode.description])
 //					self.RegisterDevice(){result in
 //						print(self.userDefault.string(forKey: "deviceIdentifier"))

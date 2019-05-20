@@ -8,12 +8,13 @@
 
 import UIKit
 import HockeySDK
+import GoogleSignIn
 //import AppCenter
 //import AppCenterCrashes
 //import AppCenterAnalytics
 
 @UIApplicationMain
-class AppDelegate: UIResponder, UIApplicationDelegate {
+class AppDelegate: UIResponder, UIApplicationDelegate, GIDSignInDelegate{
 	
 	
 	var window: UIWindow?
@@ -119,10 +120,37 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
 //		let appCenter = MSAppCenter.self
 //		appCenter.setUserId(userDefaults.string(forKey: "deviceIdentifier") ?? "" + " 1")
 //		appCenter.start("d84512a7-3d90-4546-bd54-d650b88411ed", withServices: [MSAnalytics.self, MSCrashes.self])
+		
+		//Init sign in
+		GIDSignIn.sharedInstance()?.clientID = "400574862316-pmlndl597ssjfrebrejsuro2b1ghuncj.apps.googleusercontent.com"
+		GIDSignIn.sharedInstance()?.delegate = self
 		return true
 	}
 	
-
+	func application(_ app: UIApplication, open url: URL, options: [UIApplicationOpenURLOptionsKey : Any] = [:]) -> Bool {
+		return (GIDSignIn.sharedInstance()?.handle(url as URL?,
+												   sourceApplication: options[UIApplicationOpenURLOptionsKey.sourceApplication] as? String,
+												   annotation: options[UIApplicationOpenURLOptionsKey.annotation]))!
+	}
+	
+	func sign(_ signIn: GIDSignIn!, didSignInFor user: GIDGoogleUser!, withError error: Error!) {
+		if let error = error{
+			print("sing error \(error.localizedDescription)")
+		}
+		if let user = user{
+			let idToken = user.authentication.idToken
+			let givenName = user.profile.givenName
+			let email = user.profile.email
+			
+			UserDefaults.standard.set(idToken, forKey: "googleToken")
+			UserDefaults.standard.set(givenName, forKey: "googleUserName")
+			UserDefaults.standard.set(email, forKey: "googleEmail")
+		}
+	}
+	
+	func sign(_ signIn: GIDSignIn!, didDisconnectWith user: GIDGoogleUser!, withError error: Error!) {
+		//Выход
+	}
 
 	
 	func removeFilesFromDirectory (tracksContents:[String]) {
@@ -170,16 +198,16 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
 	
 	func applicationDidBecomeActive(_ application: UIApplication) {
 		// Restart any tasks that were paused (or not yet started) while the application was inactive. If the application was previously in the background, optionally refresh the user interface.
-		if let rootController = UIApplication.shared.keyWindow?.rootViewController {
-			let navigationController = rootController as! UINavigationController
-			//получаем отображаемый в текущий момент контроллер, если это контроллер видео-слайдера - возобновляем воспроизведение видео.
-			if let startViewContr = navigationController.topViewController  as? StartVideoViewController {
-				DispatchQueue.main.asyncAfter(deadline: .now() + 1.0, execute: {
-					startViewContr.playVideoBackgroud()
-				})
-				
-			}
-		}
+//		if let rootController = UIApplication.shared.keyWindow?.rootViewController {
+//			let navigationController = rootController as! UINavigationController
+//			//получаем отображаемый в текущий момент контроллер, если это контроллер видео-слайдера - возобновляем воспроизведение видео.
+//			if let startViewContr = navigationController.topViewController  as? StartVideoViewController {
+//				DispatchQueue.main.asyncAfter(deadline: .now() + 1.0, execute: {
+//					startViewContr.playVideoBackgroud()
+//				})
+//
+//			}
+//		}
 	}
 	
 	func applicationWillTerminate(_ application: UIApplication) {

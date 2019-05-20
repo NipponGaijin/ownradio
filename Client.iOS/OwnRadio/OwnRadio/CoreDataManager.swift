@@ -261,7 +261,7 @@ class CoreDataManager {
 	}
 	
 	// получает трек с найбольшим кол-вом проигрываний
-	func getOldTrack (onlyListen: Bool) -> [SongObject?] {
+	func getOldTrack (onlyListen: Bool) -> [SongObject?]{
 		// устанавливаем сортировку по кол-ву поигрываний и по дате
 		let countSortDescriptor = NSSortDescriptor(key: "countPlay", ascending: false)
 		let dateSortDescriptor = NSSortDescriptor(key: "playingDate", ascending: true)
