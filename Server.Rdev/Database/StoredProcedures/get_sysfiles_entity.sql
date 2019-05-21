@@ -12,7 +12,6 @@ AS $BODY$
 	BEGIN
 		SELECT recid INTO trackentity FROM rdev___sysfiles WHERE entityid = CAST(trackid AS UUID);
 		sysfileid := CAST(trackentity AS UUID);
--- 		filebytes := filebody;
 	END
 $BODY$;
 
