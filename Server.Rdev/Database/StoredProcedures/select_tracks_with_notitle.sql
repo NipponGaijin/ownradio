@@ -22,9 +22,9 @@ or tracks.artist = ''
 or tracks.recname is null
 or tracks.artist is null
 and tracks.recid in (select entityid from rdev___sysfiles where length(body)>500)
-and tracks.isexist = 1)
+)
 order by tracks.reccreated desc
-limit 0;
+limit 1;
 	end
  $BODY$;
 
