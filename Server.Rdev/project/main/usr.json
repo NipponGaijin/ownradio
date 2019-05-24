@@ -1,0 +1,818 @@
+{
+	"version": "2019.05.20",
+	"settings": 
+	{
+		"mainMenu": {
+			"name": "mainMenu",
+			"style": "Vertical"
+		},
+		"gridView": {
+			"editing": "Popup"
+		},
+		"db": {
+			"provider": "Postgres"
+		},
+		"project": {
+			"title": "RDEV v2019.05.20 (ownRadio)"
+		},
+    "other": [
+      {
+        "name": "defaultDeviceId",
+        "value": "11111111-0000-0033-0000-000000000000"
+      },
+      {
+        "name": "apiaudiourl",
+        "value": "http://hub.mfc.ru:9090"
+      }
+     ]
+	},
+	"security": {
+		"appGroup": { "name": "ownRadio"},
+		"groups":[
+			{
+				"name": "Administrators",
+				"description": "Администраторы",
+				"parentGroup": "ownRadio"
+			}
+		],
+		"users": [
+			{
+				"name": "Administrator",
+				"description": "Администратор",
+				"login": "admin",
+				"password": "2128506",
+				"email": "",
+				"parentGroups": [
+					"Administrators"
+				]
+			}
+		],
+		"rules": [
+			{
+				"groups": [
+					"Administrators"
+				],
+				"objects": [
+					"mainMenu",
+					"devices",
+					"users",
+					"tracks",
+					"ratings",
+					"histories",
+					"ratios",
+					"downloadtracks",
+					"logs",
+					"downloadhistory",
+					"rdev___auth_groups",
+					"rdev___auth_groupuser",
+					"rdev___auth_users",
+					"rdev___auth_object_access",
+					"rdev___events_log",
+					"tracksMenu",
+					"actionItem_uploadaudiofile",
+					"rdev___sysfiles",
+					"rdev___shadow_tasks"
+				],
+				"access": {
+					"read": "true",
+					"write": "true",
+					"create": "true"
+				}
+			}
+		]
+	},
+	"menus": [
+    {
+      "name": "mainMenu",
+      "title": "Главное меню",
+      "hint": "Главное меню",
+      "typeMenuItem": "Submenu",
+      "submenuItems": [
+        {
+          "name": "registers",
+          "title": "ownRadio",
+          "typeMenuItem": "Submenu",
+          "submenuItems": [
+            {
+              "name": "TracksItem",
+              "title": "Треки",
+              "typeMenuItem": "Table",
+              "object": "Tracks"
+            },
+            {
+              "name": "DevicesItem",
+              "title": "Устройства",
+              "typeMenuItem": "Table",
+              "object": "Devices"
+            },
+            {
+              "name": "UsersItem",
+              "title": "Пользователи",
+              "typeMenuItem": "Table",
+              "object": "Users"
+            },
+            {
+              "name": "RatingsItem",
+              "title": "Рейтинг треков",
+              "typeMenuItem": "Table",
+              "object": "Ratings"
+            },
+            {
+              "name": "HistoriesItem",
+              "title": "История прослушивания треков",
+              "typeMenuItem": "Table",
+              "object": "Histories"
+            },
+            {
+              "name": "RatiosItem",
+              "title": "Коэффициенты схожести",
+              "typeMenuItem": "Table",
+              "object": "Ratios"
+            },
+            {
+              "name": "DownloadTracksItem",
+              "title": "Загруженные треки",
+              "typeMenuItem": "Table",
+              "object": "DownloadTracks"
+            },
+            {
+              "name": "LogsItem",
+              "title": "Логи",
+              "typeMenuItem": "Table",
+              "object": "Logs"
+            }
+          ]
+        },
+		{
+		     "name": "reportsMenu",
+		     "title": "Отчеты",
+		     "typeMenuItem": "Submenu",
+		     "submenuItems": [
+			     {
+				     "name": "reportItem",
+				     "title": "Отчет по экспертам",
+				     "typeMenuItem": "Report",
+				     "object": "own_radio_experts_stats"
+			     },
+			     {
+				     "name": "reportListenedItem",
+				     "title": "Отчет по загруженным трекам",
+				     "typeMenuItem": "Report",
+				     "object": "report_listened_tracks"
+			     },
+           {
+             "name": "reportUsersListenedItem",
+             "title": "Отчет по пользователям и прослушиваниям",
+             "typeMenuItem": "Report",
+             "object": "all_users_listened_tracks_report"
+           },
+           {
+             "name": "reportUserWithDeviceChoise",
+             "title": "Отчет по пользователям и их устройствам",
+             "typeMenuItem": "Report",
+             "object": "report_with_device_choise"
+           }
+		    ]
+		  }
+        ]
+    },
+	{
+		"name": "tracksMenu",
+		"title": "Меню треков",
+		"hint": "Меню треков",
+		"typeMenuItem": "Submenu",
+		"submenuItems": [
+			{
+				"name": "actionItem_uploadaudiofile",
+				"title": "Загрузить трек",
+				"typeMenuItem": "Method",
+				"object": "uploadaudiofile"
+			}
+		]
+	}
+	],
+	"types": [
+		{
+			"name": "UserID",
+			"type": "SysRelation",
+			"displayName": "ID пользователя",
+			"relation": {
+				"table": "Users",
+				"field": "RecID",
+				"displayField": "RecID"
+			}
+		},
+		{
+			"name": "DeviceID",
+			"type": "SysRelation",
+			"displayName": "ID устройства",
+			"relation": {
+				"table": "Devices",
+				"field": "RecID",
+				"displayField": "RecID"
+			}
+		},
+		{
+			"name": "HistoryID",
+			"type": "SysRelation",
+			"displayName": "ID истории",
+			"relation": {
+				"table": "Histories",
+				"field": "RecID",
+				"displayField": "RecID"
+			}
+		},
+		{
+			"name": "TrackID",
+			"type": "SysRelation",
+			"displayName": "ID трека",
+			"relation": {
+				"table": "Tracks",
+				"field": "RecID",
+				"displayField": "RecID"
+			}
+		},
+		{
+			"name": "FileID",
+			"type": "SysFile",
+			"multiple": false,
+			"fileMask": "*.mp3",
+			"displayName": "Трек"
+		},
+		{
+			"name": "Experience",
+			"type": "SysInt",
+			"displayName": "Экспертная группа"
+		},
+		{
+			"name": "idtoken",
+			"type": "SysString"
+		},
+		{
+			"name": "email",
+			"type": "SysString"
+		},
+		{
+			"name": "LocalDevicePathUpload",
+			"type": "SysString",
+			"displayName": "Полный путь трека, с которого происходил Upload трека"
+		},
+		{
+			"name": "Path",
+			"type": "SysString",
+			"displayName": "Полный путь хранения трека на сервере"
+		},
+		{
+			"name": "Artist",
+			"type": "SysString",
+			"displayName": "Исполнитель"
+		},
+		{
+		  "name": "outerguid",
+		  "type": "SysString",
+		  "displayName": "Внешний guid"
+		},
+		{
+		  "name": "outersource",
+		  "type": "SysString",
+		  "displayName": "Внешний источник"
+		},
+		{
+			"name": "IsCensorial",
+			"type": "SysBoolean",
+			"displayName": "Трек цензурный"
+		},
+		{
+			"name": "IsCorrect",
+			"type": "SysBoolean",
+			"displayName": "Трек корректный"
+		},
+		{
+			"name": "IsFilledInfo",
+			"type": "SysBoolean",
+			"displayName": "Информация заполнена"
+		},
+		{
+			"name": "IsExist",
+			"type": "SysBoolean",
+			"displayName": "Трек существует"
+		},
+		{
+			"name": "Length",
+			"type": "SysInt",
+			"displayName": "Длина трека, с"
+		},
+		{
+			"name": "Size",
+			"type": "SysInt",
+			"displayName": "Размер файла, Кб"
+		},
+		{
+			"name": "RatingSum",
+			"type": "SysNumber",
+			"displayName": "Рейтинг трека"
+		},
+		{
+			"name": "LastListen",
+			"type": "SysTimeDate",
+			"displayName": "Дата последнего прослушивания"
+		},
+		{
+			"name": "IsListen",
+			"type": "SysInt",
+			"displayName": "Трек дослушан"
+		},
+		{
+			"name": "CountSend",
+			"type": "SysInt",
+			"displayName": "Количество отправок строки истории"
+		},
+		{
+			"name": "Ratio",
+			"type": "SysNumber",
+			"displayName": "Коэффициент схожести интересов"
+		},
+		{
+			"name": "MethodID",
+			"type": "SysInt",
+			"displayName": "Метод выдачи трека"
+		},
+		{
+			"name": "TxtRecommendInfo",
+			"type": "SysString",
+			"displayName": "Информация о выдаче трека"
+		},
+		{
+			"name": "LogText",
+			"type": "SysString",
+			"displayName": "Запрос"
+		},
+		{
+			"name": "Response",
+			"type": "SysString",
+			"displayName": "Ответ"
+		},
+		{
+			"name": "Chapter",
+			"type": "SysInt",
+			"displayName": "Глава"
+		},
+		{
+			"name": "MediaType",
+			"type": "SysString",
+			"displayName": "Тип медиа"
+		},
+		{
+			"name": "OwnerRecid",
+			"type": "SysString",
+			"displayName": "Ссылка на аудиокнигу"
+		},
+		{
+			"name": "Urn",
+			"type": "SysString",
+			"displayName": "Urn адрес аудиофайла"
+		},
+		{
+			"name": "OuterKeyType",
+			"type": "SysString",
+			"displayName": "Ключ от zaycev"
+		}
+	],
+	"shadowTasks": [
+		{
+		  "name": "trackdownload",
+		  "description": "Фоновая задача загрузки трэков с Zaycev.net",
+		  "typeCode": "js",
+		  "repeatAfterSec": 6000,
+		  "enabled": false
+		},
+		{
+			"name": "updatetrackinfo",
+			"description": "Фоновая задача обновления информации о треках с некорректной инфой",
+			"typeCode": "js",
+			"repeatAfterSec": 6000,
+			"enabled": true
+		},
+		{
+		  "name": "parsezaycev",
+		  "description": "Фоновая задача загрузки трэков с Zaycev.net",
+		  "typeCode": "js",
+		  "repeatAfterSec": 7200,
+		  "enabled": true
+		},
+	],
+	"tables": [
+		{"name": "Devices",
+			"displayName": "Устройства",
+			"description": "Список устройств пользователей",
+			"fields": [{
+				"name": "recid",
+				"visible": true
+			},
+			{
+				"name": "UserID",
+				"type": "UserID"
+			}],
+			"methods": [
+				{
+					"name": "regnewdevice",
+					"displayName": "Зарегистрировать устройство",
+					"fields":[
+						{
+							"name": "deviceid",
+							"type": "DeviceID"
+						}, 
+						{
+							"name": "recname",
+							"type": "SysString"
+						}
+					],
+					"isEnabled": "function() { return true; }"
+				},
+				{
+					"name": "showdeviceinfo",
+					"displayName": "Показать историю для устройства",
+					"fields": [
+						{
+							"name": "deviceid",
+							"type": "DeviceID"
+						}
+					],
+					"isEnabled": "function() { return true; }"
+				},
+				{
+					"name": "showtrackinfobydevice",
+					"displayName": "Показать историю треков для устройства",
+					"isEnabled": "function() { return true; }"
+				}
+			]
+		},
+		{"name": "Users",
+			"displayName": "Пользователи",
+			"description": "Список пользователей",
+			"fields": [{
+				"name": "recid",
+				"visible": true
+			},
+			{
+				"name": "Experience",
+				"type": "Experience"
+			},
+			{
+				"name": "idtoken",
+				"type": "idtoken"
+			},
+			{
+				"name": "email",
+				"type": "email"
+			},
+			{
+				"name": "reccreated",
+				"visible": true
+			},
+			{
+				"name": "recupdated",
+				"visible": true
+			}],
+			"fieldGroups": {
+				"autoList": {
+					"displayName": "",
+					"fields": [
+						"recid",
+						"recname",
+						"experience",
+						"reccreated",
+						"recupdated"
+					]
+				},
+				"customGroups": [
+					{
+						"groupName": "maingroup",
+						"displayName": "",
+						"fields": ["recid", "recname", "experience", "reccreated", "recupdated"]
+					}
+				]
+			}
+		},
+		{"name": "tracks",
+			"displayName": "Треки",
+			"description": "Список треков",
+			"fields": [{
+				"name": "Artist",
+				"type": "Artist"
+			},
+			{
+				"name": "LocalDevicePathUpload",
+				"type": "LocalDevicePathUpload"
+			},
+			{
+				"name": "Path",
+				"type": "Path"
+			},
+			{
+				"name": "outerguid",
+				"type": "outerguid"
+			},
+			{
+				"name": "outersource",
+				"type": "outersource"
+			},
+			{
+				"name": "DeviceID",
+				"type": "DeviceID"
+			},
+			{
+				"name": "UploadUserid",
+				"type": "UserID",
+				"displayName": "ID пользователя, загрузившего трек"
+			},
+			{
+				"name": "IsCensorial",
+				"type": "IsCensorial"
+			},
+			{
+				"name": "IsCorrect",
+				"type": "IsCorrect"
+			},
+			{
+				"name": "IsFilledInfo",
+				"type": "IsFilledInfo"
+			},
+			{
+				"name": "Length",
+				"type": "Length"
+			},
+			{
+				"name": "Size",
+				"type": "Size"
+			},
+			{
+				"name": "FileID",
+				"type": "FileID"
+			},
+			{
+				"name": "Chapter",
+				"type": "Chapter"
+			},
+			{
+				"name": "MediaType",
+				"type": "MediaType"
+			},
+			{
+				"name": "OwnerRecid",
+				"type": "OwnerRecid"
+			},
+			{
+				"name": "File",
+				"displayName": "Локальное имя файла",
+				"type": "SysFile"
+			},
+			{
+				"name": "OuterUniqueKey",
+				"type": "OuterKeyType"
+			}],
+			"menus": ["tracksMenu"],
+			"methods": [
+				{
+					"name":"uploadaudiofile",
+					"displayName": "Загрузить аудиофайл",
+					"fields":[
+						{
+							"name": "trackid",
+							"type": "TrackID"
+						}, 
+						{
+							"name": "recname",
+							"type": "SysString"
+						}, 
+						{
+							"name": "mediatype",
+							"type": "MediaType"
+						}, 
+						{
+							"name": "recdescription",
+							"type": "SysString"
+						}
+					],
+					"isEnabled": "function() { return true; }"
+				},
+				{
+					"name": "nexttrack",
+					"displayName": "Следующий трек",
+					"fields": [
+						{
+							"name": "deviceid",
+							"type": "DeviceID"
+						}
+					],
+					"isEnabled": "function() { return true; }"
+				},
+				{
+					"name": "gettrack",
+					"displayName": "Воспроизвести",
+					"isEnabled": "function() { return true; }"
+				},
+				{
+					"name": "showtrackinfo",
+					"displayName": "Показать информацию о треке",
+					"fields": [
+						{
+							"name": "trackid",
+							"type": "TrackID"
+						}
+					],
+					"isEnabled": "function() { return true; }"
+				},
+				{
+					"name": "showhistoryinfo",
+					"displayName": "Показать историю треков",
+					"isEnabled": "function() { return true; }"
+				}
+			]
+		},
+		{"name": "Ratings",
+			"displayName": "Рейтинг треков",
+			"description": "Рейтинг прослушивания треков пользователями",
+			"fields": [{
+				"name": "TrackID",
+				"type": "TrackID"
+			},
+			{
+				"name": "UserID",
+				"type": "UserID"
+			},
+			{
+				"name": "RatingSum",
+				"type": "RatingSum"
+			},
+			{
+				"name": "LastListen",
+				"type": "LastListen"
+			}]
+		},
+		{"name": "Histories",
+			"displayName": "История прослушивания",
+			"description": "История прослушивания треков пользователями",
+			"fields": [{
+				"name": "TrackID",
+				"type": "TrackID"
+			},
+			{
+				"name": "DeviceID",
+				"type": "DeviceID"
+			},
+			{
+				"name": "UserID",
+				"type": "UserID"
+			},
+			{
+				"name": "IsListen",
+				"type": "IsListen"
+			},
+			{
+				"name": "LastListen",
+				"type": "LastListen"
+			},
+			{
+				"name": "CountSend",
+				"type": "CountSend"
+			}],
+			"methods":[
+				{
+					"name": "savehistory",
+					"displayName": "Сохранить историю",
+					"fields":[
+						{
+							"name": "trackid",
+							"type": "TrackID"
+						},
+						{
+							"name": "deviceid",
+							"type": "DeviceID"
+						},
+						{
+							"name": "historyid",
+							"type": "HistoryID"
+						},
+						{
+							"name": "userid",
+							"type": "UserID"
+						},
+						{
+							"name": "lastlisten",
+							"type": "LastListen"
+						},
+						{
+							"name": "islisten",
+							"type": "IsListen"
+						}
+					],
+					"isEnabled": "function() { return true; }"
+				},
+				{
+					"name": "showhistoryinfo",
+					"displayName": "Показать информацию об истории",
+					"fields": [
+						{
+							"name": "historyid",
+							"type": "HistoryID"
+						}
+					],
+					"isEnabled": "function() { return true; }"
+				}
+			]
+		},
+		{"name": "Ratios",
+			"displayName": "Коэффициенты схожести",
+			"description": "Коэффициенты схожести интересов пользователей",
+			"fields": [{
+				"name": "UserID1",
+				"type": "UserID",
+				"displayName": "Пользователь 1"
+			},
+			{
+				"name": "UserID2",
+				"type": "UserID",
+				"displayName": "Пользователь 2"
+			},
+			{
+				"name": "Ratio",
+				"type": "Ratio"
+			}]
+		},
+		{"name": "DownloadTracks",
+			"displayName": "Выданые треки",
+			"description": "Выданные устройствам треки",
+			"fields": [{
+				"name": "TrackID",
+				"type": "TrackID"
+			},
+			{
+				"name": "DeviceID",
+				"type": "DeviceID"
+			},
+			{
+				"name": "MethodID",
+				"type": "MethodID"
+			},
+			{
+				"name": "TxtRecommendInfo",
+				"type": "TxtRecommendInfo"
+			},
+			{
+				"name": "UserRecommendID",
+				"type": "UserID",
+				"displayName": "Пользователь-рекомендатель"
+			},
+			{
+				"name": "UserRecommend",
+				"type": "UserID",
+				"displayName": "Пользователь-рекомендатель"
+			},
+			{
+				"name": "UserID",
+				"type": "UserID"
+			}]
+		},
+		{"name": "Logs",
+			"displayName": "Логи",
+			"description": "Логи устройств",
+			"fields": [{
+				"name": "DeviceID",
+				"type": "DeviceID"
+			},
+			{
+				"name": "LogText",
+				"type": "LogText"
+			},
+			{
+				"name": "Response",
+				"type": "Response"
+			}]
+		},
+		{"name": "DownloadHistory",
+			"displayName": "История загрузок",
+			"description": "История загруженных медиа файлов",
+			"fields":[{
+				"name": "Url",
+				"type": "SysString"
+			},
+			{
+				"name": "IsFull",
+				"type": "SysInt"
+			},
+			{
+				"name": "InProcessing",
+				"type": "SysInt"
+			},
+			{
+				"name": "MediaType",
+				"type" : "SysString"
+			},
+			{
+				"name": "Path",
+				"type": "SysString"
+			}]
+		}
+	]
+}
