@@ -53,6 +53,4 @@ public interface APIService {
 	@Multipart
 	@POST("v4/logs/{deviceid}")
 	Call<Map<String, String>> sendLogFile(@Path("deviceid") String deviceId, @Part MultipartBody.Part file);
-
-
 }

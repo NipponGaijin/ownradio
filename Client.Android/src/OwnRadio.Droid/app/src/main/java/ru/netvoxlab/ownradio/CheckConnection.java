@@ -11,7 +11,49 @@ import android.net.NetworkInfo;
  */
 
 public class CheckConnection {
-	
+
+	/**
+	 * Get the network info
+	 * @param context
+	 * @return
+	 */
+	public static NetworkInfo getNetworkInfo(Context context){
+		ConnectivityManager cm = (ConnectivityManager) context.getSystemService(Context.CONNECTIVITY_SERVICE);
+		return cm.getActiveNetworkInfo();
+	}
+
+	/**
+	 * Check if there is any connectivity
+	 * @param context
+	 * @return
+	 */
+	public static boolean isConnected(Context context){
+		NetworkInfo info = CheckConnection.getNetworkInfo(context);
+		return (info != null && info.isConnected());
+	}
+
+
+	/**
+	 * Check if there is any connectivity to a Wifi network
+	 * @param context
+	 * @return
+	 */
+	public static boolean isConnectedWifi(Context context){
+		NetworkInfo info = CheckConnection.getNetworkInfo(context);
+		return (info != null && info.isConnected() && info.getType() == ConnectivityManager.TYPE_WIFI);
+	}
+
+	/**
+	 * Check if there is any connectivity to a mobile network
+	 * @param context
+	 * @return
+	 */
+	public static boolean isConnectedMobile(Context context){
+		NetworkInfo info = CheckConnection.getNetworkInfo(context);
+		return (info != null && info.isConnected() && info.getType() == ConnectivityManager.TYPE_MOBILE);
+	}
+
+
 	public boolean CheckInetConnection(Context mCcontext) {
 		ConnectivityManager connectivityManager = (ConnectivityManager) mCcontext.getSystemService(mCcontext.CONNECTIVITY_SERVICE);
 		NetworkInfo inetInfo = connectivityManager.getActiveNetworkInfo();
@@ -22,4 +64,6 @@ public class CheckConnection {
 		}
 		return true;
 	}
+
+
 }

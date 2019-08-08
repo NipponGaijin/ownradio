@@ -64,7 +64,7 @@ public class TrackToCache {
 		TrackDataAccess trackInfo = new TrackDataAccess(mContext);
 		//int numAttempts = 0;
 		int numTryes = 0;
-		String optimizeStatus = prefManager.getPrefItem(OPTIMIZE_STATUS, OPTIMIZE_ENABLED);
+
 		Boolean res = false;
 
 		if (!new CheckConnection().CheckInetConnection(mContext))
@@ -94,7 +94,7 @@ public class TrackToCache {
 //						final Map<String, String> authMap = rdevApiCalls.GetAuthToken();
 //						String token = authMap.get("token");
 
-						String directorId = "11111111-0000-0888-0000-000000000000"; //Тестовый id (директорский)
+//						String directorId = "11111111-0000-0888-0000-000000000000"; //Тестовый id (директорский)
 
 						final Map<String, Map<String, String>[]> rdevTrackMap = rdevApiCalls.GetNextTrack(deviceId); //Сменить на deviceid
 						Map<String, String> trackMap = rdevTrackMap.get("result")[0];
@@ -123,11 +123,16 @@ public class TrackToCache {
 
 
 						int cachedTrackCount = trackInfo.GetExistTracksCount();
-						if(optimizeStatus.equals(OPTIMIZE_ENABLED) && cachedTrackCount <= 10){
+						Boolean conn = CheckConnection.isConnectedMobile(mContext);
+						String optimizeStatus = prefManager.getPrefItem(OPTIMIZE_STATUS, OPTIMIZE_ENABLED);
+						if(optimizeStatus.equals(OPTIMIZE_ENABLED) && cachedTrackCount <= 10 && CheckConnection.isConnectedMobile(mContext)){
 							numTryes = 2;
 						}
-						else if(optimizeStatus.equals(OPTIMIZE_ENABLED) && cachedTrackCount <= 50){
+						else if(optimizeStatus.equals(OPTIMIZE_ENABLED) && cachedTrackCount <= 50 && CheckConnection.isConnectedMobile(mContext)){
 							numTryes = 1;
+						}
+						else if(optimizeStatus.equals(OPTIMIZE_ENABLED) && cachedTrackCount > 50 && CheckConnection.isConnectedMobile(mContext)){
+							numTryes = 0;
 						}
 						else{
 							numTryes = 10;
@@ -393,8 +398,13 @@ public class TrackToCache {
 				downloaderIntent.setAction(ACTION_GETNEXTTRACK);
 				downloaderIntent.putExtra(EXTRA_DEVICEID, deviceId);
 				downloaderIntent.putExtra(EXTRA_COUNT, 3);
-				mContext.getApplicationContext().startService(downloaderIntent);
-				
+
+				if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+					mContext.getApplicationContext().startForegroundService(downloaderIntent);
+				}else {
+					mContext.getApplicationContext().startService(downloaderIntent);
+				}
+
 				Thread.sleep(60000);
 //
 //				final Map<String, String> trackMap = apiCalls.GetNextTrackID(deviceId);

@@ -14,6 +14,7 @@ import android.content.IntentFilter;
 import android.content.ServiceConnection;
 import android.content.SharedPreferences;
 import android.content.pm.PackageManager;
+import android.graphics.drawable.ColorDrawable;
 import android.net.Uri;
 import android.os.Build;
 import android.os.Bundle;
@@ -25,6 +26,8 @@ import android.os.RemoteException;
 import android.os.SystemClock;
 import android.preference.PreferenceActivity;
 import android.preference.PreferenceManager;
+import android.support.annotation.RequiresApi;
+import android.support.constraint.ConstraintLayout;
 import android.support.design.widget.NavigationView;
 import android.support.v4.content.ContextCompat;
 import android.support.v4.media.session.PlaybackStateCompat;
@@ -66,6 +69,7 @@ import java.io.File;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.io.Serializable;
+import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
@@ -89,7 +93,7 @@ import static ru.netvoxlab.ownradio.Constants.IS_TIMER_WORK;
 import static ru.netvoxlab.ownradio.RequestAPIService.EXTRA_USERID;
 
 public class MainActivity extends AppCompatActivity implements NavigationView.OnNavigationItemSelectedListener, View.OnTouchListener, NetworkStateReceiver.NetworkStateReceiverListener {
-	
+
 	private APICalls apiCalls;
 	private RdevApiCalls rdevApiCalls;
 
@@ -134,6 +138,7 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
 	ViewStub viewStubRate;
 	RatingBar ratingBar;
 	ImageButton btnRateOK;
+	ImageButton btnRateApp;
 	Button btnRateCancel;
 	View rateRequestLayout;
 	TextView rateRequestMessage;
@@ -159,6 +164,9 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
 	public static final String ActionShowRateRequest = "ru.netvoxlab.ownradio.SHOW_RATING_REQUEST";
 	public static final String ActionNotFoundTrack = "ru.netvoxlab.ownradio.NOT_FOUND_TRACK";
 	public static final String ActionAlarm = "ru.netvoxlab.ownradio.ACTION_ALARM";
+	public static final String ActionCheckListensCount = "ru.netvoxlab.ownradio.CHECK_LISTENS_COUNT";
+	public static final String ActionPopupClose = "ru.netvoxlab.ownradio.CLOSE_POPUP";
+	public static final String ActionPopupSetForeground = "ru.netwoxlab.SET_FOREGROUND";
 
 
 
@@ -328,6 +336,9 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
 		filter.addAction(ACTION_UPDATE_FILLCACHE_PROGRESS);
 		filter.addAction(ActionNotFoundTrack);
 		filter.addAction(ActionAlarm);
+		filter.addAction(ActionCheckListensCount);
+		filter.addAction(ActionPopupClose);
+		filter.addAction(ActionPopupSetForeground);
 		registerReceiver(myReceiver, filter);
 
 		IntentFilter headsetFilters = new IntentFilter();
@@ -372,13 +383,15 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
 //         полная очистка настроек
 //         sp.edit().clear().commit();
 		layoutDevelopersInfo = findViewById(R.id.devInfo);//linearLayoutDevelopersInfo
-		
+
+		final SharedPreferences.Editor editor = sp.edit();
 		btnPlayPause = findViewById(R.id.btnPlayPause);
 		btnPlayPause.setOnClickListener(new View.OnClickListener() {
 			@Override
 			public void onClick(View view) {
 				if (binder.GetMediaPlayerService().player != null && binder.GetMediaPlayerService().GetMediaPlayerState() == PlaybackStateCompat.STATE_PLAYING) {
 					binder.GetMediaPlayerService().Pause();
+
 				} else {
 					binder.GetMediaPlayerService().Play();
 					MediaPlayerService.playbackWithHSisInterrupted = false;
@@ -464,6 +477,27 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
 				});
 			}
 		});
+
+		//Кнопка оценки приложения(активна, когда прослушиваний больше 100)
+		btnRateApp = findViewById(R.id.rateAppBtn);
+		btnRateApp.setOnClickListener(new View.OnClickListener() {
+
+			@Override
+			public void onClick(View v) {
+				ConstraintLayout layout = (ConstraintLayout) findViewById(R.id.main_layout);
+				if(android.os.Build.VERSION.SDK_INT >= 23) {
+					layout.setForeground(new ColorDrawable(ContextCompat.getColor(getApplicationContext(), R.color.rate_popup_color)));
+				}
+				startActivity(new Intent(MainActivity.this,RatePopup.class));
+
+
+
+				btnRateApp.setEnabled(false);
+				btnRateApp.setVisibility(View.GONE);
+			}
+		});
+		btnRateApp.setEnabled(false);
+		btnRateApp.setVisibility(View.GONE);
 		
 		txtFillCacheProgress = findViewById(R.id.fill_cache_progress);
 		
@@ -838,11 +872,15 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
 										Log.d(TAG, "curVolume = " + curVolume + " seconds = " + curSeconds);
 									}
 									
-									int curHours = curSeconds / 3600;
-									curSeconds -= curHours * 3600;
-									int curMin = curSeconds / 60;
-									curSeconds -= curMin * 60;
-									String curTime = (curHours != 0 ? (curHours + ":") : "") + (curMin != 0 ? (curMin + ":") : "") + (curSeconds != 0 ? (curSeconds) : "");
+//									int curHours = curSeconds / 3600;
+//									curSeconds -= curHours * 3600;
+//									int curMin = curSeconds / 60;
+//									curSeconds -= curMin * 60;
+									//String curTime = (curHours != 0 ? (curHours + ":") : "") + (curMin != 0 ? (curMin + ":") : "") + (curSeconds != 0 ? (curSeconds) : "");
+
+                                    SimpleDateFormat df = new SimpleDateFormat("m:ss");
+                                    String curTime = df.format(curSeconds * 1000);
+
 									int nextSeconds = (duration - binder.GetMediaPlayerService().GetPosition()) / 1000;
 									
 									if (nextSeconds < 10 && curVolume >= 0f) {
@@ -851,14 +889,16 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
 										Log.d(TAG, "curVolume = " + curVolume + " seconds = " + nextSeconds);
 									}
 									
-									int nextHours = nextSeconds / 3600;
-									nextSeconds -= nextHours * 3600;
-									int nextMin = nextSeconds / 60;
-									nextSeconds -= nextMin * 60;
-									String nextTime = "-" + (nextHours != 0 ? (nextHours + ":") : "") + (nextMin != 0 ? (nextMin + ":") : "") + (nextSeconds != 0 ? (nextSeconds) : "");
-									
+//									int nextHours = nextSeconds / 3600;
+//									nextSeconds -= nextHours * 3600;
+//									int nextMin = nextSeconds / 60;
+//									nextSeconds -= nextMin * 60;
+									//String nextTime = "-" + (nextHours != 0 ? (nextHours + ":") : "") + (nextMin != 0 ? (nextMin + ":") : "") + (nextSeconds != 0 ? (nextSeconds) : "");
+
+                                    String nextTime = df.format(nextSeconds * 1000);
+
 									txtProgressLeft.setText(curTime);
-									txtProgressRight.setText(nextTime);
+									txtProgressRight.setText("-" + nextTime);
 								}
 							});
 						}
@@ -936,7 +976,27 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
 			if (intent.getAction().equals(ActionAlarm)) {
 				//startPlayAlarm();
 			}
-			
+
+			if (intent.getAction() == ActionCheckListensCount) {
+				int listensCount = sp.getInt("rateListensCount", 0);
+				Boolean isRated = sp.getBoolean("appIsRated", false);
+				if (listensCount >= 100 && !isRated) {
+					btnRateApp.setEnabled(true);
+					btnRateApp.setVisibility(View.VISIBLE);
+				}
+			}
+			if (intent.getAction() == ActionPopupClose){
+				ConstraintLayout layout = (ConstraintLayout) findViewById(R.id.main_layout);
+				if(android.os.Build.VERSION.SDK_INT >= 23) {
+					layout.setForeground(new ColorDrawable(ContextCompat.getColor(getApplicationContext(), R.color.transparent)));
+				}
+			}
+			if (intent.getAction() == ActionPopupSetForeground){
+                ConstraintLayout layout = (ConstraintLayout) findViewById(R.id.main_layout);
+                if(android.os.Build.VERSION.SDK_INT >= 23) {
+                    layout.setForeground(new ColorDrawable(ContextCompat.getColor(getApplicationContext(), R.color.rate_popup_color)));
+                }
+            }
 		}
 	};
 	
@@ -1013,8 +1073,10 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
 			try {
 				String info = getApplicationContext().getPackageManager().getPackageInfo(getApplicationContext().getPackageName(), PackageManager.GET_META_DATA).versionName;
 				if (!info.equals(sp.getString("version", ""))) {
-					sp.edit().putString(version, info).commit();
-					sp.edit().putString(NumListenedTracks, "0").commit();
+					sp.edit().putString("version", info).commit();
+					sp.edit().putInt("rateListensCount", 0).commit();
+					sp.edit().putBoolean("appIsRated", false).commit();
+
 				}
 				textVersionName.setText("Version name: " + info);
 			} catch (PackageManager.NameNotFoundException e) {
@@ -1039,7 +1101,7 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
 					//UserId = apiCalls.GetUserId(DeviceId);
 
 
-					UserId = rdevApiCalls.GetDeviceInfo(DeviceId);
+					UserId = rdevApiCalls.GetDeviceInfo(DeviceId).get("OK").getResult().get("userid");
 					sp.edit().putString("DeviceID", DeviceId).commit();
 					sp.edit().putString("UserID", UserId);
 					sp.edit().putString("UserName", UserName);
@@ -1050,7 +1112,7 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
 				} else {
 					UserId = sp.getString("UserID", "");
 					if (UserId.isEmpty()) {
-						UserId = rdevApiCalls.GetDeviceInfo(DeviceId);
+						UserId = rdevApiCalls.GetDeviceInfo(DeviceId).get("OK").getResult().get("userid");
 						sp.edit().putString("UserID", UserId).commit();
 
 						downloaderIntent.putExtra(EXTRA_USERID, UserId);
@@ -1359,8 +1421,19 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
 						txtTrackArtist.setText(binder.GetMediaPlayerService().track.getAsString("artist"));
 						if (progressBar == null)
 							progressBar = findViewById(R.id.progressBar);
-						progressBar.setMax(binder.GetMediaPlayerService().track.getAsInteger("length") * 1000);
-						progressBar.setProgress(binder.GetMediaPlayerService().startPosition);
+						int trackLength = binder.GetMediaPlayerService().track.getAsInteger("length") * 1000;
+						progressBar.setMax(trackLength);
+
+						int currentPosition = prefManager.getPrefItemInt("LastPosition", 0);
+
+						progressBar.setProgress(currentPosition);
+						SimpleDateFormat df = new SimpleDateFormat("m:ss");
+						String curTime = df.format(currentPosition);
+						txtProgressLeft.setText(curTime);
+
+						int nextSeconds = (trackLength - currentPosition);
+						String nextTime = df.format(nextSeconds);
+						txtProgressRight.setText("-" + nextTime);
 					}
 				}
 			}

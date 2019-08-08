@@ -35,8 +35,10 @@ public class RdevGetNextTrack extends AsyncTask<String, Void, Map<String, Map<St
     @Override
     protected Map<String, Map<String, String>[]> doInBackground(String... strings) {
         try{
-            NexttrackFields bodyFields = new NexttrackFields("", strings[0]);
+            Integer ratio = sp.getInt("tracksRatio", 100);
+            NexttrackFields bodyFields = new NexttrackFields("", strings[0], ratio);
             NextTrackBody body = new NextTrackBody(bodyFields);
+
             String bodyJson = new Gson().toJson(body);
             Log.d("Body", bodyJson);
             String token = sp.getString("authToken", "");
@@ -59,12 +61,14 @@ public class RdevGetNextTrack extends AsyncTask<String, Void, Map<String, Map<St
             }
             else {
                 new Utilites().SendInformationTxt(mContext, "RdevGetNextTrack: Error with response code: " + response.code());
+                int code = response.code();
                 Log.d("GetTrackFail", String.valueOf(response.code()));
                 Log.d("GetTrackFail", response.message());
                 return null;
             }
         }catch (Exception ex){
             Log.d("RdevGetNextTrack", ex.getLocalizedMessage());
+            new Utilites().SendInformationTxt(mContext, "RdevGetNextTrack: " + ex.getLocalizedMessage());
             return null;
         }
     }
