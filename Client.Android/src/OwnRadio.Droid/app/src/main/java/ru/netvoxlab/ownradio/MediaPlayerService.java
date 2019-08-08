@@ -44,11 +44,16 @@ import java.util.Map;
 import java.util.TimeZone;
 import java.util.concurrent.ExecutionException;
 
+import ru.netvoxlab.ownradio.rdevapi.RdevApiCalls;
+import ru.netvoxlab.ownradio.rdevapi.RdevGetTrack;
 import ru.netvoxlab.ownradio.utils.ResourceHelper;
 
 import static android.app.PendingIntent.getActivity;
 import static ru.netvoxlab.ownradio.Constants.CURRENT_TRACK_ARTIST;
 import static ru.netvoxlab.ownradio.Constants.CURRENT_TRACK_TITLE;
+import static ru.netvoxlab.ownradio.Constants.OPTIMIZE_DISABLED;
+import static ru.netvoxlab.ownradio.Constants.OPTIMIZE_ENABLED;
+import static ru.netvoxlab.ownradio.Constants.OPTIMIZE_STATUS;
 import static ru.netvoxlab.ownradio.MainActivity.ActionButtonImgUpdate;
 import static ru.netvoxlab.ownradio.MainActivity.ActionNotFoundTrack;
 import static ru.netvoxlab.ownradio.MainActivity.ActionProgressBarFirstTracksLoad;
@@ -307,7 +312,7 @@ public class MediaPlayerService extends Service implements MediaPlayer.OnComplet
 							player.release();
 							player = null;
 						}
-						new APICalls(getApplicationContext()).SetIsCorrect(DeviceID, track.getAsString("id"), 0);
+						//new APICalls(getApplicationContext()).SetIsCorrect(DeviceID, track.getAsString("id"), 0);
 						new TrackToCache(getApplicationContext()).DeleteTrackFromCache(track);
 						utilites.SendInformationTxt(getApplicationContext(), "Битый трек удален и помечен");
 						PlayNext();
@@ -356,11 +361,12 @@ public class MediaPlayerService extends Service implements MediaPlayer.OnComplet
 		}
 		if (!trackDataAccess.CheckEnoughTimeFromStartPlaying(track.getAsString("id"))) {
 			new TrackToCache(getApplicationContext()).DeleteTrackFromCache(track);
-			if (GetDuration() < minTrackDuration)
-				new APICalls(getApplicationContext()).SetIsCorrect(DeviceID, track.getAsString("id"), 0);
-			else
-				new APICalls(getApplicationContext()).SetIsCorrect(DeviceID, track.getAsString("id"), 2);
-			
+			if (GetDuration() < minTrackDuration) {
+//				new APICalls(getApplicationContext()).SetIsCorrect(DeviceID, track.getAsString("id"), 0);
+			}
+			else {
+//				new APICalls(getApplicationContext()).SetIsCorrect(DeviceID, track.getAsString("id"), 2);
+			}
 			try {
 				utilites.SendInformationTxt(getApplicationContext(), "track id: " + track.get("id") + ", \n track duration (server): " + track.get("length") + ", \n track duration (player): " + GetDuration());
 			} catch (Exception ex) {
@@ -669,10 +675,22 @@ public class MediaPlayerService extends Service implements MediaPlayer.OnComplet
 	
 	
 	public boolean DownloadFile(String id) {
-		boolean isDownload = false;
+		Boolean isDownload = false;
+		TrackDataAccess trackInfo = new TrackDataAccess(getApplicationContext());
 		try {
 			Map<String, String> obj = createMap(id);
-			isDownload = new DownloadTracks(getApplicationContext()).execute(obj).get();
+			String optimizeStatus = prefManager.getPrefItem(OPTIMIZE_STATUS, OPTIMIZE_ENABLED);
+			int cachedTrackCount = trackInfo.GetExistTracksCount();
+			if(optimizeStatus.equals(OPTIMIZE_ENABLED) && cachedTrackCount > 50){
+				return isDownload;
+			}else{
+				isDownload = new RdevGetTrack(getApplicationContext()).execute(obj).get();
+				if(isDownload == null){
+					RdevApiCalls rdevApiCalls = new RdevApiCalls(getApplicationContext());
+					rdevApiCalls.GetAuthToken();
+					DownloadFile(id);
+				}
+			}
 		} catch (InterruptedException e) {
 			e.printStackTrace();
 		} catch (ExecutionException e) {
