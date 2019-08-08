@@ -1,0 +1,28 @@
+---
+# ----------------------------------------
+# проектный файл для проекта "ownradio" 
+# ----------------------------------------
+project:
+  start: main/usr.json  # файл - с которого можно начать чтение, в нем могут быть ссылки на другие файлы
+
+  name: ownradio  # уникальное имя проекта 
+
+  files:          # список файлов проекта - массив строк
+  - main:         # каждый элемент массива - это подпапка в каталоге проекта на сервере. Например папка /main
+    - usr.json
+  - scripts:      # подкаталог со скриптами /scripts
+    - ownRadioMethods.js
+    - trackdownloader.js
+    - updatetrackinfo.js
+    - parsezaycev.js
+  - images:       # подкаталог с изображениями /images
+    - banner.png
+    - basic.png
+    - logo.png
+    - logo1.png
+    - logo2.png
+  - reports:
+    - own_radio_experts_stats.mrt
+    - report_listened_tracks.mrt
+    - all_users_listened_tracks_report.mrt
+    - report_with_device_choise.mrt
