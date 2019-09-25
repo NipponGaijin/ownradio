@@ -60,7 +60,10 @@ public class TimerSleep extends AppCompatActivity {
 		btnGo = findViewById(R.id.btnGo);
 		timeDuration = findViewById(R.id.timeDuration);
 		txtProgress = findViewById(R.id.txtProgress);
-		
+
+		picker.setValue(1);
+		SetTextTime(1);
+
 		setSupportActionBar(toolbar);
 		
 		if (getSupportActionBar() != null) {
@@ -136,6 +139,8 @@ public class TimerSleep extends AppCompatActivity {
 				RestartTimer(); // пытаемся перезапустить таймер
 			}
 		});
+
+
 	}
 	
 	@Override
@@ -189,7 +194,7 @@ public class TimerSleep extends AppCompatActivity {
 				min += " " + GetCase(_min, MINUTES);
 				String time = hours + " " + min;
 				
-				timeDuration.setText("Таймер выключится через " + time);
+				timeDuration.setText("Радио выключится через " + time);
 				
 				btnGo.setImageResource(R.drawable.ic_blu_bud);
 			}
