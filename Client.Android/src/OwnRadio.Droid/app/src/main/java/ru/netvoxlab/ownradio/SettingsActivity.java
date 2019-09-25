@@ -856,9 +856,16 @@ public class SettingsActivity extends AppCompatPreferenceActivity {
 					} catch (ApiException e) {
 						// The ApiException status code indicates the detailed failure reason.
 						// Please refer to the GoogleSignInStatusCodes class reference for more information.
+                        String message = e.getMessage();
+                        Log.d("login fail", message);
 						Log.d("login fail", "signInResult:failed code=" + e.getStatusCode());
-						loginWithGoogle.setTitle("Авторизоваться через google");
-						loginWithGoogle.setSummary("Авторизация через google поможет идентифицировать ваши устройства");
+						handler.post(new Runnable() {
+							@Override
+							public void run() {
+								loginWithGoogle.setTitle("Авторизоваться через google");
+								loginWithGoogle.setSummary("Авторизация через google поможет идентифицировать ваши устройства");
+							}
+						});
 					}
 				}
 			});

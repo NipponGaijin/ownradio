@@ -62,6 +62,8 @@ public class RdevGetNextTrack extends AsyncTask<String, Void, Map<String, Map<St
             else {
                 new Utilites().SendInformationTxt(mContext, "RdevGetNextTrack: Error with response code: " + response.code());
                 int code = response.code();
+                String error = response.errorBody().string();
+                Log.d("GetTrackFail", error);
                 Log.d("GetTrackFail", String.valueOf(response.code()));
                 Log.d("GetTrackFail", response.message());
                 return null;
