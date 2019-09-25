@@ -66,8 +66,7 @@ public class AlarmClock extends AppCompatActivity {
 	private TextView txtFriday;
 	private TextView txtSaturday;
 	private TextView txtSunday;
-	
-	private TextView txtCurrentTrack;
+
 	private TextView txtCurrentPlayTrack;
 	
 	private SharedPreferences prefs;
@@ -131,8 +130,7 @@ public class AlarmClock extends AppCompatActivity {
 		
 		numberHours = findViewById(R.id.numberHours);
 		numberMinutes = findViewById(R.id.numberMinutes);
-		
-		txtCurrentTrack = findViewById(R.id.txtCurrentTrack);
+
 		txtCurrentPlayTrack = findViewById(R.id.txtCurrentPlayTrack);
 		
 		db = new TrackDataAccess(getApplicationContext());
@@ -261,8 +259,7 @@ public class AlarmClock extends AppCompatActivity {
 		String path = getPathAlarmTrack(url);
 		
 		copyFile(url, path); // копируем трек в папку
-		
-		txtCurrentTrack.setText(title); // устанавливаем его как трек для будильника
+
 		
 		SharedPreferences.Editor editor = prefs.edit();
 		
@@ -526,8 +523,7 @@ public class AlarmClock extends AppCompatActivity {
 				editor.apply(); // сохраняем текущий трек
 				
 			}
-			
-			txtCurrentTrack.setText(prefs.getString(CURRENT_TRACK_TITLE, ""));
+
 		}
 		
 		String time = prefs.getString(ALARM_TIME, "8:00");
@@ -626,7 +622,7 @@ public class AlarmClock extends AppCompatActivity {
 		}
 		
 		numberMinutes.setMinValue(0);
-		numberMinutes.setMaxValue(60);
+		numberMinutes.setMaxValue(59);
 		numberMinutes.setDisplayedValues(minValues);
 	}
 	

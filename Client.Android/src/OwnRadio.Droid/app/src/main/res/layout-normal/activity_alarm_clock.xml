@@ -206,55 +206,16 @@
 
 			</LinearLayout>
 
-			<TextView
-				android:id="@+id/textView2"
-				android:layout_width="wrap_content"
-				android:layout_height="wrap_content"
-				android:layout_marginTop="25dp"
-				android:layout_weight="1"
-				android:text="Мелодия будильника"
-				app:layout_constraintStart_toStartOf="@+id/linearLayout2"
-				app:layout_constraintTop_toBottomOf="@+id/linearLayout2" />
-
-
-			<LinearLayout
-				android:id="@+id/linearLayout3"
-				android:layout_width="wrap_content"
-				android:layout_height="wrap_content"
-				android:layout_marginTop="15dp"
-				android:orientation="horizontal"
-				app:layout_constraintStart_toStartOf="@+id/textView2"
-				app:layout_constraintTop_toBottomOf="@+id/textView2">
-
-				<TextView
-					android:id="@+id/txtCurrentTrack"
-					android:layout_width="200dp"
-					android:layout_height="wrap_content"
-					android:layout_weight="1"
-					android:text="Lay Me Down Radio Edit"
-					android:textColor="#000" />
-
-
-			</LinearLayout>
-
-			<ImageView
-				android:layout_width="19dp"
-				android:layout_height="19dp"
-				android:layout_marginEnd="40dp"
-				android:contentDescription="TODO" android:onClick="SetTrack"
-				app:layout_constraintEnd_toEndOf="parent"
-				app:layout_constraintStart_toEndOf="@+id/linearLayout3"
-				app:layout_constraintTop_toTopOf="@+id/linearLayout3"
-				app:srcCompat="@drawable/ic_krest" />
 
 			<TextView
 				android:id="@+id/textView5"
 				android:layout_width="wrap_content"
 				android:layout_height="wrap_content"
-				android:layout_marginTop="25dp"
+				android:layout_marginStart="85dp"
+				android:layout_marginTop="22dp"
 				android:text="Играет сейчас:"
-				app:layout_constraintStart_toStartOf="@+id/linearLayout3"
-				app:layout_constraintTop_toBottomOf="@+id/linearLayout3" />
+				app:layout_constraintStart_toStartOf="parent"
+				app:layout_constraintTop_toBottomOf="@+id/linearLayout2" />
 
 
 			<LinearLayout

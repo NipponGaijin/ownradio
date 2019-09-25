@@ -36,8 +36,8 @@ public class RdevGetAuthToken extends AsyncTask<String, Void, LoginResponseBody>
             RdevAPIService rdevAPIService = RdevServiceGenerator.createService(RdevAPIService.class);
 
             JsonObject body = new JsonObject();
-            body.addProperty("login", "admin");
-            body.addProperty("password", "2128506");
+            body.addProperty("login", "client");
+            body.addProperty("password", "o3!GGIi3s");
             Log.d("ResponseStart", body.toString());
             Response<LoginResponseBody> response = RdevServiceGenerator.createService(RdevAPIService.class).getRdevAuthToken(body).execute();
             Log.d("ResponseStart1", body.toString());
